@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <!--
-  SBK Manpower App v8 — ระบบตรวจเช็คการมาปฏิบัติงาน + แดชบอร์ดวิเคราะห์อัตรากำลังพล (รวมในแอปเดียว)
+  SBK Manpower App v9 — ระบบตรวจเช็คการมาปฏิบัติงาน + แดชบอร์ดวิเคราะห์อัตรากำลังพล (รวมในแอปเดียว)
+  v9: ฝัง URL Apps Script + Google Sheets ของแผนก (เชื่อมต่ออัตโนมัติ), แก้ติ๊กแล้วหน้าเด้งขึ้นบน, ขอชื่อผู้บันทึกครั้งแรก
   v8: ปฏิทินวันหยุดนักขัตฤกษ์ในตารางเวร/รายงาน (ปรับเองได้ ใช้ร่วมกันผ่าน Sheets), ยกเลิกส่งอีเมล/LINE (คงปุ่มคัดลอกสรุป),
       ตรวจทาน edge case รอบใหม่: undo ขณะปิดยอด, ข้ามเที่ยงคืน, นาฬิกาเครื่องคลาด, ล็อกในเครื่อง, แถวซ้ำใน Sheets ฯลฯ
   v7: ปิดยอดเดือน (ล็อกทั้งแอปและฝั่ง Sheets), แจ้งเตือนวันที่ค้างติ๊ก, คัดลอกสรุปประจำวัน,
@@ -468,7 +469,7 @@
   </div>
   </section>
 
-  <footer class="text-center text-xs muted py-5">SBK Manpower App v8 · แผนกลานจอดและจราจร · ศูนย์การค้า ซีคอนบางแค</footer>
+  <footer class="text-center text-xs muted py-5">SBK Manpower App v9 · แผนกลานจอดและจราจร · ศูนย์การค้า ซีคอนบางแค</footer>
 </main>
 
 <!-- แถบเมนูล่างสำหรับมือถือ (แสดงเฉพาะจอ < 768px) — ใช้ปุ่มชุดเดียวกับเมนูหลัก -->
@@ -725,7 +726,10 @@ function excelCheck(wb, m, XLSX) {
 /* =====================================================================
    ตั้งค่า — วาง URL Web App ของ Code_Manpower_v2.gs (หรือกรอกใน เมนู → ตั้งค่า)
    ===================================================================== */
-const GAS_URL = '';
+// URL Web App ของ Google Apps Script (Code_Manpower_v5.gs) ที่ผูกกับ Google Sheets ของแผนก — ฝังไว้ เปิดแอปแล้วเชื่อมต่ออัตโนมัติ
+// Google Sheets: https://docs.google.com/spreadsheets/d/1U8FCXHogSNpSkjPUJj0xxHZf9cRxl5GUBfJr_uvwL5U
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwenkqdxtPAq6AeSs1Xi35jBd-5Qx4zC4jUwgEpSwVXpsmUIAhsYNRNSxfnREOTN3uW/exec';
+const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1U8FCXHogSNpSkjPUJj0xxHZf9cRxl5GUBfJr_uvwL5U/edit';
 const ORG = 'ศูนย์การค้า ซีคอนบางแค';
 const DEPT = 'แผนกลานจอดและจราจร';
 const LS = 'sbk_mp_app_v3'; // คงคีย์เดิม เพื่อให้ข้อมูลที่บันทึกในเครื่องจาก v3/v4 ใช้ต่อได้
@@ -734,7 +738,7 @@ const ICON512 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAMAAADDp
 
 /* ข้อมูลตั้งต้น (ประวัติจากไฟล์ Excel ของแผนก แปลงด้วย parser เดียวกับปุ่มนำเข้า) — ใช้เมื่อยังไม่มีข้อมูลใน Sheets
    รูปแบบย่อ: months[mk] = { meta:{src,sheet,chk}, rows:[[code,name,tag,role,shift,zone,remark,codes,plan,oth]] } */
-const EMBED = {"months":{"2026-09":{"meta":{"src":"สรุปอัตราพนักงานประจำ ปี. 2569.xlsx","sheet":"เดือน ก.ย. 2569","chk":[]},"xchk":{"file":"สรุปอัตราพนักงานประจำ ปี. 2569.xlsx","sheet":"เดือน ก.ย. 2569","at":"2026-10-03T17:39:34.205Z","issues":[]},"rows":[["21332","นาย นิรันดร์ ผันกลาง","หน.แผนก","s","d","กลางวัน","วันจันทร์ / ศุกร์","WWWOWWOWWWWWWOWWWOWWOWWWWWWOWW","",0],["21525","นาย ชำนาญ พวงเขียว","ตรวจการ","s","d","กลางวัน","วันจันทร์","WWWWWWOSWWWWWWWWWWWWWWWWWWWOWW","",0],["21644","นาย รังสี สารนิม","ตรวจการ","s","d","กลางวัน","วันพุธ","WOSWWWWWWWWWWWWWWWWWWWWWWWWWWO","",0],["21548","นาย ชัยชนะ อุดชาชน","ตรวจการ","s","d","กลางวัน","วันพุธ","WOWWWWWWWWWWWWWWWWWVWWWWWWWWWO","",0],["21459","นาย นเรศ สมใจ","ตรวจการ","s","d","กลางวัน","วันพฤหัสบดี","WWWWWWWWWOWWWWWWWWWWWWWWWWWWOO","",0],["21173","นาย มงคล เนื่องพิมพ์","ผช.หน.แผนก","s","d","กลางวัน","วันศุกร์","WWWOWWWWWWOWWWWWWOWWWWWWOWWWWW","",0],["21759","นาย เกรียงศักดิ์ ศรีสลับ","","g","d","กลางวัน","วันจันทร์","WWPPWWWWWWWWWWWWWWWWWWWOWWWWSS","",0],["22017","นาย เกียรติชัย กิ่งแก้ว","","g","d","กลางวัน","วันจันทร์","WWWWWWOWWWWWWOWWWWSWOWWWWWWOWW","",0],["22052","นาย นภัทร พัฒน์พิภพ","","g","d","กลางวัน","วันจันทร์","VWWWWWWWWWWWWWWWWWWWOWWWWWWWWW","",0],["22147","นาย วุฒิพงศ์ วงษาแก้ว","","g","d","กลางวัน","วันจันทร์","WPWWWWOWWWWWWOWWWWWWOWWWWPSOWW","",0],["22031","นาย ศรัณยู ช่วยศีริ","","g","d","กลางวัน","วันอังคาร","WWWWWWVOWWWWWWWWWWWWWOWWWWWWWW","",0],["22089","นาย สุวิทย์ พิมพ์ศรี","","g","d","กลางวัน","วันอังคาร","WWWWWWWWWWWWWWOVWWWWWWWWWWWWWW","",0],["21535","นาย สรายุทธิ ติยะบุตร","","g","d","กลางวัน","วันพุธ","WWWWWWWWWWWWWWWWWWWWWWOWWWWWWO","",0],["21931","นาย ธำรงค์ศักดิ์ มณีจันทรา","","g","d","กลางวัน","วันพุธ","WOWWWWWWOWWWWWWOWWWWWWOVVWWWWO","",0],["22032","นาย บุญฤทธิ์ เกตุแก้ว","","g","d","กลางวัน","วันพุธ","WWWWWWWOWOWWWWWWWWSWWWWWWWWWWW","",0],["21595","นาย บันเทิง คุ้มหนองฮี","","g","d","กลางวัน","วันพุธ","POWWWWWWWWWWWWWWWWWWWWOWWWWWWO","",0],["21566","นาย สมชาย ทวีไพศาล","","g","d","กลางวัน","วันพฤหัสบดี","WSOWWWWWWWWWWWWWOOWWWWWWWWWWWW","",0],["22046","นาย อนุวัฒน์ ฝ่ายสูนย์","","g","d","กลางวัน","วันพฤหัสบดี","WWOWWWWWWOWWWWWWOOWWWWWWWWWWWW","",0],["21344","นาย พิพัฒน์ สุวรรณไตยรัตย์","","g","d","กลางวัน","วันพฤหัสบดี","WWOWWWWWWOWWWWWWOWWWWWWOWWWWWW","",0],["21966","น.ส. คมคาย สอนสังข์","","g","d","กลางวัน","วันพฤหัสบดี","WWWWWWWWWOWWWWWWWWWWWWWWWWWWOO","",0],["22121","นาย ณัฐพล คำนัน","","g","d","กลางวัน","วันศุกร์","WWWWWWSSWWOWWWWWWOWWWWWWOWWWWW","",0],["21419","นาย หาญพงศ์ ทองอร่าม","","g","d","กลางวัน","วันศุกร์","SWWOWWWSWWOWWWWWWWWWWWWWOVSSWW","",0],["22102","นาย ลิขิต ชะนะหาญ","","g","d","กลางวัน","วันศุกร์","WWWOWWWWWWOWWWSWWOWWWWWWWWOWWW","",0],["21395","นาย ระเบียบ พรหมปากดี","","g","d","กลางวัน","วันศุกร์","WWWOWWWWWWOWWOWWWWWWWWWWOWWWWW","",0],["21991","นาย เจษฎา มนุษย์","","g","d","กลางวัน","วันจันทร์","WWWWWWOWWWWWWOWWWWWWOWWOWSWWWW","",0],["22124","นาย กฤษฎา กอคูณกลาง","","g","d","กลางวัน","วันอังคาร","WWOWWWWWWOOWWWWWWWOWWWWWWWWWWW","",0],["22065","นาย ธวัชชัย กันตัด","","g","d","กลางวัน","วันอังคาร","WWWWWWWOWWWWWWOWOOWWWWWWWWWWWW","",0],["22023","นาย กฤตนันท์ ลับบัวงาม","","g","d","กลางวัน","วันพุธ","WWWOWWWWWWWWWWWOWWWWWWWWOWWWWW","",0],["22095","นาย นรพนธ์ บุตรดาเคย","","g","d","กลางวัน","วันพฤหัสบดี","WWOWWWWWWOWWWWWWWWWWWWWOWWWWWW","",0],["22127","นาย ศรัน คำดำ","","g","d","กลางวัน","วันพฤหัสบดี","WWOWWWWWOWWWWWWWWWWWOWWWWWWWWW","",0],["22033","นาย ภาสกร โพธิสุวรรณ","","g","d","กลางวัน","วันศุกร์","WWWOWWWWWWOWWWWWWWWWWWWWOWWWWW","",0],["21840","นาย บุญชัย พิลา","หัวหน้าทีม","s","n","กลางคืน","วันอังคาร","OWWWWWWOWWWWWWOWWWWWWWWWWWWWOW","",0],["21264","นาย สาธิต ทองสีกล่ำ","ตรวจการ","s","n","กลางคืน","วันพฤหัสบดี","WVOWWWWWWWWWWWWWOWWWWWWWWWWWWW","",0],["21309","นาย พรชัย ทวียิ่งสกุล","","g","n","กลางคืน","วันจันทร์","WWWWWWOWWWWWWOWWVWWWOWWWWWWOWW","",0],["21819","นาย มงคล สิงห์สุข","","g","n","กลางคืน","วันพุธ","WWWWWOWWWWWWOWWWWOWWWWWWSWWWWW","",0],["21626","น.ส.จันทิมา พานิชผล","","g","n","กลางคืน","วันศุกร์","WWWWWWWWWWWWWWWWWWWWWWSSOWWWWO","",0],["21615","นาย สมัชชา ฉิมน้อย","","g","n","กลางคืน","วันเสาร์","WWWPOWWWWVVOWWWWWWOWWWWWWOSWWW","",0],["21797","นาย ชัยวัฒน์ เสมมีสุข","","g","n","กลางคืน","วันอาทิตย์","WWWWWOWWWWWWOWWWWWWOWWWWWWOWWW","",0]]},"2026-10":{"meta":{"src":"สรุปอัตราพนักงานประจำ ปี. 2569.xlsx","sheet":"เดือน ต.ค. 2569","chk":[]},"xchk":{"file":"สรุปอัตราพนักงานประจำ ปี. 2569.xlsx","sheet":"เดือน ต.ค. 2569","at":"2026-10-03T17:39:34.206Z","issues":[{"zone":"กลางวัน","grp":"ตรวจการ-หัวหน้าทีม","label":"ตรวจการ - หัวหน้าทีม","row":11,"r1":5,"r2":10,"n":6,"diffs":[],"formula":"=SUM(G6:G10)","expect":"=SUM(G5:G10)","range":"G11:AH11","badCells":28,"sheet":"เดือน ต.ค. 2569"},{"zone":"กลางวัน","grp":"รปภ.","label":"รวม","row":38,"r1":13,"r2":37,"n":25,"diffs":[[1,18,13],[2,19,13],[3,24,17]],"formula":"=SUM(D13:D30)","expect":"=SUM(D13:D37)","range":"D38:AH38","badCells":31,"sheet":"เดือน ต.ค. 2569"}]},"rows":[["21332","นาย นิรันดร์ ผันกลาง","หน.แผนก","s","d","กลางวัน","วันจันทร์/ศุกร์","WWWAOAAAAAAOAAAOAAOAAAAAAOAAAOA","",0],["21525","นาย ชำนาญ พวงเขียว","ตรวจการ","s","d","กลางวัน","วันจันทร์","WWWAOAAAAAAOAAAAAAOAAAAAAOAAAAA","",0],["21548","นาย รังสี สารนิม","ตรวจการ","s","d","กลางวัน","วันพุธ","WWWCCCOCCCCCCOCCCCCCOCCCCCCOCCC","",0],["21644","นาย ชัยชนะ อุดชาชน","ตรวจการ","s","d","กลางวัน","วันพุธ","WWWAAAOAAAAAAOAAAAAAOAAAAAAOAAA","",0],["21459","นาย นเรศ สมใจ","ตรวจการ","s","d","กลางวัน","วันพฤหัสบดี","OVPPAAAOAAAAAAOAAAAAAOAAAAAAOAA","",0],["21173","นาย มงคล เนื่องพิมพ์","ผช.หน.แผนก","s","d","กลางวัน","วันศุกร์","WOWAAAAAOAAAAAAOAAAAAAOAAAAAAOA","",0],["21759","นาย เกรียงศักดิ์ ศรีสลับ","","g","d","กลางวัน","วันจันทร์","WWWAOAAAAAAOAAAAAAOAAAAAAOAAAAA","",0],["22017","นาย เกียรติชัย กิ่งแก้ว","","g","d","กลางวัน","วันจันทร์","WWWAOAAAAAAOAAAAAAOAAAAAAOAAAAA","",0],["22052","นาย นภัทร พัฒน์พิภพ","","g","d","กลางวัน","วันจันทร์","WWWAOAAAAAAOAAAAAAOAAAAAAOAAAAA","",0],["22147","นาย วุฒิพงศ์ วงษาแก้ว","","g","d","กลางวัน","วันจันทร์","WWWAOAAAAAAOAAAAAAOAAAAAAOAAAAA","",0],["21535","นาย สรายุทธิ ติยะบุตร","","g","d","กลางวัน","วันอังคาร","WWWAAOAAAAAAOAAAAAAOAAAAAAOAAAA","",0],["22089","นาย สุวิทย์ พิมพ์ศรี","","g","d","กลางวัน","วันอังคาร","WWWAAOAAAAAAOAAAAAAOAAAAAAOAAAA","",0],["21595","นาย บันเทิง คุ้มหนองฮี","","g","d","กลางวัน","วันอังคาร","WWWAAOAAAAAAOAAAAAAOAAAAAAOAAAA","",0],["22031","นาย ศรัณยู ช่วยศิริ","","g","d","กลางวัน","วันพุธ","WWWAAAOAAAAAAOAAAAAAOAAAAAAOAAA","",0],["22032","นาย บุญฤทธิ์ เกตุแก้ว","","g","d","กลางวัน","วันพุธ","SWWAAAOAAAAAAOAAAAAAOAAAAAAOAAA","",0],["21931","นาย ธำรงค์ศักดิ์ มณีจันทรา","","g","d","กลางวัน","วันพุธ","WWWAAAOAAAAAAOAAAAAAOAAAAAAOAAA","",0],["21566","นาย สมชาย ทวีไพศาล","","g","d","กลางวัน","วันพฤหัสบดี","OWWAAAAOAAAAAAOAAAAAAOAAAAAAOAA","",0],["22046","นาย อนุวัฒน์ ฝ่ายสูนย์","","g","d","กลางวัน","วันพฤหัสบดี","OWWAAAAOAAAAAAOAAAAAAOAAAAAAOAA","",0],["21344","นาย พิพัฒน์ สุวรรณไตยรัตย์","","g","d","กลางวัน","วันพฤหัสบดี","OWWAAAAOAAAAAAOAAAAAAOAAAAAAOAA","",0],["21966","น.ส. คมคาย สอนสังข์","","g","d","กลางวัน","วันพฤหัสบดี","OVPPAAAOAAAAAAOAAAAAAOAAAAAAOAA","",0],["22121","นาย ณัฐพล คำนัน","","g","d","กลางวัน","วันศุกร์","WOWAAAAAOAAAAAAOAAAAAAOAAAAAAOA","",0],["21419","นาย หาญพงศ์ ทองอร่าม","","g","d","กลางวัน","วันศุกร์","WOWAAAAAOAAAAAAOAAAAAAOAAAAAAOA","",0],["22102","นาย ลิขิต ชะนะหาญ","","g","d","กลางวัน","วันศุกร์","WOWAAAAAOAAAAAAOAAAAAAOAAAAAAOA","",0],["21395","นาย ระเบียบ พรหมปากดี","","g","d","กลางวัน","วันศุกร์","WOWAAAAAOAAAAAAOAAAAAAOAAAAAAOA","",0],["21991","นาย เจษฎา มนุษย์","","g","d","กลางวัน","วันจันทร์","WWWCOCCCCCCOCCCCCCOCCCCCCOCCCCC","",0],["22124","นาย กฤษฎา กอคูณกลาง","","g","d","กลางวัน","วันอังคาร","WWWCCOCCCCCCOCCCCCCOCCCCCCOCCCC","",0],["22065","นาย ธวัชชัย กันตัด","","g","d","กลางวัน","วันอังคาร","WWWCCOCCCCCCOCCCCCCOCCCCCCOCCCC","",0],["22023","นาย กฤตนันท์ ลับบัวงาม","","g","d","กลางวัน","วันพุธ","WWWCCCOCCCCCCOCCCCCCOCCCCCCOCCC","",0],["22095","นาย นรพนธ์ บุตรดาเคย","","g","d","กลางวัน","วันพฤหัสบดี","OWWCCCCOCCCCCCOCCCCCCOCCCCCCOCC","",0],["22127","นาย ศรัน คำดำ","","g","d","กลางวัน","วันพฤหัสบดี","OWWCCCCOCCCCCCOCCCCCCOCCCCCCOCC","",0],["22033","นาย ภาสกร โพธิสุวรรณ","","g","d","กลางวัน","วันศุกร์","WOWCCCCCOCCCCCCOCCCCCCOCCCCCCOC","",0],["21840","นาย บุญชัย พิลา","หัวหน้าทีม","s","n","กลางคืน","วันอังคาร","WWBBBOBBBBBBOBBBBBBOBBBBBBOBBBB","",0],["21264","นาย สาธิต ทองสีกล่ำ","ตรวจการ","s","n","กลางคืน","วันพฤหัสบดี","OWBBBBBOBBBBBBOBBBBBBOBBBBBBOBB","",0],["21309","นาย พรชัย ทวียิ่งสกุล","","g","n","กลางคืน","วันจันทร์","WWBBOBBBBBBOBBBBBBOBBBBBBOBBBBB","",0],["21819","นาย มงคล สิงห์สุข","","g","n","กลางคืน","วันพุธ","WWBBBBOBBBBBBOBBBBBBOBBBBBBOBBB","",0],["21626","น.ส.จันทิมา พานิชผล","","g","n","กลางคืน","วันศุกร์","WOBBBBBBOBBBBBBOBBBBBBOBBBBBBOB","",0],["21615","นาย สมัชชา ฉิมน้อย","","g","n","กลางคืน","วันเสาร์","WWOBBBBBBOBBBBBBOBBBBBBOBBBBBBO","",0],["21797","นาย ชัยวัฒน์ เสมมีสุข","","g","n","กลางคืน","วันอาทิตย์","WWBOBBBBBBOBBBBBBOBBBBBBOBBBBBB","",0]]}}};
+const EMBED = {"months":{"2026-09":{"meta":{"src":"สรุปอัตราพนักงานประจำ ปี. 2569.xlsx","sheet":"เดือน ก.ย. 2569","chk":[]},"xchk":{"file":"สรุปอัตราพนักงานประจำ ปี. 2569.xlsx","sheet":"เดือน ก.ย. 2569","at":"2026-10-04T02:10:18.450Z","issues":[]},"rows":[["21332","นาย นิรันดร์ ผันกลาง","หน.แผนก","s","d","กลางวัน","วันจันทร์ / ศุกร์","WWWOWWOWWWWWWOWWWOWWOWWWWWWOWW","",0],["21525","นาย ชำนาญ พวงเขียว","ตรวจการ","s","d","กลางวัน","วันจันทร์","WWWWWWOSWWWWWWWWWWWWWWWWWWWOWW","",0],["21644","นาย รังสี สารนิม","ตรวจการ","s","d","กลางวัน","วันพุธ","WOSWWWWWWWWWWWWWWWWWWWWWWWWWWO","",0],["21548","นาย ชัยชนะ อุดชาชน","ตรวจการ","s","d","กลางวัน","วันพุธ","WOWWWWWWWWWWWWWWWWWVWWWWWWWWWO","",0],["21459","นาย นเรศ สมใจ","ตรวจการ","s","d","กลางวัน","วันพฤหัสบดี","WWWWWWWWWOWWWWWWWWWWWWWWWWWWOO","",0],["21173","นาย มงคล เนื่องพิมพ์","ผช.หน.แผนก","s","d","กลางวัน","วันศุกร์","WWWOWWWWWWOWWWWWWOWWWWWWOWWWWW","",0],["21759","นาย เกรียงศักดิ์ ศรีสลับ","","g","d","กลางวัน","วันจันทร์","WWPPWWWWWWWWWWWWWWWWWWWOWWWWSS","",0],["22017","นาย เกียรติชัย กิ่งแก้ว","","g","d","กลางวัน","วันจันทร์","WWWWWWOWWWWWWOWWWWSWOWWWWWWOWW","",0],["22052","นาย นภัทร พัฒน์พิภพ","","g","d","กลางวัน","วันจันทร์","VWWWWWWWWWWWWWWWWWWWOWWWWWWWWW","",0],["22147","นาย วุฒิพงศ์ วงษาแก้ว","","g","d","กลางวัน","วันจันทร์","WPWWWWOWWWWWWOWWWWWWOWWWWPSOWW","",0],["22031","นาย ศรัณยู ช่วยศีริ","","g","d","กลางวัน","วันอังคาร","WWWWWWVOWWWWWWWWWWWWWOWWWWWWWW","",0],["22089","นาย สุวิทย์ พิมพ์ศรี","","g","d","กลางวัน","วันอังคาร","WWWWWWWWWWWWWWOVWWWWWWWWWWWWWW","",0],["21535","นาย สรายุทธิ ติยะบุตร","","g","d","กลางวัน","วันพุธ","WWWWWWWWWWWWWWWWWWWWWWOWWWWWWO","",0],["21931","นาย ธำรงค์ศักดิ์ มณีจันทรา","","g","d","กลางวัน","วันพุธ","WOWWWWWWOWWWWWWOWWWWWWOVVWWWWO","",0],["22032","นาย บุญฤทธิ์ เกตุแก้ว","","g","d","กลางวัน","วันพุธ","WWWWWWWOWOWWWWWWWWSWWWWWWWWWWW","",0],["21595","นาย บันเทิง คุ้มหนองฮี","","g","d","กลางวัน","วันพุธ","POWWWWWWWWWWWWWWWWWWWWOWWWWWWO","",0],["21566","นาย สมชาย ทวีไพศาล","","g","d","กลางวัน","วันพฤหัสบดี","WSOWWWWWWWWWWWWWOOWWWWWWWWWWWW","",0],["22046","นาย อนุวัฒน์ ฝ่ายสูนย์","","g","d","กลางวัน","วันพฤหัสบดี","WWOWWWWWWOWWWWWWOOWWWWWWWWWWWW","",0],["21344","นาย พิพัฒน์ สุวรรณไตยรัตย์","","g","d","กลางวัน","วันพฤหัสบดี","WWOWWWWWWOWWWWWWOWWWWWWOWWWWWW","",0],["21966","น.ส. คมคาย สอนสังข์","","g","d","กลางวัน","วันพฤหัสบดี","WWWWWWWWWOWWWWWWWWWWWWWWWWWWOO","",0],["22121","นาย ณัฐพล คำนัน","","g","d","กลางวัน","วันศุกร์","WWWWWWSSWWOWWWWWWOWWWWWWOWWWWW","",0],["21419","นาย หาญพงศ์ ทองอร่าม","","g","d","กลางวัน","วันศุกร์","SWWOWWWSWWOWWWWWWWWWWWWWOVSSWW","",0],["22102","นาย ลิขิต ชะนะหาญ","","g","d","กลางวัน","วันศุกร์","WWWOWWWWWWOWWWSWWOWWWWWWWWOWWW","",0],["21395","นาย ระเบียบ พรหมปากดี","","g","d","กลางวัน","วันศุกร์","WWWOWWWWWWOWWOWWWWWWWWWWOWWWWW","",0],["21991","นาย เจษฎา มนุษย์","","g","d","กลางวัน","วันจันทร์","WWWWWWOWWWWWWOWWWWWWOWWOWSWWWW","",0],["22124","นาย กฤษฎา กอคูณกลาง","","g","d","กลางวัน","วันอังคาร","WWOWWWWWWOOWWWWWWWOWWWWWWWWWWW","",0],["22065","นาย ธวัชชัย กันตัด","","g","d","กลางวัน","วันอังคาร","WWWWWWWOWWWWWWOWOOWWWWWWWWWWWW","",0],["22023","นาย กฤตนันท์ ลับบัวงาม","","g","d","กลางวัน","วันพุธ","WWWOWWWWWWWWWWWOWWWWWWWWOWWWWW","",0],["22095","นาย นรพนธ์ บุตรดาเคย","","g","d","กลางวัน","วันพฤหัสบดี","WWOWWWWWWOWWWWWWWWWWWWWOWWWWWW","",0],["22127","นาย ศรัน คำดำ","","g","d","กลางวัน","วันพฤหัสบดี","WWOWWWWWOWWWWWWWWWWWOWWWWWWWWW","",0],["22033","นาย ภาสกร โพธิสุวรรณ","","g","d","กลางวัน","วันศุกร์","WWWOWWWWWWOWWWWWWWWWWWWWOWWWWW","",0],["21840","นาย บุญชัย พิลา","หัวหน้าทีม","s","n","กลางคืน","วันอังคาร","OWWWWWWOWWWWWWOWWWWWWWWWWWWWOW","",0],["21264","นาย สาธิต ทองสีกล่ำ","ตรวจการ","s","n","กลางคืน","วันพฤหัสบดี","WVOWWWWWWWWWWWWWOWWWWWWWWWWWWW","",0],["21309","นาย พรชัย ทวียิ่งสกุล","","g","n","กลางคืน","วันจันทร์","WWWWWWOWWWWWWOWWVWWWOWWWWWWOWW","",0],["21819","นาย มงคล สิงห์สุข","","g","n","กลางคืน","วันพุธ","WWWWWOWWWWWWOWWWWOWWWWWWSWWWWW","",0],["21626","น.ส.จันทิมา พานิชผล","","g","n","กลางคืน","วันศุกร์","WWWWWWWWWWWWWWWWWWWWWWSSOWWWWO","",0],["21615","นาย สมัชชา ฉิมน้อย","","g","n","กลางคืน","วันเสาร์","WWWPOWWWWVVOWWWWWWOWWWWWWOSWWW","",0],["21797","นาย ชัยวัฒน์ เสมมีสุข","","g","n","กลางคืน","วันอาทิตย์","WWWWWOWWWWWWOWWWWWWOWWWWWWOWWW","",0]]},"2026-10":{"meta":{"src":"สรุปอัตราพนักงานประจำ ปี. 2569.xlsx","sheet":"เดือน ต.ค. 2569","chk":[]},"xchk":{"file":"สรุปอัตราพนักงานประจำ ปี. 2569.xlsx","sheet":"เดือน ต.ค. 2569","at":"2026-10-04T02:10:18.451Z","issues":[{"zone":"กลางวัน","grp":"ตรวจการ-หัวหน้าทีม","label":"ตรวจการ - หัวหน้าทีม","row":11,"r1":5,"r2":10,"n":6,"diffs":[],"formula":"=SUM(G6:G10)","expect":"=SUM(G5:G10)","range":"G11:AH11","badCells":28,"sheet":"เดือน ต.ค. 2569"},{"zone":"กลางวัน","grp":"รปภ.","label":"รวม","row":38,"r1":13,"r2":37,"n":25,"diffs":[[1,18,13],[2,19,13],[3,24,17]],"formula":"=SUM(D13:D30)","expect":"=SUM(D13:D37)","range":"D38:AH38","badCells":31,"sheet":"เดือน ต.ค. 2569"}]},"rows":[["21332","นาย นิรันดร์ ผันกลาง","หน.แผนก","s","d","กลางวัน","วันจันทร์/ศุกร์","WWWAOAAAAAAOAAAOAAOAAAAAAOAAAOA","",0],["21525","นาย ชำนาญ พวงเขียว","ตรวจการ","s","d","กลางวัน","วันจันทร์","WWWAOAAAAAAOAAAAAAOAAAAAAOAAAAA","",0],["21548","นาย รังสี สารนิม","ตรวจการ","s","d","กลางวัน","วันพุธ","WWWCCCOCCCCCCOCCCCCCOCCCCCCOCCC","",0],["21644","นาย ชัยชนะ อุดชาชน","ตรวจการ","s","d","กลางวัน","วันพุธ","WWWAAAOAAAAAAOAAAAAAOAAAAAAOAAA","",0],["21459","นาย นเรศ สมใจ","ตรวจการ","s","d","กลางวัน","วันพฤหัสบดี","OVPPAAAOAAAAAAOAAAAAAOAAAAAAOAA","",0],["21173","นาย มงคล เนื่องพิมพ์","ผช.หน.แผนก","s","d","กลางวัน","วันศุกร์","WOWAAAAAOAAAAAAOAAAAAAOAAAAAAOA","",0],["21759","นาย เกรียงศักดิ์ ศรีสลับ","","g","d","กลางวัน","วันจันทร์","WWWAOAAAAAAOAAAAAAOAAAAAAOAAAAA","",0],["22017","นาย เกียรติชัย กิ่งแก้ว","","g","d","กลางวัน","วันจันทร์","WWWAOAAAAAAOAAAAAAOAAAAAAOAAAAA","",0],["22052","นาย นภัทร พัฒน์พิภพ","","g","d","กลางวัน","วันจันทร์","WWWAOAAAAAAOAAAAAAOAAAAAAOAAAAA","",0],["22147","นาย วุฒิพงศ์ วงษาแก้ว","","g","d","กลางวัน","วันจันทร์","WWWAOAAAAAAOAAAAAAOAAAAAAOAAAAA","",0],["21535","นาย สรายุทธิ ติยะบุตร","","g","d","กลางวัน","วันอังคาร","WWWAAOAAAAAAOAAAAAAOAAAAAAOAAAA","",0],["22089","นาย สุวิทย์ พิมพ์ศรี","","g","d","กลางวัน","วันอังคาร","WWWAAOAAAAAAOAAAAAAOAAAAAAOAAAA","",0],["21595","นาย บันเทิง คุ้มหนองฮี","","g","d","กลางวัน","วันอังคาร","WWWAAOAAAAAAOAAAAAAOAAAAAAOAAAA","",0],["22031","นาย ศรัณยู ช่วยศิริ","","g","d","กลางวัน","วันพุธ","WWWAAAOAAAAAAOAAAAAAOAAAAAAOAAA","",0],["22032","นาย บุญฤทธิ์ เกตุแก้ว","","g","d","กลางวัน","วันพุธ","SWWAAAOAAAAAAOAAAAAAOAAAAAAOAAA","",0],["21931","นาย ธำรงค์ศักดิ์ มณีจันทรา","","g","d","กลางวัน","วันพุธ","WWWAAAOAAAAAAOAAAAAAOAAAAAAOAAA","",0],["21566","นาย สมชาย ทวีไพศาล","","g","d","กลางวัน","วันพฤหัสบดี","OWWAAAAOAAAAAAOAAAAAAOAAAAAAOAA","",0],["22046","นาย อนุวัฒน์ ฝ่ายสูนย์","","g","d","กลางวัน","วันพฤหัสบดี","OWWAAAAOAAAAAAOAAAAAAOAAAAAAOAA","",0],["21344","นาย พิพัฒน์ สุวรรณไตยรัตย์","","g","d","กลางวัน","วันพฤหัสบดี","OWWAAAAOAAAAAAOAAAAAAOAAAAAAOAA","",0],["21966","น.ส. คมคาย สอนสังข์","","g","d","กลางวัน","วันพฤหัสบดี","OVPPAAAOAAAAAAOAAAAAAOAAAAAAOAA","",0],["22121","นาย ณัฐพล คำนัน","","g","d","กลางวัน","วันศุกร์","WOWAAAAAOAAAAAAOAAAAAAOAAAAAAOA","",0],["21419","นาย หาญพงศ์ ทองอร่าม","","g","d","กลางวัน","วันศุกร์","WOWAAAAAOAAAAAAOAAAAAAOAAAAAAOA","",0],["22102","นาย ลิขิต ชะนะหาญ","","g","d","กลางวัน","วันศุกร์","WOWAAAAAOAAAAAAOAAAAAAOAAAAAAOA","",0],["21395","นาย ระเบียบ พรหมปากดี","","g","d","กลางวัน","วันศุกร์","WOWAAAAAOAAAAAAOAAAAAAOAAAAAAOA","",0],["21991","นาย เจษฎา มนุษย์","","g","d","กลางวัน","วันจันทร์","WWWCOCCCCCCOCCCCCCOCCCCCCOCCCCC","",0],["22124","นาย กฤษฎา กอคูณกลาง","","g","d","กลางวัน","วันอังคาร","WWWCCOCCCCCCOCCCCCCOCCCCCCOCCCC","",0],["22065","นาย ธวัชชัย กันตัด","","g","d","กลางวัน","วันอังคาร","WWWCCOCCCCCCOCCCCCCOCCCCCCOCCCC","",0],["22023","นาย กฤตนันท์ ลับบัวงาม","","g","d","กลางวัน","วันพุธ","WWWCCCOCCCCCCOCCCCCCOCCCCCCOCCC","",0],["22095","นาย นรพนธ์ บุตรดาเคย","","g","d","กลางวัน","วันพฤหัสบดี","OWWCCCCOCCCCCCOCCCCCCOCCCCCCOCC","",0],["22127","นาย ศรัน คำดำ","","g","d","กลางวัน","วันพฤหัสบดี","OWWCCCCOCCCCCCOCCCCCCOCCCCCCOCC","",0],["22033","นาย ภาสกร โพธิสุวรรณ","","g","d","กลางวัน","วันศุกร์","WOWCCCCCOCCCCCCOCCCCCCOCCCCCCOC","",0],["21840","นาย บุญชัย พิลา","หัวหน้าทีม","s","n","กลางคืน","วันอังคาร","WWBBBOBBBBBBOBBBBBBOBBBBBBOBBBB","",0],["21264","นาย สาธิต ทองสีกล่ำ","ตรวจการ","s","n","กลางคืน","วันพฤหัสบดี","OWBBBBBOBBBBBBOBBBBBBOBBBBBBOBB","",0],["21309","นาย พรชัย ทวียิ่งสกุล","","g","n","กลางคืน","วันจันทร์","WWBBOBBBBBBOBBBBBBOBBBBBBOBBBBB","",0],["21819","นาย มงคล สิงห์สุข","","g","n","กลางคืน","วันพุธ","WWBBBBOBBBBBBOBBBBBBOBBBBBBOBBB","",0],["21626","น.ส.จันทิมา พานิชผล","","g","n","กลางคืน","วันศุกร์","WOBBBBBBOBBBBBBOBBBBBBOBBBBBBOB","",0],["21615","นาย สมัชชา ฉิมน้อย","","g","n","กลางคืน","วันเสาร์","WWOBBBBBBOBBBBBBOBBBBBBOBBBBBBO","",0],["21797","นาย ชัยวัฒน์ เสมมีสุข","","g","n","กลางคืน","วันอาทิตย์","WWBOBBBBBBOBBBBBBOBBBBBBOBBBBBB","",0]]}}};
 
 /* ===================== รหัสสถานะ =====================
    รหัสภายใน 1 ตัวอักษร ↔ ค่าที่เก็บใน Google Sheets/Excel (อ่านด้วย classifyCell ใน parser)
@@ -822,7 +826,7 @@ function holMap() {
 }
 const holidayAt = (mk, d) => holMap().get(isoDay(mk, d)) || null;
 const holidaysOfMonth = (mk) => [...holMap().values()].filter(h => h.d.startsWith(mk + '-')).sort((a, b) => a.d < b.d ? -1 : 1);
-function setHolidays(next) { App.store.hol = { custom: (next.custom || []).filter(c => validIsoDate(c.d)), off: (next.off || []).filter(validIsoDate), updatedAt: next.updatedAt || new Date().toISOString(), by: next.by || App.user || '' }; HOLC = null; App.ver++; }
+function setHolidays(next) { App.store.hol = { custom: (next.custom || []).filter(c => validIsoDate(c.d)), off: (next.off || []).filter(validIsoDate), updatedAt: next.updatedAt || '', by: next.by || '' }; HOLC = null; App.ver++; } /* updatedAt: ไม่สร้างเวลาเอง ใช้เวลาที่บันทึกจริง (ใช้เทียบว่าชุดไหนใหม่กว่า) */
 
 /* ===================== STATE ===================== */
 const App = {
@@ -958,7 +962,7 @@ function writeLocalNow() {
 function saveLocal() { App.ver++; clearTimeout(saveTimer); saveTimer = setTimeout(writeLocalNow, 300); } // หน่วงเล็กน้อย แต่บังคับเขียนทันทีตอนปิด/สลับหน้า
 function loadLocal() { try { const s = localStorage.getItem(LS); const j = s ? JSON.parse(s) : null; return j && typeof j.months === 'object' ? j : null; } catch (e) { return null; } }
 function loadPrefs() { try { return JSON.parse(localStorage.getItem(LS + '_prefs') || '{}') || {}; } catch (e) { return {}; } }
-function savePrefs() { try { localStorage.setItem(LS + '_prefs', JSON.stringify({ gasUrl: App.gasUrl, user: App.user, fit: App.fit, target: D.target, hiddenMonths: [...App.hidden], rpt: App.rpt, theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light' })); } catch (e) {} }
+function savePrefs() { try { localStorage.setItem(LS + '_prefs', JSON.stringify({ gasUrl: App.gasUrl === GAS_URL ? '' : App.gasUrl, gasOff: !App.gasUrl, user: App.user, fit: App.fit, target: D.target, hiddenMonths: [...App.hidden], rpt: App.rpt, theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light' })); } catch (e) {} }
 
 function rowFromSheet(o, mk) {
   const days = mDays(mk), c = [], oth = {};
@@ -1008,7 +1012,7 @@ function jsonp(params, timeout = 30000) {
     const timer = setTimeout(() => { if (!done) { finish(); reject(new Error('หมดเวลาเชื่อมต่อ Google Sheets (ตรวจสอบอินเทอร์เน็ต / URL / การ Deploy เป็น Anyone)')); } }, timeout);
     window[cb] = (d) => { if (done) return; finish(); if (d && d.version) App.apiVersion = d.version; d && d.ok ? resolve(d) : reject(new Error((d && d.error) || 'ข้อมูลตอบกลับจาก Google Sheets ไม่ถูกต้อง')); };
     s.src = App.gasUrl + (App.gasUrl.includes('?') ? '&' : '?') + new URLSearchParams({ ...params, callback: cb, _: Date.now() });
-    s.onerror = () => { if (!done) { finish(); reject(new Error('เชื่อมต่อ Google Sheets ไม่ได้ (URL ไม่ถูกต้อง หรือยังไม่ได้ Deploy แบบ Anyone)')); } };
+    s.onerror = () => { if (!done) { finish(); reject(new Error('เชื่อมต่อ Google Sheets ไม่ได้ — ตรวจสอบอินเทอร์เน็ต / เครือข่ายอาจบล็อก script.google.com / การ Deploy ต้องเป็น "Anyone" (ข้อมูลยังอยู่ในเครื่อง)')); } };
     document.body.appendChild(s);
   });
 }
@@ -1016,7 +1020,8 @@ async function gasPost(body) {
   if (!navigator.onLine) throw new Error('อุปกรณ์ไม่ได้เชื่อมต่ออินเทอร์เน็ต — ข้อมูลยังเก็บอยู่ในเครื่อง ลองใหม่เมื่อออนไลน์');
   const json = JSON.stringify(body);
   if (json.length > 45e6) throw new Error('ข้อมูลที่ส่งมีขนาดใหญ่เกินขีดจำกัดของ Google Apps Script — กรุณาส่งทีละเดือน');
-  await fetch(App.gasUrl, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: json }); // no-cors อ่านผลไม่ได้ → ยืนยันด้วยการอ่านกลับ
+  try { await fetch(App.gasUrl, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: json }); } // no-cors อ่านผลไม่ได้ → ยืนยันด้วยการอ่านกลับ
+  catch (e) { throw new Error('ส่งข้อมูลไปยัง Google Sheets ไม่สำเร็จ (สัญญาณอินเทอร์เน็ต หรือเครือข่ายบริษัทบล็อก script.google.com) — ข้อมูลยังอยู่ในเครื่อง ลองใหม่อีกครั้ง'); }
 }
 function setConn(state, text) {
   const el = document.getElementById('connChip');
@@ -1273,6 +1278,8 @@ function visibleRows() {
   return M.rows.filter(r => (App.shift === 'all' || r.shift === App.shift) && (!q || r.name.toLowerCase().replace(/\s+/g, '').includes(q) || r.code.includes(q)));
 }
 function render() {
+  // จำตำแหน่งเลื่อนหน้าก่อนวาดใหม่ — ติ๊กทีละช่องแล้วหน้าต้องอยู่ที่เดิม (ไม่เด้งขึ้นบน)
+  const keepY = window.scrollY, viewKey = App.tab + '|' + App.fv + '|' + App.mk + '|' + (App.tab === 'dash' ? D.view + D.period : '');
   const M = curMonth(), form = App.tab === 'form';
   document.body.classList.toggle('mode-form', form); document.body.classList.toggle('mode-dash', !form);
   document.querySelectorAll('.main-tab').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === App.tab)));
@@ -1284,8 +1291,11 @@ function render() {
   document.getElementById('btnFit').classList.toggle('hidden', App.fv !== 'grid');
   document.getElementById('btnUndo').classList.toggle('hidden', !form);
   document.getElementById('dashFilter').classList.toggle('hidden', form);
-  document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('hidden'));
   const empty = !M && !(App.tab === 'dash' && D.period !== 'month');
+  // สาเหตุเดิมที่หน้าเด้งขึ้นบน: ซ่อน "ทุกแท็บ" ก่อนแล้วค่อยแสดงแท็บเดิม ระหว่างนั้นมีการอ่านขนาดหน้า (updateStickyOffset)
+  // เบราว์เซอร์จึงคำนวณหน้าที่ว่างเปล่า → ตำแหน่งเลื่อนถูกดีดกลับเป็น 0 — แก้เป็นสลับเฉพาะแท็บที่เปลี่ยนจริง
+  const activePane = empty ? '' : form ? 'tab-' + App.fv : 'tab-dash';
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.toggle('hidden', p.id !== activePane));
   const es = document.getElementById('emptyState'); es.classList.toggle('hidden', !empty);
   es.querySelector('h3').textContent = 'ยังไม่มีตารางเวรของเดือนนี้'; es.querySelector('p').textContent = 'กด "โหลดจาก Sheets" หรือ เมนู → สร้างตารางเวรเดือนใหม่ / นำเข้าไฟล์ Excel';
   const n = M ? dirtyCount(App.mk) : 0, up = M && M.origin !== 'sheets' && App.gasUrl;
@@ -1295,8 +1305,11 @@ function render() {
   document.getElementById('btnUndo').disabled = !App.undo.length;
   updateStickyOffset();
   if (empty) return;
-  if (form) { document.getElementById('tab-' + App.fv).classList.remove('hidden'); if (App.fv === 'grid') { renderSummary(); renderGrid(); } else renderDaily(); App._flash = null; }
-  else { document.getElementById('tab-dash').classList.remove('hidden'); renderDash(); }
+  if (form) { if (App.fv === 'grid') { renderSummary(); renderGrid(); } else renderDaily(); App._flash = null; }
+  else renderDash();
+  // มุมมองเดิม (แค่แก้ข้อมูล) → คืนตำแหน่งเลื่อนเดิม · เปลี่ยนแท็บ/เดือน → ปล่อยตามปกติ
+  if (App._viewKey === viewKey && Math.abs(window.scrollY - keepY) > 2) window.scrollTo(0, keepY);
+  App._viewKey = viewKey;
 }
 // แถบสถานะปิดยอด + ปุ่มเตือนวันที่ค้างติ๊ก (แสดงในหน้าฟอร์มกรอก)
 function renderLockState(M, form, locked) {
@@ -1613,7 +1626,7 @@ function computeView(def = periodDef()) {
 
 /* ---------- Render หลักของแดชบอร์ด ---------- */
 function renderDash() {
-  document.querySelectorAll('.dview').forEach(p => p.classList.add('hidden'));
+  document.querySelectorAll('.dview').forEach(p => p.classList.toggle('hidden', p.id !== 'dv-' + D.view)); // สลับเฉพาะที่เปลี่ยน (กันหน้าเด้ง/กะพริบ)
   document.querySelectorAll('[data-dv]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.dv === D.view)));
   document.querySelectorAll('[data-period]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.period === D.period)));
   buildPeriodPickers(); renderChips();
@@ -2131,6 +2144,7 @@ function openSettings() {
   openModal('⚙️ ตั้งค่า', `
     <div class="font-semibold text-sm mb-2">การเชื่อมต่อ Google Sheets</div>
     <label class="block text-sm mb-2">URL Web App ของ Google Apps Script (ลงท้าย /exec)<input id="setUrl" class="inp mt-1 font-mono text-xs" placeholder="https://script.google.com/macros/s/xxxx/exec" value="${esc(App.gasUrl)}"></label>
+    <div class="flex flex-wrap gap-2 mb-3 text-xs">${GAS_URL ? `<button type="button" class="btn btn-ghost !py-1 !min-h-0 text-xs" id="setUseDef">↺ ใช้ URL ที่ฝังในแอป</button>` : ''}<a class="btn btn-ghost !py-1 !min-h-0 text-xs" href="${SHEET_URL}" target="_blank" rel="noopener">📄 เปิด Google Sheets</a>${App.server ? `<span class="chip">Code.gs v${App.server.version || '?'}</span>` : ''}</div>
     ${f('setUser', 'ชื่อผู้บันทึก (ใช้ในประวัติการแก้ไข และบันทึกการเปลี่ยนวันหยุด) *', App.user, 'เช่น นิรันดร์ ผันกลาง')}
     <div class="font-semibold text-sm mt-4 mb-2">ข้อมูลในรายงานทางการ <span class="muted font-normal">(เว้นว่างได้ — ช่องลงนามจะแสดงเฉพาะที่กรอก)</span></div>
     <div class="grid sm:grid-cols-2 gap-2">
@@ -2146,10 +2160,13 @@ function openSettings() {
     try { const r = await jsonp({ action: 'ping' }, 15000); toast(`เชื่อมต่อสำเร็จ: ${r.app}${r.version ? ' · Code.gs v' + r.version : ' · Code.gs รุ่นเก่า (แนะนำอัปเดตเป็น v3)'}`, r.version >= 3 ? 'success' : 'warn', 7000); } catch (err) { toast(err.message, 'error', 7000); }
     finally { App.gasUrl = old; setBtnLoading(b, false); }
   };
+  let confirm_off_ok = false;
+  const useDef = document.getElementById('setUseDef'); if (useDef) useDef.onclick = () => { document.getElementById('setUrl').value = GAS_URL; };
   document.getElementById('setSave').onclick = () => {
     const v = (id) => document.getElementById(id).value.trim(), url = v('setUrl');
     if (url && !/^https:\/\/script\.google(usercontent)?\.com\/.+\/exec(\?.*)?$/.test(url)) { toast('URL ไม่ถูกต้อง: ต้องขึ้นต้นด้วย https://script.google.com/ และลงท้ายด้วย /exec', 'error', 7000); return; }
     if (url && !v('setUser')) { toast('กรุณากรอกชื่อผู้บันทึก', 'error'); return; }
+    if (!url && GAS_URL && !confirm_off_ok) { confirm_off_ok = true; toast('ช่อง URL ว่าง = ใช้งานแบบออฟไลน์ (ไม่บันทึกขึ้น Sheets) — กดบันทึกอีกครั้งเพื่อยืนยัน หรือกด "ใช้ URL ที่ฝังในแอป"', 'warn', 7000); return; }
     const changed = url !== App.gasUrl;
     App.gasUrl = url; App.user = v('setUser');
     App.rpt = { to: v('rpTo'), makerPos: v('rpMakerPos'), checker: v('rpChecker'), checkerPos: v('rpCheckerPos'), approver: v('rpApprover'), approverPos: v('rpApproverPos') };
@@ -2798,7 +2815,7 @@ async function openHolidays() {
   };
   document.getElementById('hlCancel').onclick = closeModal;
   document.getElementById('hlSave').onclick = async (ev) => {
-    const btn = ev.currentTarget, next = { custom: work.custom.sort((a, b) => a.d < b.d ? -1 : 1), off: [...work.off].sort() };
+    const btn = ev.currentTarget, next = { custom: work.custom.sort((a, b) => a.d < b.d ? -1 : 1), off: [...work.off].sort(), updatedAt: new Date().toISOString(), by: App.user || '' };
     setBtnLoading(btn, true, 'กำลังบันทึก…');
     try {
       if (App.gasUrl) {
@@ -2835,6 +2852,16 @@ function dayRollover() {
   if (App.fv === 'daily' && App.mk === t.mk) App.day = t.d;
   App.ver++; render();
 }
+function openNamePrompt() {
+  if (!document.getElementById('modal').classList.contains('hidden')) return;
+  openModal('👋 ยินดีต้อนรับ — ระบุชื่อผู้บันทึก', `<p class="text-sm mb-3">แอปเชื่อมต่อ Google Sheets ของแผนกไว้แล้ว กรุณาระบุชื่อ-สกุลของคุณ ชื่อนี้จะแสดงในประวัติการแก้ไข การปิดยอด และช่องผู้จัดทำในรายงาน</p>
+    <input id="npName" class="inp" maxlength="60" placeholder="เช่น นิรันดร์ ผันกลาง" autocomplete="name">
+    <div class="flex justify-end gap-2 mt-4"><button class="btn btn-ghost" id="npLater">ภายหลัง</button><button class="btn btn-primary" id="npOk">บันทึกชื่อ</button></div>`);
+  const inp = document.getElementById('npName'); setTimeout(() => inp.focus(), 50);
+  const ok = () => { const n = inp.value.trim().replace(/\s+/g, ' '); if (n.length < 2) { toast('กรุณาระบุชื่ออย่างน้อย 2 ตัวอักษร', 'error'); return; } App.user = n; savePrefs(); closeModal(); toast(`สวัสดีคุณ${n} — พร้อมใช้งาน`, 'success'); };
+  document.getElementById('npOk').onclick = ok; inp.onkeydown = (e) => { if (e.key === 'Enter') ok(); };
+  document.getElementById('npLater').onclick = closeModal;
+}
 function seedFromEmbed() {
   const months = {};
   Object.entries(EMBED.months).forEach(([k, m]) => {
@@ -2846,7 +2873,8 @@ function seedFromEmbed() {
 function init() {
   const prefs = loadPrefs();
   applyTheme(prefs.theme ? prefs.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches);
-  App.gasUrl = prefs.gasUrl || GAS_URL; App.user = prefs.user || ''; App.fit = prefs.fit !== false; App.rpt = { ...App.rpt, ...(prefs.rpt || {}) };
+  // ค่าเริ่มต้น = URL ที่ฝังในแอป · ผู้ใช้ตั้ง URL อื่นเองได้ · ลบ URL ในตั้งค่า = ใช้แบบออฟไลน์ (gasOff)
+  App.gasUrl = prefs.gasOff === true ? '' : (prefs.gasUrl || GAS_URL); App.user = prefs.user || ''; App.fit = prefs.fit !== false; App.rpt = { ...App.rpt, ...(prefs.rpt || {}) };
   if (prefs.target) { D.target = prefs.target; document.getElementById('targetInp').value = prefs.target; }
   const local = loadLocal();
   App.store.months = seedFromEmbed();
@@ -2871,7 +2899,8 @@ function init() {
   buildYearOptions();
   buildToolbar(); handleEvents(); buildMonthSelect(); render();
   initScreens();
-  if (App.gasUrl) { syncFromSheets(false); jsonp({ action: 'ping' }).then(r => { App.server = r; checkClock(r.time); }).catch(() => {}); }
+  if (App.gasUrl) { syncFromSheets(false); jsonp({ action: 'ping' }).then(r => { App.server = r; checkClock(r.time);
+    if ((+r.version || 0) < 5) toast(`Code.gs ที่เชื่อมอยู่เป็นรุ่น v${r.version || '2'} — กรุณาอัปเดตเป็น Code_Manpower_v5.gs (ปิดยอด/ปฏิทินวันหยุดร่วมกันจึงจะใช้ได้ครบ)`, 'warn', 9000); }).catch(() => {}); }
   else { setConn('none', 'ออฟไลน์'); document.getElementById('lastSync').textContent = 'ยังไม่ได้เชื่อมต่อ Google Sheets — ข้อมูลเก็บในเครื่องนี้ (เมนู → ตั้งค่า)'; }
   setInterval(dayRollover, 60000); // เปิดแอปค้างข้ามเที่ยงคืน → อัปเดต "วันนี้" / วันที่ค้างติ๊ก อัตโนมัติ
   if (typeof Chart === 'undefined') toast('โหลดไลบรารีกราฟไม่สำเร็จ กรุณาตรวจสอบอินเทอร์เน็ต', 'error', 8000);
@@ -2902,8 +2931,10 @@ function hideSplash() {
   if (el.classList.contains('hide')) return;
   el.classList.add('hide'); setTimeout(() => { if (el.classList.contains('hide')) el.style.display = 'none'; }, 650);
   resetIdle();
+  // ครั้งแรกที่ใช้งาน (เชื่อม Sheets แล้วแต่ยังไม่มีชื่อผู้บันทึก) → ขอชื่อก่อน เพื่อให้ประวัติการแก้ไขระบุตัวผู้บันทึกได้
+  if (App.gasUrl && !App.user && !App._namePrompted) { App._namePrompted = true; setTimeout(openNamePrompt, 500); }
   // เตือนวันที่ค้างติ๊กครั้งแรกที่เข้าแอป (ไม่รบกวนซ้ำทุกครั้งที่เปิดหน้าโลโก้)
-  if (!App._pendWarned && curMonth() && !isLocked()) { App._pendWarned = true; const pd = pendingDays(); if (pd.length) setTimeout(() => toast(`⏳ ${mLabel(App.mk)} มีวันที่ค้างติ๊ก ${pd.length} วัน (วันที่ ${pd.slice(0, 6).map(p => p.d).join(', ')}${pd.length > 6 ? ' …' : ''}) — กดปุ่ม "ค้างติ๊ก" เพื่อดูรายการ`, 'warn', 7000), 700); }
+  if (!App._pendWarned && curMonth() && !isLocked()) { App._pendWarned = true; const pd = pendingDays(), mk0 = App.mk; if (pd.length) setTimeout(() => toast(`⏳ ${mLabel(mk0)} มีวันที่ค้างติ๊ก ${pd.length} วัน (วันที่ ${pd.slice(0, 6).map(p => p.d).join(', ')}${pd.length > 6 ? ' …' : ''}) — กดปุ่ม "ค้างติ๊ก" เพื่อดูรายการ`, 'warn', 7000), 700); }
 }
 function idleStats() {
   // สรุปของวันนี้ (ถ้ามีตารางเดือนปัจจุบัน) ให้หัวหน้างานเห็นภาพรวมได้แม้หน้าจอพักอยู่
