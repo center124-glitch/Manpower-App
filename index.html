@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <!--
-  SBK Manpower App v15 — ระบบตรวจเช็คการมาปฏิบัติงาน + แดชบอร์ดวิเคราะห์อัตรากำลังพล (รวมในแอปเดียว)
-  v15: เพิ่มสถานะ "ลาแทนวันหยุดประจำปี (ลา Extra)" รหัส E — ติ๊กได้, นับเป็นการลา, แสดงในแดชบอร์ด/รายงาน/ส่งออก (ใช้ Code_Manpower_v5.gs เดิมได้ ไม่ต้องอัปเดต)
+  SBK Manpower App v14 — ระบบตรวจเช็คการมาปฏิบัติงาน + แดชบอร์ดวิเคราะห์อัตรากำลังพล (รวมในแอปเดียว)
   v14: คัดลอกสรุปประจำวันเลือกได้ ทุกผลัด / ผลัดกลางวัน / ผลัดกลางคืน (หน้าฟอร์มกรอก + เมนู)
   v13: ตัดช่องลงนาม "ผู้ตรวจสอบ" ในใบรายงาน, สถิติทุกจุดคิดจากวันที่ยืนยันแล้วชุดเดียวกัน (วันที่ติ๊กไม่ครบแยกเป็น "รอยืนยัน"),
        ตารางรายเดือนในรายงานรายปีตรงกับยอดรวม, ข้อความรุ่น Code.gs เป็น v5
@@ -22,7 +21,7 @@
       ไอคอนแอป (เพิ่มลงหน้าจอ), หน้าโลโก้เปิดแอป และหน้าพักหน้าจอเมื่อไม่ได้ใช้งาน
   แผนกลานจอดและจราจร · ศูนย์การค้า ซีคอนบางแค
   - ตารางติ๊กรูปแบบ WORKING SCHEDULE แสดงครบทั้งเดือนในหน้าเดียว (ปรับความกว้างช่องให้พอดีจอ)
-  - สถานะ: มา / มาสาย / OT / ทำแทนวันหยุด / เปลี่ยนวันหยุด (สลับวันหยุด) / OFF / ลาป่วย / ลากิจ / พักร้อน / ลาแทนวันหยุดประจำปี (ลา Extra) / ขาด
+  - สถานะ: มา / มาสาย / OT / ทำแทนวันหยุด / เปลี่ยนวันหยุด (สลับวันหยุด) / OFF / ลาป่วย / ลากิจ / พักร้อน / ขาด
   - บันทึกขึ้น Google Sheets (Code_Manpower_v5.gs — รองรับ v2–v4 เดิม) แล้วอ่านกลับตรวจยืนยันทุกครั้ง
   - แดชบอร์ด KPI / กราฟ / Insight / รายบุคคล / แนวโน้ม คำนวณจากข้อมูลชุดเดียวกับที่ติ๊ก
   Stack: Tailwind CDN + Chart.js + SheetJS + html2canvas + jsPDF (ไม่ต้องติดตั้ง)
@@ -555,8 +554,6 @@ function classifyCell(v) {
   const u = t.toUpperCase();
   if (u === 'OFF') return { s: 'OFF', n: 0, raw };
   if (u === 'OT') return { s: 'OT', n: 1, raw };                       // มาทำงานในวันหยุด (นับเป็นวันมาปฏิบัติงาน + OT)
-  // ลาแทนวันหยุดประจำปี (ลา Extra): รับ "EX", "Extra", "ลาExtra" และชื่อเต็ม — ต้องตรวจก่อน ทำแทน/หยุดแทน เพราะชื่อเต็มมีคำว่า "แทน" และ "หยุด"
-  if (u === 'EX' || /extra|ลาแทนวันหยุดประจำปี|แทนวันหยุดประจำปี|ลาแทนวันหยุดนักขัตฤกษ์/i.test(t)) return { s: 'EXTRA', n: 0, raw };
   if (/สาย/.test(t)) return { s: 'LATE', n: 1, raw };                  // มาสาย (นับเป็นวันมาปฏิบัติงาน + สถิติมาสาย)
   if (/^แผนทำแทน$/.test(t)) return { s: 'PLAN', n: 0, raw: 'J' };       // เวรทำแทนวันหยุดที่ย้าย (ยังไม่ติ๊ก)
   if (/ทำแทน/.test(t)) return { s: 'SWW', n: 1, raw };                 // มาทำงานแทนวันหยุดเดิมที่ถูกย้าย (นับเป็นวันทำงาน ไม่ใช่ OT)
@@ -567,7 +564,7 @@ function classifyCell(v) {
   if (/ขาด/.test(t)) return { s: 'ABS', n: 0, raw };
   if (/^[ABC]$/.test(u)) return { s: 'PLAN', n: 0, raw: u };         // รหัสกะตามแผน (ยังไม่ยืนยันการมาทำงาน)
   if (/ลาออก|หนีหาย|เลิกจ้าง|พ้นสภาพ/.test(t)) return { s: 'SEP', n: 0, raw };
-  return { s: 'OTHER', n: 0, raw };                                     // เช่น ET หรือหมายเหตุอื่น (EX = ลา Extra แยกเป็น EXTRA แล้ว)
+  return { s: 'OTHER', n: 0, raw };                                     // เช่น EX, ET หรือหมายเหตุอื่น
 }
 
 function cellVal(ws, r, c, XLSX) {
@@ -759,7 +756,7 @@ const EMBED = {"months":{"2026-09":{"meta":{"src":"สรุปอัตรา�
 /* ===================== รหัสสถานะ =====================
    รหัสภายใน 1 ตัวอักษร ↔ ค่าที่เก็บใน Google Sheets/Excel (อ่านด้วย classifyCell ใน parser)
    W มา · Y มาสาย · T OT (มาวันหยุด) · K ทำแทนวันหยุดที่ย้าย · H เปลี่ยนวันหยุด (หยุดวันใหม่) · J เวรทำแทน (รอติ๊ก)
-   O OFF · S ลาป่วย · P ลากิจ · V พักร้อน · E ลาแทนวันหยุดประจำปี (ลา Extra) · X ขาด · A/B/C เวรตามแผน · R พ้นสภาพ · ? รหัสอื่น · . ว่าง */
+   O OFF · S ลาป่วย · P ลากิจ · V พักร้อน · X ขาด · A/B/C เวรตามแผน · R พ้นสภาพ · ? รหัสอื่น · . ว่าง */
 const ST = {
   W: { label: 'มาปฏิบัติงาน', cell: '✓', sheet: '1', bg: '#10b981', fg: '#fff' },
   Y: { label: 'มาสาย', cell: 'สาย', sheet: 'สาย', bg: '#84cc16', fg: '#fff' },
@@ -770,7 +767,6 @@ const ST = {
   S: { label: 'ลาป่วย', cell: 'ป', sheet: 'ลาป่วย', bg: '#f59e0b', fg: '#fff' },
   P: { label: 'ลากิจ', cell: 'ก', sheet: 'ลากิจ', bg: '#8b5cf6', fg: '#fff' },
   V: { label: 'พักร้อน', cell: 'พร', sheet: 'พักร้อน', bg: '#0ea5e9', fg: '#fff' },
-  E: { label: 'ลาแทนวันหยุดประจำปี (ลา Extra)', cell: 'EX', sheet: 'ลาExtra', bg: '#c026d3', fg: '#fff' },
   X: { label: 'ขาดงาน', cell: 'ข', sheet: 'ขาด', bg: '#ef4444', fg: '#fff' },
   J: { label: 'เวรทำแทน (รอติ๊ก)', cell: 'แทน', sheet: 'แผนทำแทน', bg: 'transparent', fg: '#059669' },
   A: { label: 'เวรตามแผน A', cell: 'A', sheet: 'A', bg: 'transparent', fg: '#818cf8' },
@@ -780,11 +776,11 @@ const ST = {
   '?': { label: 'รหัสอื่นๆ', cell: '?', sheet: '', bg: '#f472b6', fg: '#fff' },
   '.': { label: 'ว่าง', cell: '', sheet: '', bg: 'transparent', fg: '' }
 };
-const PARSE_MAP = { W: 'W', LATE: 'Y', OT: 'T', SWW: 'K', SWO: 'H', OFF: 'O', SICK: 'S', PERS: 'P', VAC: 'V', EXTRA: 'E', ABS: 'X', SEP: 'R', OTHER: '?', EMPTY: '.' };
+const PARSE_MAP = { W: 'W', LATE: 'Y', OT: 'T', SWW: 'K', SWO: 'H', OFF: 'O', SICK: 'S', PERS: 'P', VAC: 'V', ABS: 'X', SEP: 'R', OTHER: '?', EMPTY: '.' };
 const isWork = (ch) => ch === 'W' || ch === 'Y' || ch === 'T' || ch === 'K'; // มาสาย/OT/ทำแทน นับเป็นวันมาปฏิบัติงาน
 const isPlan = (ch) => ch === 'A' || ch === 'B' || ch === 'C' || ch === 'J';
 const isOff = (ch) => ch === 'O' || ch === 'H';
-const isLeave = (ch) => ch === 'S' || ch === 'P' || ch === 'V' || ch === 'E'; // ลา Extra นับเป็นการลาเหมือนพักร้อน
+const isLeave = (ch) => ch === 'S' || ch === 'P' || ch === 'V';
 const TOOLS = [
   { id: 'tick', label: '✓ ติ๊ก', bg: '#10b981', tip: 'เวร→มา · OFF→OT · เวรทำแทน→ทำแทน · ติ๊กซ้ำ=ยกเลิก' },
   { id: 'W', label: 'มา', bg: ST.W.bg }, { id: 'Y', label: '⏰ สาย', bg: '#65a30d', tip: 'มาสาย (นับเป็นวันมาปฏิบัติงาน)' }, { id: 'K', label: 'ทำแทน', bg: ST.K.bg, tip: 'มาทำงานแทนวันหยุดที่เปลี่ยน (ไม่ใช่ OT)' },
@@ -792,7 +788,6 @@ const TOOLS = [
   { id: 'swap', label: '↔ สลับวันหยุด', bg: '#d97706', tip: 'คลิกวันหยุดเดิม แล้วคลิกวันใหม่ที่จะหยุดแทน (แถวเดียวกัน)' },
   { id: 'H', label: 'เปลี่ยนหยุด', bg: '#ca8a04', tip: 'หยุดในวันใหม่ (เปลี่ยนวันหยุด)' }, { id: 'O', label: 'OFF', bg: '#64748b' },
   { id: 'S', label: 'ป่วย', bg: ST.S.bg }, { id: 'P', label: 'กิจ', bg: ST.P.bg }, { id: 'V', label: 'พักร้อน', bg: ST.V.bg },
-  { id: 'E', label: 'ลา Extra', bg: ST.E.bg, tip: 'ลาแทนวันหยุดประจำปี (ลา Extra)' },
   { id: 'X', label: 'ขาด', bg: ST.X.bg }, { id: 'plan', label: '↺ เวร', bg: '#6366f1', tip: 'คืนเป็นรหัสเวรตามแผน (A/B/C)' },
   { id: 'clear', label: '⌫', bg: '#94a3b8', tip: 'ล้างช่อง' }
 ];
@@ -1365,7 +1360,7 @@ function renderSummary() {
     card('from-green-700 to-emerald-800', 'ทำแทนวันหยุด', fmt(t.k) + ' วัน', `รอติ๊ก ${t.j} วัน`) +
     card('from-cyan-600 to-sky-700', 'OT วันหยุด', fmt(t.ot) + ' วัน', 'ติ๊กในช่อง OFF') +
     card('from-yellow-500 to-amber-600', 'เปลี่ยนวันหยุด', fmt(t.h) + ' วัน', 'หยุดแทนวันใหม่') +
-    card('from-orange-500 to-orange-700', 'ลา', fmt(t.leave) + ' วัน', 'ป่วย / กิจ / พักร้อน / ลา Extra') +
+    card('from-orange-500 to-orange-700', 'ลา', fmt(t.leave) + ' วัน', 'ป่วย / กิจ / พักร้อน') +
     card('from-rose-500 to-red-600', 'ขาดงาน', fmt(t.abs) + ' วัน', t.abs ? 'โปรดตรวจสอบ' : 'ไม่มีขาดงาน') +
     card('from-slate-500 to-slate-700', 'เวรรอติ๊ก', fmt(t.plan) + ' ช่อง', 'A/B/C + เวรทำแทน') + progressCard(rows);
   fx.count(document.getElementById('summary'), 'sum');
@@ -1434,7 +1429,7 @@ function renderGrid() {
     h += `<tr class="tot"><td class="stk0"></td><td class="!text-left px-2 stk1 truncate">รวมยอด ${title}</td>${all.map(v => `<td>${v}</td>`).join('')}<td>${all.reduce((a, b) => a + b, 0)}</td><td colspan="5"></td></tr></tbody></table></div></div>`;
     html += h;
   });
-  html += `<div class="card p-2.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px]">${['W', 'Y', 'K', 'T', 'O', 'H', 'J', 'S', 'P', 'V', 'E', 'X', 'A', 'R'].map(k => `<span class="flex items-center gap-1"><span class="inline-grid place-items-center w-7 h-4 rounded text-[9px] font-bold" style="background:${ST[k].bg};color:${ST[k].fg};${isPlan(k) ? `border:1px dashed ${ST[k].fg}` : ''}">${ST[k].cell}</span>${k === 'A' ? 'เวรตามแผน A/B/C' : ST[k].label}</span>`).join('')}<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-500"></span>แก้ไขยังไม่บันทึก</span><span class="flex items-center gap-1"><span class="inline-block w-7 h-4 rounded hol-legend"></span>วันหยุดนักขัตฤกษ์</span></div>`;
+  html += `<div class="card p-2.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px]">${['W', 'Y', 'K', 'T', 'O', 'H', 'J', 'S', 'P', 'V', 'X', 'A', 'R'].map(k => `<span class="flex items-center gap-1"><span class="inline-grid place-items-center w-7 h-4 rounded text-[9px] font-bold" style="background:${ST[k].bg};color:${ST[k].fg};${isPlan(k) ? `border:1px dashed ${ST[k].fg}` : ''}">${ST[k].cell}</span>${k === 'A' ? 'เวรตามแผน A/B/C' : ST[k].label}</span>`).join('')}<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-500"></span>แก้ไขยังไม่บันทึก</span><span class="flex items-center gap-1"><span class="inline-block w-7 h-4 rounded hol-legend"></span>วันหยุดนักขัตฤกษ์</span></div>`;
   const pos = [...wrapEl.querySelectorAll('.gridwrap')].map(e => e.scrollLeft);
   wrapEl.innerHTML = html || '<div class="card p-8 text-center muted">ไม่พบพนักงานตามเงื่อนไข</div>';
   wrapEl.querySelectorAll('.gridwrap').forEach((e, i) => { e.scrollLeft = pos[i] || (scroll && t.mk === mk && !App._scrolled ? Math.max(0, (t.d - 5) * cw) : 0); });
@@ -1453,7 +1448,7 @@ function renderDaily() {
   const sb = (l, v, col) => `<div class="card p-2 text-center"><div class="text-[11px] muted">${l}</div><div class="text-lg font-bold font-head" style="color:${col}">${v}</div></div>`;
   document.getElementById('dailyStats').innerHTML = sb('มา', c.W, '#059669') + sb('มาสาย', c.Y, '#65a30d') + sb('ทำแทน', c.K, '#047857') + sb('OT', c.T, '#0891b2') + sb('รอติ๊ก', c.PL, '#6366f1') + sb('OFF', c.O, '#64748b') + sb('เปลี่ยนหยุด', c.H, '#ca8a04') + sb('ลา', c.L, '#ea580c') + sb('ขาด', c.X, '#e11d48');
   const groups = [['d', 's', 'กลางวัน · ตรวจการ/หัวหน้าทีม'], ['d', 'g', 'กลางวัน · รปภ.'], ['n', 's', 'กลางคืน · ตรวจการ/หัวหน้าทีม'], ['n', 'g', 'กลางคืน · รปภ.']];
-  const btns = [['W', '✓ มา'], ['Y', '⏰ สาย'], ['K', 'ทำแทน'], ['T', 'OT'], ['O', 'OFF'], ['H', 'เปลี่ยนหยุด'], ['S', 'ป่วย'], ['P', 'กิจ'], ['V', 'พักร้อน'], ['E', 'ลา Extra'], ['X', 'ขาด']];
+  const btns = [['W', '✓ มา'], ['Y', '⏰ สาย'], ['K', 'ทำแทน'], ['T', 'OT'], ['O', 'OFF'], ['H', 'เปลี่ยนหยุด'], ['S', 'ป่วย'], ['P', 'กิจ'], ['V', 'พักร้อน'], ['X', 'ขาด']];
   let html = '';
   groups.forEach(([sh, ro, title]) => {
     const gr = rows.filter(r => r.shift === sh && r.role === ro); if (!gr.length) return;
@@ -1489,11 +1484,11 @@ const D = { period: 'month', week: '', view: 'overview', f: { d1: 1, d2: 31, rol
 const DS = {
   W: { label: 'มาปฏิบัติงาน', color: '#10b981' }, Y: { label: 'มาสาย', color: '#84cc16' }, K: { label: 'มาทำแทนวันหยุด', color: '#047857' }, T: { label: 'มาทำ OT (วันหยุด)', color: '#0891b2' },
   O: { label: 'หยุด (OFF)', color: '#94a3b8' }, H: { label: 'เปลี่ยนวันหยุด', color: '#eab308' }, S: { label: 'ลาป่วย', color: '#f59e0b' },
-  P: { label: 'ลากิจ', color: '#8b5cf6' }, V: { label: 'พักร้อน', color: '#0ea5e9' }, E: { label: 'ลาแทนวันหยุดประจำปี (ลา Extra)', color: '#c026d3' }, X: { label: 'ขาดงาน', color: '#ef4444' },
+  P: { label: 'ลากิจ', color: '#8b5cf6' }, V: { label: 'พักร้อน', color: '#0ea5e9' }, X: { label: 'ขาดงาน', color: '#ef4444' },
   LA: { label: 'ลาล่วงหน้า (ยังไม่ถึงวัน)', color: '#fcd34d' }, PL: { label: 'เวรรอติ๊ก', color: '#c7d2fe' }, PT: { label: 'ติ๊กแล้ว (วันที่ยังติ๊กไม่ครบ)', color: '#a78bfa' },
   '?': { label: 'รหัสอื่นๆ', color: '#f472b6' }, R: { label: 'พ้นสภาพ/ลาออก', color: '#475569' }, '.': { label: 'ไม่มีข้อมูล', color: 'transparent' }
 };
-const DS_ORDER = ['W', 'Y', 'K', 'T', 'O', 'H', 'S', 'P', 'V', 'E', 'X', 'LA', 'PL', 'PT', '?', 'R'];
+const DS_ORDER = ['W', 'Y', 'K', 'T', 'O', 'H', 'S', 'P', 'V', 'X', 'LA', 'PL', 'PT', '?', 'R'];
 const statusOf = (ch) => isPlan(ch) ? 'PL' : (ch || '.');
 const SEG = [
   { key: 'ds', label: 'กลางวัน · ตรวจการ/หน.ทีม', shift: 'd', role: 's', color: '#4f46e5' },
@@ -1592,7 +1587,7 @@ const holCounts = (h) => !!h && h.t !== 'gov' && h.t !== 'obs';
 //      เดิมนับ "มา" ทันทีแต่ "ขาด" ไปเป็นลาล่วงหน้า → % มาปฏิบัติงานสูงเกินจริงระหว่างติ๊ก และยอดไม่ตรงกับตารางสรุปรายวันในรายงาน
 //      ตอนนี้ทุกตัวเลขสถิติคิดจาก "วันที่ยืนยันแล้ว" ชุดเดียวกันทั้งแดชบอร์ด/รายงาน/ส่งออก
 function recStats(r, conf, hol) {
-  const o = { W: 0, Y: 0, K: 0, T: 0, O: 0, H: 0, Oc: 0, Hc: 0, S: 0, P: 0, V: 0, E: 0, X: 0, LA: 0, PL: 0, PT: 0, R: 0, '?': 0, '.': 0, HW: 0 };
+  const o = { W: 0, Y: 0, K: 0, T: 0, O: 0, H: 0, Oc: 0, Hc: 0, S: 0, P: 0, V: 0, X: 0, LA: 0, PL: 0, PT: 0, R: 0, '?': 0, '.': 0, HW: 0 };
   r.c.forEach((ch, i) => {
     const st = statusOf(ch), pend = !!(conf && !conf[i]);
     if (pend && (isWork(st) || st === 'X')) { o.PT++; return; }
@@ -1602,17 +1597,17 @@ function recStats(r, conf, hol) {
     if (st === 'Y' || st === 'T' || st === 'K') { o.W++; o[st]++; }
     else o[st] = (o[st] || 0) + 1;
   });
-  o.leave = o.S + o.P + o.V + o.E; o.sched = o.W + o.leave + o.X; o.rate = o.sched > 0 ? o.W / o.sched : null;
+  o.leave = o.S + o.P + o.V; o.sched = o.W + o.leave + o.X; o.rate = o.sched > 0 ? o.W / o.sched : null;
   o.ontime = o.W > 0 ? (o.W - o.Y) / o.W : null;
   return o;
 }
 function computeView(def = periodDef()) {
   const dd = dashData();
   const rows = periodRows(def), conf = def.days.map(x => dd.months[x.mk] ? confirmedDays(x.mk).has(x.d) : false);
-  const tot = { W: 0, Y: 0, K: 0, T: 0, O: 0, H: 0, Oc: 0, Hc: 0, S: 0, P: 0, V: 0, E: 0, X: 0, LA: 0, PL: 0, PT: 0, R: 0, '?': 0, '.': 0, HW: 0 };
+  const tot = { W: 0, Y: 0, K: 0, T: 0, O: 0, H: 0, Oc: 0, Hc: 0, S: 0, P: 0, V: 0, X: 0, LA: 0, PL: 0, PT: 0, R: 0, '?': 0, '.': 0, HW: 0 };
   const hol = def.days.map(x => holCounts(holidayAt(x.mk, x.d)) ? holidayAt(x.mk, x.d) : null);
   const people = rows.map(r => { const s = recStats(r, conf, hol); Object.keys(tot).forEach(k => tot[k] += s[k] || 0); return { r, s }; });
-  tot.leave = tot.S + tot.P + tot.V + tot.E; tot.sched = tot.W + tot.leave + tot.X;
+  tot.leave = tot.S + tot.P + tot.V; tot.sched = tot.W + tot.leave + tot.X;
   const daily = def.days.map((x, i) => {
     const row = { i, ...x, conf: conf[i], seg: { ds: 0, dg: 0, ns: 0, ng: 0 }, W: 0, Y: 0, T: 0, K: 0, O: 0, L: 0, X: 0, PL: 0 };
     rows.forEach(r => { const ch = r.c[i]; if (isWork(ch)) { row.W++; row.seg[r.shift + r.role]++; if (ch === 'Y') row.Y++; if (ch === 'T') row.T++; if (ch === 'K') row.K++; } else if (isOff(ch)) row.O++; else if (isLeave(ch)) row.L++; else if (ch === 'X') row.X++; else if (isPlan(ch)) row.PL++; });
@@ -1710,7 +1705,7 @@ function renderKPIs(v) {
     ['from-sky-500 to-blue-600', '📅', 'กำลังพลเฉลี่ย/วัน', fmt(v.avgDay, 1), 'คน', v.minDay ? `ต่ำสุด ${v.minDay.W} คน (${thShort(v.minDay.dt)}) · สูงสุด ${v.maxDay.W}` : 'ยังไม่มีวันที่ยืนยันข้อมูล'],
     ['from-fuchsia-500 to-pink-600', '🎯', 'อัตราการมาปฏิบัติงาน', rate === null ? '-' : fmt(rate, 1), rate === null ? '' : '%', `มา ÷ (มา + ลา + ขาด) ${prate !== null && crate !== null ? delta(crate, prate, true) : ''}`],
     ['from-lime-500 to-green-600', '⏰', 'มาสาย', fmt(t.Y), 'ครั้ง', `${v.people.filter(x => x.s.Y > 0).length} คน · ตรงเวลา ${t.W ? fmt((t.W - t.Y) / t.W * 100, 1) + '%' : '-'}`],
-    ['from-amber-500 to-red-600', '🩺', 'ลา / ขาดงาน', `${fmt(t.leave)} / ${fmt(t.X)}`, 'วัน', `ป่วย ${t.S} · กิจ ${t.P} · พักร้อน ${t.V} · Extra ${t.E}${t.LA ? ` · ล่วงหน้า ${t.LA}` : ''}`],
+    ['from-amber-500 to-red-600', '🩺', 'ลา / ขาดงาน', `${fmt(t.leave)} / ${fmt(t.X)}`, 'วัน', `ป่วย ${t.S} · กิจ ${t.P} · พักร้อน ${t.V}${t.LA ? ` · ล่วงหน้า ${t.LA}` : ''}`],
     ['from-cyan-600 to-teal-700', '⏱️', 'OT / ทำแทนวันหยุด', `${fmt(t.T)} / ${fmt(t.K)}`, 'วัน', `เปลี่ยนวันหยุด ${t.H} วัน · OFF ${fmt(t.O)} วัน`],
     ['from-violet-500 to-indigo-700', '🗓️', 'เวรรอติ๊ก', fmt(t.PL), 'เวร', (v.lastConf ? `ยืนยันข้อมูลถึง ${thShort(v.lastConf.dt)} ${v.lastConf.dt.getFullYear() + 543}` : 'ยังไม่มีวันที่ยืนยัน') + (t.PT ? ` · ติ๊กแล้ว ${fmt(t.PT)} ช่อง (รอติ๊กให้ครบวัน)` : '')]
   ];
@@ -1776,7 +1771,7 @@ function renderTopLeave(v) {
   const box = document.getElementById('topLeaveBox');
   if (!top.length) { if (D.charts.chTopLeave) { D.charts.chTopLeave.destroy(); delete D.charts.chTopLeave; } box.innerHTML = '<div class="h-full grid place-items-center text-sm muted">🎉 ไม่มีการลา ขาด หรือมาสายในช่วงที่เลือก</div>'; return; }
   if (!document.getElementById('chTopLeave')) box.innerHTML = '<canvas id="chTopLeave"></canvas>';
-  mkChart('chTopLeave', { type: 'bar', data: { labels: top.map(p => p.r.name.replace(/^(นาย|นางสาว|นาง|น\.ส\.)\s*/, '')), datasets: [['Y', 'มาสาย'], ['S', 'ลาป่วย'], ['P', 'ลากิจ'], ['V', 'พักร้อน'], ['E', 'ลา Extra'], ['X', 'ขาดงาน']].map(([k, l]) => ({ label: l, data: top.map(p => p.s[k]), backgroundColor: DS[k].color, borderRadius: 4 })) },
+  mkChart('chTopLeave', { type: 'bar', data: { labels: top.map(p => p.r.name.replace(/^(นาย|นางสาว|นาง|น\.ส\.)\s*/, '')), datasets: [['Y', 'มาสาย'], ['S', 'ลาป่วย'], ['P', 'ลากิจ'], ['V', 'พักร้อน'], ['X', 'ขาดงาน']].map(([k, l]) => ({ label: l, data: top.map(p => p.s[k]), backgroundColor: DS[k].color, borderRadius: 4 })) },
     options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: legendB }, scales: { x: axis({ stacked: true, beginAtZero: true, ticks: { precision: 0 } }), y: axis({ stacked: true }) }, onClick: (e, els) => { if (els.length) openPerson(top[els[0].index].r.code); } } });
 }
 
@@ -1798,7 +1793,7 @@ function buildInsights(v) {
   { const nn = swapList(v.def).filter(x => !x.s).length; if (nn) add('warn', '📝', 'เปลี่ยนวันหยุดโดยไม่มีบันทึกเหตุผล', `${nn} รายการ — เพิ่มเหตุผลได้ที่ ฟอร์มกรอก → บันทึกเปลี่ยนวันหยุด`); }
   if (t.T > 0) { const ot = v.people.filter(p => p.s.T > 0).sort((a, b) => b.s.T - a.s.T); add('info', '⏱️', 'มาทำ OT ในวันหยุด', `${t.T} วัน จาก ${ot.length} คน — มากสุด ${ot[0].r.name} (${ot[0].s.T} วัน)`); }
   const top = v.people.filter(p => p.s.leave + p.s.X > 0).sort((a, b) => (b.s.leave + b.s.X) - (a.s.leave + a.s.X));
-  if (top.length) { const p = top[0]; add(p.s.leave + p.s.X >= 4 ? 'warn' : 'info', '🩺', 'ลา/ขาดมากที่สุด', `${p.r.name} (${p.r.code}) รวม ${p.s.leave + p.s.X} วัน — ป่วย ${p.s.S} · กิจ ${p.s.P} · พักร้อน ${p.s.V} · Extra ${p.s.E} · ขาด ${p.s.X} · ผู้ลา/ขาดทั้งหมด ${top.length} คน`); }
+  if (top.length) { const p = top[0]; add(p.s.leave + p.s.X >= 4 ? 'warn' : 'info', '🩺', 'ลา/ขาดมากที่สุด', `${p.r.name} (${p.r.code}) รวม ${p.s.leave + p.s.X} วัน — ป่วย ${p.s.S} · กิจ ${p.s.P} · พักร้อน ${p.s.V} · ขาด ${p.s.X} · ผู้ลา/ขาดทั้งหมด ${top.length} คน`); }
   if (t.X > 0) add('bad', '⚠️', 'มีการขาดงาน', `รวม ${t.X} วัน: ${v.people.filter(p => p.s.X > 0).slice(0, 6).map(p => `${p.r.name} (${p.s.X})`).join(', ')}`);
   if (v.confDaily.length) { const pf = v.people.filter(p => p.s.sched > 0 && p.s.W === p.s.sched && !p.s.Y); add('good', '🏅', 'มาครบและตรงเวลา 100%', `${pf.length} จาก ${v.people.length} คน ไม่มีลา/ขาด/สาย (${pct(pf.length, v.people.length, 0)})`); }
   let adj = 0; const an = new Set();
@@ -1832,12 +1827,12 @@ function renderInsights(v) {
 const COLS = [
   { k: 'code', l: 'รหัส' }, { k: 'name', l: 'ชื่อ - สกุล' }, { k: 'role', l: 'ตำแหน่ง' }, { k: 'shift', l: 'ผลัด' },
   { k: 'W', l: 'มา', n: 1 }, { k: 'Y', l: 'สาย', n: 1 }, { k: 'K', l: 'ทำแทน', n: 1 }, { k: 'T', l: 'OT', n: 1 }, { k: 'O', l: 'OFF', n: 1 }, { k: 'H', l: 'เปลี่ยนหยุด', n: 1 },
-  { k: 'S', l: 'ป่วย', n: 1 }, { k: 'P', l: 'กิจ', n: 1 }, { k: 'V', l: 'พักร้อน', n: 1 }, { k: 'E', l: 'ลา Extra', n: 1 }, { k: 'X', l: 'ขาด', n: 1 }, { k: 'HW', l: '🎌 นักขัตฯ', n: 1 }, { k: 'leave', l: 'ลา+ขาด', n: 1 },
+  { k: 'S', l: 'ป่วย', n: 1 }, { k: 'P', l: 'กิจ', n: 1 }, { k: 'V', l: 'พักร้อน', n: 1 }, { k: 'X', l: 'ขาด', n: 1 }, { k: 'HW', l: '🎌 นักขัตฯ', n: 1 }, { k: 'leave', l: 'ลา+ขาด', n: 1 },
   { k: 'PL', l: 'รอติ๊ก', n: 1 }, { k: 'rate', l: '% มา', n: 1 }, { k: 'remark', l: 'หยุดประจำ' }
 ];
 function rowVal(p, k) {
   if (k === 'leave') return p.s.leave + p.s.X; if (k === 'rate') return p.s.rate ?? -1;
-  if (['W', 'Y', 'K', 'T', 'O', 'H', 'S', 'P', 'V', 'E', 'X', 'PL', 'HW'].includes(k)) return p.s[k];
+  if (['W', 'Y', 'K', 'T', 'O', 'H', 'S', 'P', 'V', 'X', 'PL', 'HW'].includes(k)) return p.s[k];
   if (k === 'role') return p.r.role === 's' ? 'ตรวจการ' : 'รปภ.';
   return p.r[k] || '';
 }
@@ -1852,7 +1847,7 @@ function renderTable(v) {
   const body = slice.map(p => { const r = p.s.rate, rc = r === null ? '' : r >= .97 ? 'text-emerald-600' : r >= .9 ? 'text-amber-600' : 'text-rose-600';
     return `<tr data-person="${esc(p.r.code)}"><td class="font-mono text-xs">${esc(p.r.code)}</td><td class="font-medium whitespace-nowrap">${esc(p.r.name)}</td><td class="whitespace-nowrap"><span class="chip">${p.r.role === 's' ? esc(p.r.tag || 'ตรวจการ') : 'รปภ.'}</span></td><td class="whitespace-nowrap">${p.r.shift === 'n' ? 'กลางคืน' : 'กลางวัน'}</td>
       <td class="text-right font-semibold text-emerald-600">${p.s.W}</td><td class="text-right text-lime-600 font-semibold">${nz(p.s.Y)}</td><td class="text-right">${nz(p.s.K)}</td><td class="text-right text-cyan-600">${nz(p.s.T)}</td><td class="text-right">${p.s.O}</td><td class="text-right text-amber-600">${nz(p.s.H)}</td>
-      <td class="text-right">${nz(p.s.S)}</td><td class="text-right">${nz(p.s.P)}</td><td class="text-right">${nz(p.s.V)}</td><td class="text-right">${nz(p.s.E)}</td><td class="text-right ${p.s.X ? 'text-rose-600 font-bold' : ''}">${nz(p.s.X)}</td><td class="text-right font-semibold">${nz(p.s.leave + p.s.X)}</td>
+      <td class="text-right">${nz(p.s.S)}</td><td class="text-right">${nz(p.s.P)}</td><td class="text-right">${nz(p.s.V)}</td><td class="text-right ${p.s.X ? 'text-rose-600 font-bold' : ''}">${nz(p.s.X)}</td><td class="text-right font-semibold">${nz(p.s.leave + p.s.X)}</td>
       <td class="text-right muted">${nz(p.s.PL)}</td><td class="text-right font-semibold ${rc}">${r === null ? '-' : fmt(r * 100, 1) + '%'}</td><td class="whitespace-nowrap muted">${esc(p.r.remark)}</td></tr>`; }).join('');
   document.getElementById('tblPeople').innerHTML = `<thead><tr>${th}</tr></thead><tbody>${body || `<tr><td colspan="${COLS.length}" class="text-center muted py-6">ไม่มีพนักงานตามเงื่อนไข</td></tr>`}</tbody>`;
   document.getElementById('tblCount').textContent = `${rows.length} คน · ${v.def.label}`;
@@ -1877,12 +1872,12 @@ function renderTrend() {
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: legendB, tooltip: { callbacks: { afterBody: (it) => { const r = rows[it[0].dataIndex]; return `อัตรากำลัง ${r.heads} คน · ยืนยัน ${r.conf}/${r.days} วัน · ${r.src}`; } } } },
       scales: { x: axis(), y: axis({ beginAtZero: true }), y1: axis({ beginAtZero: true, position: 'right', grid: { display: false } }) }, onClick: (e, els) => { if (els.length) gotoMonth(rows[els[0].index].k); } } });
   mkChart('chTrend2', { data: { labels: rows.map(r => r.short), datasets: [
-    ...[['Y', 'มาสาย'], ['S', 'ลาป่วย'], ['P', 'ลากิจ'], ['V', 'พักร้อน'], ['E', 'ลา Extra'], ['X', 'ขาดงาน'], ['T', 'OT']].map(([k, l]) => ({ type: 'bar', label: l, data: rows.map(r => r[k]), backgroundColor: DS[k].color, stack: k === 'T' ? 'o' : k === 'Y' ? 'y' : 'l', yAxisID: 'y' })),
+    ...[['Y', 'มาสาย'], ['S', 'ลาป่วย'], ['P', 'ลากิจ'], ['V', 'พักร้อน'], ['X', 'ขาดงาน'], ['T', 'OT']].map(([k, l]) => ({ type: 'bar', label: l, data: rows.map(r => r[k]), backgroundColor: DS[k].color, stack: k === 'T' ? 'o' : k === 'Y' ? 'y' : 'l', yAxisID: 'y' })),
     { type: 'line', label: '% มาปฏิบัติงาน', data: rows.map(r => r.rate === null ? null : +r.rate.toFixed(1)), borderColor: '#4f46e5', backgroundColor: '#4f46e5', tension: .3, yAxisID: 'y1' }] },
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: legendB }, scales: { x: axis({ stacked: true }), y: axis({ stacked: true, beginAtZero: true }), y1: axis({ position: 'right', suggestedMin: 85, max: 100, grid: { display: false }, ticks: { callback: (x) => x + '%' } }) }, onClick: (e, els) => { if (els.length) gotoMonth(rows[els[0].index].k); } } });
-  const H = ['เดือน', 'แหล่งข้อมูล', 'อัตรากำลัง', 'ยืนยัน', 'แรงงาน', 'เฉลี่ย/วัน', 'สาย', 'OT', 'ทำแทน', 'เปลี่ยนหยุด', 'ป่วย', 'กิจ', 'พักร้อน', 'ลา Extra', 'ขาด', '% มา'];
+  const H = ['เดือน', 'แหล่งข้อมูล', 'อัตรากำลัง', 'ยืนยัน', 'แรงงาน', 'เฉลี่ย/วัน', 'สาย', 'OT', 'ทำแทน', 'เปลี่ยนหยุด', 'ป่วย', 'กิจ', 'พักร้อน', 'ขาด', '% มา'];
   const nz = (x) => x || '';
-  document.getElementById('tblTrend').innerHTML = `<thead><tr>${H.map((h, i) => `<th class="${i > 1 ? 'text-right' : 'text-left'}">${h}</th>`).join('')}</tr></thead><tbody>${rows.slice().reverse().map(r => `<tr data-month="${r.k}" class="${r.k === App.mk ? 'bg-indigo-50 dark:bg-indigo-950/40' : ''}"><td class="font-medium whitespace-nowrap">${r.label}</td><td class="text-xs muted whitespace-nowrap">${esc(r.src)}</td><td class="text-right">${r.heads}</td><td class="text-right">${r.conf}/${r.days}</td><td class="text-right font-semibold">${fmt(r.W)}</td><td class="text-right">${fmt(r.avg, 1)}</td><td class="text-right">${nz(r.Y)}</td><td class="text-right">${nz(r.T)}</td><td class="text-right">${nz(r.K)}</td><td class="text-right">${nz(r.H)}</td><td class="text-right">${nz(r.S)}</td><td class="text-right">${nz(r.P)}</td><td class="text-right">${nz(r.V)}</td><td class="text-right">${nz(r.E)}</td><td class="text-right ${r.X ? 'text-rose-600 font-semibold' : ''}">${nz(r.X)}</td><td class="text-right font-semibold">${r.rate === null ? '-' : fmt(r.rate, 1) + '%'}</td></tr>`).join('')}</tbody>`;
+  document.getElementById('tblTrend').innerHTML = `<thead><tr>${H.map((h, i) => `<th class="${i > 1 ? 'text-right' : 'text-left'}">${h}</th>`).join('')}</tr></thead><tbody>${rows.slice().reverse().map(r => `<tr data-month="${r.k}" class="${r.k === App.mk ? 'bg-indigo-50 dark:bg-indigo-950/40' : ''}"><td class="font-medium whitespace-nowrap">${r.label}</td><td class="text-xs muted whitespace-nowrap">${esc(r.src)}</td><td class="text-right">${r.heads}</td><td class="text-right">${r.conf}/${r.days}</td><td class="text-right font-semibold">${fmt(r.W)}</td><td class="text-right">${fmt(r.avg, 1)}</td><td class="text-right">${nz(r.Y)}</td><td class="text-right">${nz(r.T)}</td><td class="text-right">${nz(r.K)}</td><td class="text-right">${nz(r.H)}</td><td class="text-right">${nz(r.S)}</td><td class="text-right">${nz(r.P)}</td><td class="text-right">${nz(r.V)}</td><td class="text-right ${r.X ? 'text-rose-600 font-semibold' : ''}">${nz(r.X)}</td><td class="text-right font-semibold">${r.rate === null ? '-' : fmt(r.rate, 1) + '%'}</td></tr>`).join('')}</tbody>`;
 }
 function gotoMonth(k) { App.mk = k; D.f.d1 = 1; D.f.d2 = mDays(k); D.period = 'month'; D.view = 'overview'; App.tab = 'dash'; saveLocal(); buildMonthSelect(); render(); toast(`เปิดข้อมูล ${mLabel(k)}`, 'info'); }
 
@@ -1921,7 +1916,7 @@ function openPerson(code, mk = App.mk) {
 /* ---------- ส่งออกสรุป ---------- */
 function personRows(v) {
   return v.people.map(p => ({ 'รหัส': p.r.code, 'ชื่อ - สกุล': p.r.name, 'ตำแหน่ง': p.r.role === 's' ? (p.r.tag || 'ตรวจการ/หัวหน้าทีม') : 'รปภ.', 'ผลัด': p.r.shift === 'n' ? 'กลางคืน' : 'กลางวัน',
-    'มาปฏิบัติงาน (รวม)': p.s.W, 'มาสาย': p.s.Y, 'ทำแทนวันหยุด': p.s.K, 'OT วันหยุด': p.s.T, 'OFF': p.s.O, 'เปลี่ยนวันหยุด': p.s.H, 'ลาป่วย': p.s.S, 'ลากิจ': p.s.P, 'พักร้อน': p.s.V, 'ลาแทนวันหยุดประจำปี (ลา Extra)': p.s.E, 'ขาดงาน': p.s.X, 'มาทำงานวันหยุดนักขัตฤกษ์': p.s.HW, 'ลาล่วงหน้า': p.s.LA, 'เวรรอติ๊ก': p.s.PL, 'ติ๊กแล้ว (วันที่ยังไม่ครบ)': p.s.PT,
+    'มาปฏิบัติงาน (รวม)': p.s.W, 'มาสาย': p.s.Y, 'ทำแทนวันหยุด': p.s.K, 'OT วันหยุด': p.s.T, 'OFF': p.s.O, 'เปลี่ยนวันหยุด': p.s.H, 'ลาป่วย': p.s.S, 'ลากิจ': p.s.P, 'พักร้อน': p.s.V, 'ขาดงาน': p.s.X, 'มาทำงานวันหยุดนักขัตฤกษ์': p.s.HW, 'ลาล่วงหน้า': p.s.LA, 'เวรรอติ๊ก': p.s.PL, 'ติ๊กแล้ว (วันที่ยังไม่ครบ)': p.s.PT,
     '% มาปฏิบัติงาน': p.s.rate === null ? '' : +(p.s.rate * 100).toFixed(1), 'วันหยุดประจำ': p.r.remark }));
 }
 const stamp = () => (D.cur ? `${D.cur.def.type}_${D.cur.def.key}` : App.mk);
@@ -2012,7 +2007,7 @@ function deepAnalysis(v) {
         conf: cd.length, days: ds.length, W, L, X, Y, avg: cd.length ? W / cd.length : 0, rate: W + L + X ? W / (W + L + X) : null }; });
   }
   // 2) รูปแบบการลา/ขาด: ประเภท · ลาติดวันหยุด · ลาวันจันทร์/ศุกร์ เทียบสัดส่วนวันทำงานจันทร์/ศุกร์
-  const lp = { total: 0, S: 0, P: 0, V: 0, E: 0, X: 0, adj: 0, sickAdj: 0, monFri: 0, schedMF: 0, sched: 0, people: new Map() };
+  const lp = { total: 0, S: 0, P: 0, V: 0, X: 0, adj: 0, sickAdj: 0, monFri: 0, schedMF: 0, sched: 0, people: new Map() };
   v.rows.forEach(r => r.c.forEach((ch, i) => {
     if (!conf[i]) return;
     const wd = v.daily[i].wd, mf = wd === 1 || wd === 5;
@@ -2089,8 +2084,8 @@ function renderDeep(v) {
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <div class="card p-4"><h3 class="font-semibold mb-2">📅 ${A.bucketTitle}</h3><div class="scroll-x"><table class="tbl w-full"><thead><tr><th class="text-left">ช่วง</th><th class="text-left">เฉลี่ย/วัน</th><th class="text-right">% มา</th><th class="text-right">สาย</th><th class="text-right">ลา</th><th class="text-right">ขาด</th></tr></thead><tbody>${bucketRows || '<tr><td colspan="6" class="muted text-center">ไม่มีข้อมูล</td></tr>'}</tbody></table></div></div>
       <div class="card p-4"><h3 class="font-semibold mb-2">🩺 รูปแบบการลา / ขาดงาน</h3>
-        ${lp.total ? `<div class="flex h-4 rounded-full overflow-hidden mb-1.5 bg-slate-100">${bar(lp.S, '#f59e0b', 'ลาป่วย')}${bar(lp.P, '#8b5cf6', 'ลากิจ')}${bar(lp.V, '#0ea5e9', 'พักร้อน')}${bar(lp.E, '#c026d3', 'ลา Extra')}${bar(lp.X, '#ef4444', 'ขาด')}</div>
-        <div class="flex flex-wrap gap-x-3 text-xs mb-3"><span>🟧 ป่วย ${lp.S}</span><span>🟪 กิจ ${lp.P}</span><span>🟦 พักร้อน ${lp.V}</span><span><span style="color:#c026d3">■</span> Extra ${lp.E}</span><span>🟥 ขาด ${lp.X}</span><b>รวม ${lp.total} วัน</b></div>
+        ${lp.total ? `<div class="flex h-4 rounded-full overflow-hidden mb-1.5 bg-slate-100">${bar(lp.S, '#f59e0b', 'ลาป่วย')}${bar(lp.P, '#8b5cf6', 'ลากิจ')}${bar(lp.V, '#0ea5e9', 'พักร้อน')}${bar(lp.X, '#ef4444', 'ขาด')}</div>
+        <div class="flex flex-wrap gap-x-3 text-xs mb-3"><span>🟧 ป่วย ${lp.S}</span><span>🟪 กิจ ${lp.P}</span><span>🟦 พักร้อน ${lp.V}</span><span>🟥 ขาด ${lp.X}</span><b>รวม ${lp.total} วัน</b></div>
         <div class="grid grid-cols-2 gap-2 text-sm"><div class="rounded-xl p-2.5 bg-amber-50 dark:bg-amber-900/20"><div class="text-[11px] muted">ลา/ขาด ติดวันหยุด</div><div class="text-lg font-bold">${lp.adj} <span class="text-xs font-normal">(${pctTxt(lp.adj / lt, 0)})</span></div><div class="text-[11px] muted">ลาป่วยติดวันหยุด ${lp.sickAdj} วัน</div></div>
           <div class="rounded-xl p-2.5 bg-violet-50 dark:bg-violet-900/20"><div class="text-[11px] muted">ลา/ขาด วันจันทร์-ศุกร์</div><div class="text-lg font-bold">${pctTxt(lp.mfShare, 0)}</div><div class="text-[11px] ${lp.mfShare > lp.mfBase * 1.3 && lp.total >= 5 ? 'text-rose-600 font-semibold' : 'muted'}">ปกติควรใกล้ ${pctTxt(lp.mfBase, 0)} (สัดส่วนวันทำงาน จ./ศ.)</div></div></div>
         <div class="text-xs mt-2"><b>ลา/ขาดตั้งแต่ 3 ครั้ง:</b> ${lp.repeat.length ? lp.repeat.slice(0, 6).map(x => `${esc(shortName(x.r.name))} (${x.n})`).join(', ') : 'ไม่มี'}</div>` : '<div class="text-sm muted">ไม่มีการลา/ขาดงานในช่วงนี้ 🎉</div>'}</div>
@@ -2140,7 +2135,7 @@ function deepReportHtml(v, secNo) {
 `, bottom: `
     <div style="display:grid;grid-template-columns:1.05fr 1fr 1fr;gap:10px;margin-top:6px">
       <div>${rptSec(secNo + 2, A.bucketTitle)}${bk}</div>
-      <div>${rptSec(secNo + 3, 'รูปแบบการลา / ขาดงาน')}${box('สรุป', lp.total ? `ลา/ขาดรวม <b>${lp.total}</b> วัน (ป่วย ${lp.S} · กิจ ${lp.P} · พักร้อน ${lp.V} · Extra ${lp.E} · ขาด ${lp.X})<br>ลา/ขาดติดวันหยุด <b>${lp.adj}</b> วัน (${pctTxt(lp.adj / lt, 0)}) · ลาป่วยติดวันหยุด ${lp.sickAdj} วัน<br>ลา/ขาดวันจันทร์-ศุกร์ <b>${pctTxt(lp.mfShare, 0)}</b> (สัดส่วนวันทำงาน จ./ศ. ${pctTxt(lp.mfBase, 0)})${lp.mfShare > lp.mfBase * 1.3 && lp.total >= 5 ? ' <b style="color:#dc2626">— สูงกว่าปกติ ควรติดตาม</b>' : ''}<br>ลา/ขาดตั้งแต่ 3 ครั้ง: ${lp.repeat.length ? lp.repeat.slice(0, 6).map(x => `${esc(shortName(x.r.name))} (${x.n})`).join(', ') : 'ไม่มี'}` : 'ไม่มีการลา/ขาดงานในช่วงนี้')}
+      <div>${rptSec(secNo + 3, 'รูปแบบการลา / ขาดงาน')}${box('สรุป', lp.total ? `ลา/ขาดรวม <b>${lp.total}</b> วัน (ป่วย ${lp.S} · กิจ ${lp.P} · พักร้อน ${lp.V} · ขาด ${lp.X})<br>ลา/ขาดติดวันหยุด <b>${lp.adj}</b> วัน (${pctTxt(lp.adj / lt, 0)}) · ลาป่วยติดวันหยุด ${lp.sickAdj} วัน<br>ลา/ขาดวันจันทร์-ศุกร์ <b>${pctTxt(lp.mfShare, 0)}</b> (สัดส่วนวันทำงาน จ./ศ. ${pctTxt(lp.mfBase, 0)})${lp.mfShare > lp.mfBase * 1.3 && lp.total >= 5 ? ' <b style="color:#dc2626">— สูงกว่าปกติ ควรติดตาม</b>' : ''}<br>ลา/ขาดตั้งแต่ 3 ครั้ง: ${lp.repeat.length ? lp.repeat.slice(0, 6).map(x => `${esc(shortName(x.r.name))} (${x.n})`).join(', ') : 'ไม่มี'}` : 'ไม่มีการลา/ขาดงานในช่วงนี้')}
         <div style="height:6px"></div>${box('การเปลี่ยนวันหยุด', `ใช้งาน <b>${sw.active}</b> · ทำแทนแล้ว ${sw.done} · รอทำแทน ${sw.wait} · ไม่ได้มาทำแทน ${sw.miss} · ยกเลิก ${sw.cancelled}${sw.none ? ` · <b style="color:#dc2626">ไม่มีบันทึกเหตุผล ${sw.none}</b>` : ''}<br>เหตุผลที่พบบ่อย: ${sw.reasons.length ? sw.reasons.map(([t, n]) => `${esc(t)} (${n})`).join(', ') : '-'}`)}</div>
       <div>${rptSec(secNo + 4, 'จัดอันดับรายบุคคล')}${box(`มาครบ ไม่สาย ไม่ลา (${rk.perfect.length} คน)`, rk.perfect.length ? rk.perfect.slice(0, 14).map(n => esc(shortName(n))).join(', ') + (rk.perfect.length > 14 ? ` และอีก ${rk.perfect.length - 14} คน` : '') : '-')}
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px">${box('% มาต่ำสุด', li(rk.low, p => `${esc(shortName(p.r.name))} <b>${pctTxt(p.s.rate)}</b>`, 'ไม่มีผู้ที่มาต่ำกว่า 100%'))}${box('OT + ทำแทนมากสุด', li(rk.ot, p => `${esc(shortName(p.r.name))} <b>${p.s.T + p.s.K}</b>`, '-'))}${box('มาสายบ่อย', li(rk.late, p => `${esc(shortName(p.r.name))} <b>${p.s.Y}</b>`, 'ไม่มี'))}${box('ทำงานวันนักขัตฤกษ์', li(rk.hw, p => `${esc(shortName(p.r.name))} <b>${p.s.HW}</b>`, '-'))}</div></div>
@@ -2191,7 +2186,7 @@ function buildReportPages(v, host, scale = 1) {
   host.innerHTML = '';
   const t = v.tot, rate = t.sched ? fmt(t.W / t.sched * 100, 1) + '%' : '-', pages = [], charts = [];
   const kp = [['อัตรากำลัง', fmt(v.heads) + ' คน', `ตก./หน.ทีม ${v.sup} · รปภ. ${v.guard}`, RC.navy], ['แรงงานรวม', fmt(t.W) + ' คน-วัน', 'รวม สาย/OT/ทำแทน', '#047857'], ['เฉลี่ยต่อวัน', fmt(v.avgDay, 1) + ' คน', v.minDay ? `ต่ำสุด ${v.minDay.W} · สูงสุด ${v.maxDay.W}` : '-', '#0369a1'], ['% มาปฏิบัติงาน', rate, 'มา ÷ (มา+ลา+ขาด)', '#7c3aed'],
-    ['มาสาย', fmt(t.Y) + ' ครั้ง', `ตรงเวลา ${t.W ? fmt((t.W - t.Y) / t.W * 100, 1) + '%' : '-'}`, '#4d7c0f'], ['ลา / ขาด', `${t.leave} / ${t.X} วัน`, `ป่วย ${t.S} · กิจ ${t.P} · พร. ${t.V} · EX ${t.E}`, '#b45309'], ['OT / ทำแทน', `${t.T} / ${t.K} วัน`, `เปลี่ยนวันหยุด ${t.H}`, '#0e7490'], ['เวรรอติ๊ก', fmt(t.PL) + ' เวร', `ยืนยันแล้ว ${v.confDaily.length}/${v.daily.length} วัน${t.PT ? ` · ติ๊กแล้วรอครบ ${fmt(t.PT)}` : ''}`, '#475569']];
+    ['มาสาย', fmt(t.Y) + ' ครั้ง', `ตรงเวลา ${t.W ? fmt((t.W - t.Y) / t.W * 100, 1) + '%' : '-'}`, '#4d7c0f'], ['ลา / ขาด', `${t.leave} / ${t.X} วัน`, `ป่วย ${t.S} · กิจ ${t.P} · พร. ${t.V}`, '#b45309'], ['OT / ทำแทน', `${t.T} / ${t.K} วัน`, `เปลี่ยนวันหยุด ${t.H}`, '#0e7490'], ['เวรรอติ๊ก', fmt(t.PL) + ' เวร', `ยืนยันแล้ว ${v.confDaily.length}/${v.daily.length} วัน${t.PT ? ` · ติ๊กแล้วรอครบ ${fmt(t.PT)}` : ''}`, '#475569']];
   const kpi = `<div style="display:grid;grid-template-columns:repeat(8,1fr);gap:7px">${kp.map(([l, val, s, c]) => `<div style="border:1px solid ${RC.line};border-top:4px solid ${c};border-radius:8px;padding:5px 8px;background:#fff"><div style="font-size:10.5px;color:${RC.muted}">${l}</div><div style="font-family:Prompt;font-weight:700;font-size:16px;color:${c};line-height:1.3">${val}</div><div style="font-size:9.5px;color:${RC.muted};white-space:nowrap;overflow:hidden">${s}</div></div>`).join('')}</div>`;
   const segRows = SEG.map(s => { const ps = v.people.filter(p => p.r.shift + p.r.role === s.key); if (!ps.length) return ''; const sm = (f) => ps.reduce((a, p) => a + f(p.s), 0); const W = sm(x => x.W), L = sm(x => x.leave), X = sm(x => x.X); return `<tr><td style="${TD}">${s.label}</td>${[ps.length, W, sm(x => x.Y), sm(x => x.T), sm(x => x.K), sm(x => x.O + x.H), L, X].map(n => `<td style="${TD}text-align:right">${fmt(n)}</td>`).join('')}<td style="${TD}text-align:right;font-weight:700">${pct(W, W + L + X)}</td></tr>`; }).join('');
   const segTotal = `<tr style="background:${RC.soft};font-weight:700"><td style="${TD}">รวม</td>${[v.heads, t.W, t.Y, t.T, t.K, t.O + t.H, t.leave, t.X].map(n => `<td style="${TD}text-align:right">${fmt(n)}</td>`).join('')}<td style="${TD}text-align:right">${rate}</td></tr>`;
@@ -2376,7 +2371,7 @@ function cellPop(code, day, x, y) {
   const days = mDays(App.mk), cur = r.c[day - 1];
   const opts = Array.from({ length: days }, (_, i) => i + 1).filter(d => d !== day).map(d => `<option value="${d}">${d} (${WD_S[wdOf(App.mk, d)]})${isWork(r.c[d - 1]) ? ' · ติ๊กแล้ว' : ''}</option>`).join('');
   showPop(x, y, `<div class="px-3 py-1 text-xs muted">${esc(r.name)} · วัน${WD[wdOf(App.mk, day)]}ที่ ${day}</div>
-    ${['W', 'Y', 'K', 'T', 'O', 'H', 'S', 'P', 'V', 'E', 'X'].map(k => popItem(`data-pset="${k}"`, k, ST[k].label)).join('')}
+    ${['W', 'Y', 'K', 'T', 'O', 'H', 'S', 'P', 'V', 'X'].map(k => popItem(`data-pset="${k}"`, k, ST[k].label)).join('')}
     ${popItem('data-pset="J"', 'J', 'เวรทำแทน (รอติ๊ก)')}
     ${(() => { const sw = swapAt(curMonth(), code, day); return sw ? popItem(`data-swedit="${esc(sw.id)}"`, null, '📝 ดู/แก้ไขบันทึกเหตุผลการเปลี่ยนวันหยุด') : cur === 'H' ? popItem(`data-swnew="${esc(code)}|${day}"`, null, '📝 เพิ่มบันทึกเหตุผล (ยังไม่มี)') : ''; })()}
     ${popItem('data-pset="plan"', null, `↺ คืนเป็นเวร ${esc(r.plan || '')}`)}${popItem('data-pset="clear"', null, '⌫ ล้างช่อง')}
