@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <!--
-  SBK Manpower App v14 — ระบบตรวจเช็คการมาปฏิบัติงาน + แดชบอร์ดวิเคราะห์อัตรากำลังพล (รวมในแอปเดียว)
+  SBK Manpower App v17 — ระบบตรวจเช็คการมาปฏิบัติงาน + แดชบอร์ดวิเคราะห์อัตรากำลังพล (รวมในแอปเดียว)
+  v17: ยุบปุ่มซ้ำ — ตัดปุ่ม "📝 บันทึกเปลี่ยนวันหยุด" บนแถบเครื่องมือ (ซ้ำกับแท็บ) เหลือปุ่ม "+ เพิ่มรายการ" ในแผงใต้ตาราง · เปลี่ยนชื่อแท็บเป็น "📋 รายการเปลี่ยนวันหยุด" ให้ต่างจากเครื่องมือ "↔ เปลี่ยนวันหยุด"
+  v16: ปุ่ม "คัดลอกสรุป" และ "บันทึกเปลี่ยนวันหยุด" ในหน้าตารางทั้งเดือน, ช่องแสดง "จาก/ไป วันที่" ชัดขึ้น, รายการเปลี่ยนวันหยุดใต้ตาราง (แก้ไข/ยกเลิกได้),
+       แก้ "จากวันไหนไปวันไหน" ในบันทึกเดิมได้ (ช่องในตารางปรับตามอัตโนมัติ + ย้อนกลับได้), ใช้คำว่า "เปลี่ยนวันหยุด" คำเดียว (ตัดคำว่า "สลับ")
+  v15: เพิ่มสถานะ "ลาแทนวันหยุดประจำปี (ลา Extra)" รหัส E — ติ๊กได้, นับเป็นการลา, แสดงในแดชบอร์ด/รายงาน/ส่งออก (ใช้ Code_Manpower_v5.gs เดิมได้ ไม่ต้องอัปเดต)
   v14: คัดลอกสรุปประจำวันเลือกได้ ทุกผลัด / ผลัดกลางวัน / ผลัดกลางคืน (หน้าฟอร์มกรอก + เมนู)
   v13: ตัดช่องลงนาม "ผู้ตรวจสอบ" ในใบรายงาน, สถิติทุกจุดคิดจากวันที่ยืนยันแล้วชุดเดียวกัน (วันที่ติ๊กไม่ครบแยกเป็น "รอยืนยัน"),
        ตารางรายเดือนในรายงานรายปีตรงกับยอดรวม, ข้อความรุ่น Code.gs เป็น v5
@@ -21,7 +25,7 @@
       ไอคอนแอป (เพิ่มลงหน้าจอ), หน้าโลโก้เปิดแอป และหน้าพักหน้าจอเมื่อไม่ได้ใช้งาน
   แผนกลานจอดและจราจร · ศูนย์การค้า ซีคอนบางแค
   - ตารางติ๊กรูปแบบ WORKING SCHEDULE แสดงครบทั้งเดือนในหน้าเดียว (ปรับความกว้างช่องให้พอดีจอ)
-  - สถานะ: มา / มาสาย / OT / ทำแทนวันหยุด / เปลี่ยนวันหยุด (สลับวันหยุด) / OFF / ลาป่วย / ลากิจ / พักร้อน / ขาด
+  - สถานะ: มา / มาสาย / OT / ทำแทนวันหยุด / เปลี่ยนวันหยุด / OFF / ลาป่วย / ลากิจ / พักร้อน / ลาแทนวันหยุดประจำปี (ลา Extra) / ขาด
   - บันทึกขึ้น Google Sheets (Code_Manpower_v5.gs — รองรับ v2–v4 เดิม) แล้วอ่านกลับตรวจยืนยันทุกครั้ง
   - แดชบอร์ด KPI / กราฟ / Insight / รายบุคคล / แนวโน้ม คำนวณจากข้อมูลชุดเดียวกับที่ติ๊ก
   Stack: Tailwind CDN + Chart.js + SheetJS + html2canvas + jsPDF (ไม่ต้องติดตั้ง)
@@ -268,8 +272,9 @@
   .hol-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #e11d48; margin-left: 2px; vertical-align: super; }
   /* ===== v10: แสดงคู่วันที่เปลี่ยนวันหยุดในช่อง ===== */
   .ws td.cell.hassub { line-height: 1; padding-top: 1px; }
-  .ws td.cell .swsub { display: block; font-size: 8px; font-weight: 800; line-height: 1; margin-top: 1px; opacity: .95; letter-spacing: -.2px; }
-  .ws.tight td.cell .swsub { font-size: 7px; }
+  .ws td.cell .swsub { display: block; font-size: 9px; font-weight: 800; line-height: 1; margin-top: 1px; opacity: .95; letter-spacing: -.2px; }
+  .ws.tight td.cell .swsub { font-size: 8px; }
+  .ws td.cell.long { font-size: 8.5px; letter-spacing: -.3px; } .ws.tight td.cell.long { font-size: 7.5px; }
   #miTheme { display: none; } @media (max-width: 639px) { #miTheme { display: block; } }
 </style>
 </head>
@@ -349,9 +354,10 @@
   </div>
   <!-- เมนูย่อย: ฟอร์มกรอก -->
   <div id="toolRow" class="max-w-[1800px] mx-auto px-3 sm:px-4 pb-2 flex flex-wrap items-center gap-1.5">
-    <div class="seg mr-1 hscroll max-w-full" role="tablist"><button data-fv="grid">🗓️ ตารางทั้งเดือน</button><button data-fv="daily">📱 เช็ครายวัน</button><button data-fv="swaps">↔ เปลี่ยนวันหยุด</button></div>
+    <div class="seg mr-1 hscroll max-w-full" role="tablist"><button data-fv="grid">🗓️ ตารางทั้งเดือน</button><button data-fv="daily">📱 เช็ครายวัน</button><button data-fv="swaps">📋 รายการเปลี่ยนวันหยุด</button></div>
     <button id="btnPending" class="hidden pend-btn" title="วันที่ค้างติ๊ก"></button>
     <div id="toolbar" class="hscroll xl:flex-wrap items-center gap-1.5 order-last w-full xl:order-none xl:w-auto pb-0.5"></div>
+    <button class="btn btn-ghost !py-1 !px-2 text-xs" id="btnCopyGrid" title="คัดลอกสรุปประจำวัน (เลือกวัน/ผลัดได้) แล้วนำไปวางใน LINE">📋<span class="lg2-hide"> คัดลอกสรุป</span></button>
     <button class="btn btn-ghost !py-1 !px-2 text-xs ml-auto" id="btnUndo" title="ย้อนกลับ (Ctrl+Z)" disabled>↶<span class="lg2-hide"> ย้อนกลับ</span></button>
     <button class="btn btn-ghost !py-1 !px-2 text-xs xs-hide" id="btnFit" title="สลับ: พอดีจอ / ขยายช่อง">⤢ พอดีจอ</button>
   </div>
@@ -413,7 +419,7 @@
     </div>
     <div id="swapStats" class="grid grid-cols-2 sm:grid-cols-5 gap-2"></div>
     <div class="card p-3"><div class="scroll-x"><table class="tbl w-full" id="tblSwaps"></table></div>
-      <p class="text-xs muted mt-2">ระบบบังคับใส่เหตุผลทุกครั้งที่ใช้ "↔ สลับวันหยุด" · รายการที่แก้ไข/ยกเลิกจะเก็บผู้แก้ไขและเวลาไว้ · แสดงตามช่วงเวลาและตัวกรองด้านบน</p></div>
+      <p class="text-xs muted mt-2">ระบบบังคับใส่เหตุผลทุกครั้งที่ใช้ "↔ เปลี่ยนวันหยุด" · รายการที่แก้ไข/ยกเลิกจะเก็บผู้แก้ไขและเวลาไว้ · แสดงตามช่วงเวลาและตัวกรองด้านบน</p></div>
   </section>
 
   <!-- ===== TAB: ภาพรวม ===== -->
@@ -554,17 +560,19 @@ function classifyCell(v) {
   const u = t.toUpperCase();
   if (u === 'OFF') return { s: 'OFF', n: 0, raw };
   if (u === 'OT') return { s: 'OT', n: 1, raw };                       // มาทำงานในวันหยุด (นับเป็นวันมาปฏิบัติงาน + OT)
+  // ลาแทนวันหยุดประจำปี (ลา Extra): รับ "EX", "Extra", "ลาExtra" และชื่อเต็ม — ต้องตรวจก่อน ทำแทน/หยุดแทน เพราะชื่อเต็มมีคำว่า "แทน" และ "หยุด"
+  if (u === 'EX' || /extra|ลาแทนวันหยุดประจำปี|แทนวันหยุดประจำปี|ลาแทนวันหยุดนักขัตฤกษ์/i.test(t)) return { s: 'EXTRA', n: 0, raw };
   if (/สาย/.test(t)) return { s: 'LATE', n: 1, raw };                  // มาสาย (นับเป็นวันมาปฏิบัติงาน + สถิติมาสาย)
   if (/^แผนทำแทน$/.test(t)) return { s: 'PLAN', n: 0, raw: 'J' };       // เวรทำแทนวันหยุดที่ย้าย (ยังไม่ติ๊ก)
   if (/ทำแทน/.test(t)) return { s: 'SWW', n: 1, raw };                 // มาทำงานแทนวันหยุดเดิมที่ถูกย้าย (นับเป็นวันทำงาน ไม่ใช่ OT)
-  if (/เปลี่ยนหยุด|หยุดแทน|สลับหยุด|สลับวันหยุด/.test(t)) return { s: 'SWO', n: 0, raw }; // หยุดในวันใหม่ที่ย้ายมา
+  if (/เปลี่ยนหยุด|เปลี่ยนวันหยุด|หยุดแทน|สลับหยุด|สลับวันหยุด/.test(t)) return { s: 'SWO', n: 0, raw }; // หยุดในวันใหม่ที่ย้ายมา
   if (/ป่วย/.test(t)) return { s: 'SICK', n: 0, raw };
   if (/กิจ/.test(t)) return { s: 'PERS', n: 0, raw };
   if (/^พร$|พักร้อน|พักผ่อน/.test(t)) return { s: 'VAC', n: 0, raw };
   if (/ขาด/.test(t)) return { s: 'ABS', n: 0, raw };
   if (/^[ABC]$/.test(u)) return { s: 'PLAN', n: 0, raw: u };         // รหัสกะตามแผน (ยังไม่ยืนยันการมาทำงาน)
   if (/ลาออก|หนีหาย|เลิกจ้าง|พ้นสภาพ/.test(t)) return { s: 'SEP', n: 0, raw };
-  return { s: 'OTHER', n: 0, raw };                                     // เช่น EX, ET หรือหมายเหตุอื่น
+  return { s: 'OTHER', n: 0, raw };                                     // เช่น ET หรือหมายเหตุอื่น (EX = ลา Extra แยกเป็น EXTRA แล้ว)
 }
 
 function cellVal(ws, r, c, XLSX) {
@@ -756,19 +764,20 @@ const EMBED = {"months":{"2026-09":{"meta":{"src":"สรุปอัตรา�
 /* ===================== รหัสสถานะ =====================
    รหัสภายใน 1 ตัวอักษร ↔ ค่าที่เก็บใน Google Sheets/Excel (อ่านด้วย classifyCell ใน parser)
    W มา · Y มาสาย · T OT (มาวันหยุด) · K ทำแทนวันหยุดที่ย้าย · H เปลี่ยนวันหยุด (หยุดวันใหม่) · J เวรทำแทน (รอติ๊ก)
-   O OFF · S ลาป่วย · P ลากิจ · V พักร้อน · X ขาด · A/B/C เวรตามแผน · R พ้นสภาพ · ? รหัสอื่น · . ว่าง */
+   O OFF · S ลาป่วย · P ลากิจ · V พักร้อน · E ลาแทนวันหยุดประจำปี (ลา Extra) · X ขาด · A/B/C เวรตามแผน · R พ้นสภาพ · ? รหัสอื่น · . ว่าง */
 const ST = {
   W: { label: 'มาปฏิบัติงาน', cell: '✓', sheet: '1', bg: '#10b981', fg: '#fff' },
   Y: { label: 'มาสาย', cell: 'สาย', sheet: 'สาย', bg: '#84cc16', fg: '#fff' },
   K: { label: 'มาทำแทนวันหยุด', cell: 'แทน', sheet: 'ทำแทน', bg: '#047857', fg: '#fff' },
   T: { label: 'มาทำ OT (วันหยุด)', cell: 'OT', sheet: 'OT', bg: '#0891b2', fg: '#fff' },
   O: { label: 'หยุด (OFF)', cell: 'OFF', sheet: 'OFF', bg: '#cbd5e1', fg: '#334155' },
-  H: { label: 'เปลี่ยนวันหยุด (หยุดแทน)', cell: 'สลับ', sheet: 'เปลี่ยนหยุด', bg: '#fde68a', fg: '#92400e' },
+  H: { label: 'เปลี่ยนวันหยุด (หยุดแทน)', cell: 'หยุดแทน', sheet: 'เปลี่ยนหยุด', bg: '#fde68a', fg: '#92400e' },
   S: { label: 'ลาป่วย', cell: 'ป', sheet: 'ลาป่วย', bg: '#f59e0b', fg: '#fff' },
   P: { label: 'ลากิจ', cell: 'ก', sheet: 'ลากิจ', bg: '#8b5cf6', fg: '#fff' },
   V: { label: 'พักร้อน', cell: 'พร', sheet: 'พักร้อน', bg: '#0ea5e9', fg: '#fff' },
+  E: { label: 'ลาแทนวันหยุดประจำปี (ลา Extra)', cell: 'EX', sheet: 'ลาExtra', bg: '#c026d3', fg: '#fff' },
   X: { label: 'ขาดงาน', cell: 'ข', sheet: 'ขาด', bg: '#ef4444', fg: '#fff' },
-  J: { label: 'เวรทำแทน (รอติ๊ก)', cell: 'แทน', sheet: 'แผนทำแทน', bg: 'transparent', fg: '#059669' },
+  J: { label: 'เวรทำแทน (รอติ๊ก)', cell: 'รอแทน', sheet: 'แผนทำแทน', bg: 'transparent', fg: '#059669' },
   A: { label: 'เวรตามแผน A', cell: 'A', sheet: 'A', bg: 'transparent', fg: '#818cf8' },
   B: { label: 'เวรตามแผน B', cell: 'B', sheet: 'B', bg: 'transparent', fg: '#818cf8' },
   C: { label: 'เวรตามแผน C', cell: 'C', sheet: 'C', bg: 'transparent', fg: '#818cf8' },
@@ -776,18 +785,19 @@ const ST = {
   '?': { label: 'รหัสอื่นๆ', cell: '?', sheet: '', bg: '#f472b6', fg: '#fff' },
   '.': { label: 'ว่าง', cell: '', sheet: '', bg: 'transparent', fg: '' }
 };
-const PARSE_MAP = { W: 'W', LATE: 'Y', OT: 'T', SWW: 'K', SWO: 'H', OFF: 'O', SICK: 'S', PERS: 'P', VAC: 'V', ABS: 'X', SEP: 'R', OTHER: '?', EMPTY: '.' };
+const PARSE_MAP = { W: 'W', LATE: 'Y', OT: 'T', SWW: 'K', SWO: 'H', OFF: 'O', SICK: 'S', PERS: 'P', VAC: 'V', EXTRA: 'E', ABS: 'X', SEP: 'R', OTHER: '?', EMPTY: '.' };
 const isWork = (ch) => ch === 'W' || ch === 'Y' || ch === 'T' || ch === 'K'; // มาสาย/OT/ทำแทน นับเป็นวันมาปฏิบัติงาน
 const isPlan = (ch) => ch === 'A' || ch === 'B' || ch === 'C' || ch === 'J';
 const isOff = (ch) => ch === 'O' || ch === 'H';
-const isLeave = (ch) => ch === 'S' || ch === 'P' || ch === 'V';
+const isLeave = (ch) => ch === 'S' || ch === 'P' || ch === 'V' || ch === 'E'; // ลา Extra นับเป็นการลาเหมือนพักร้อน
 const TOOLS = [
   { id: 'tick', label: '✓ ติ๊ก', bg: '#10b981', tip: 'เวร→มา · OFF→OT · เวรทำแทน→ทำแทน · ติ๊กซ้ำ=ยกเลิก' },
   { id: 'W', label: 'มา', bg: ST.W.bg }, { id: 'Y', label: '⏰ สาย', bg: '#65a30d', tip: 'มาสาย (นับเป็นวันมาปฏิบัติงาน)' }, { id: 'K', label: 'ทำแทน', bg: ST.K.bg, tip: 'มาทำงานแทนวันหยุดที่เปลี่ยน (ไม่ใช่ OT)' },
   { id: 'T', label: 'OT', bg: ST.T.bg, tip: 'มาทำงานในวันหยุด (OT)' },
-  { id: 'swap', label: '↔ สลับวันหยุด', bg: '#d97706', tip: 'คลิกวันหยุดเดิม แล้วคลิกวันใหม่ที่จะหยุดแทน (แถวเดียวกัน)' },
-  { id: 'H', label: 'เปลี่ยนหยุด', bg: '#ca8a04', tip: 'หยุดในวันใหม่ (เปลี่ยนวันหยุด)' }, { id: 'O', label: 'OFF', bg: '#64748b' },
+  { id: 'swap', label: '↔ เปลี่ยนวันหยุด', bg: '#d97706', tip: 'คลิกวันหยุดเดิม แล้วคลิกวันใหม่ที่จะหยุดแทน (แถวเดียวกัน)' },
+  { id: 'O', label: 'OFF', bg: '#64748b' }, // v16: ตัดปุ่ม "เปลี่ยนหยุด" (ช่องเดียว) ออก — ใช้ "↔ เปลี่ยนวันหยุด" แทน (ยังเลือกได้จากเมนูคลิกขวาช่อง)
   { id: 'S', label: 'ป่วย', bg: ST.S.bg }, { id: 'P', label: 'กิจ', bg: ST.P.bg }, { id: 'V', label: 'พักร้อน', bg: ST.V.bg },
+  { id: 'E', label: 'ลา Extra', bg: ST.E.bg, tip: 'ลาแทนวันหยุดประจำปี (ลา Extra)' },
   { id: 'X', label: 'ขาด', bg: ST.X.bg }, { id: 'plan', label: '↺ เวร', bg: '#6366f1', tip: 'คืนเป็นรหัสเวรตามแผน (A/B/C)' },
   { id: 'clear', label: '⌫', bg: '#94a3b8', tip: 'ล้างช่อง' }
 ];
@@ -1244,6 +1254,7 @@ function undo() {
   if (u.mk !== App.mk) { App.mk = u.mk; buildMonthSelect(); }
   // ย้อนบันทึกการเปลี่ยนวันหยุดด้วย (ถ้าการกระทำนั้นสร้าง/ยกเลิกรายการ)
   if (u.extra && u.extra.swapAdd) { const M = curMonth(); M.swaps = (M.swaps || []).filter(s => s.id !== u.extra.swapAdd); }
+  if (u.extra && u.extra.swapEdit) { const s = (curMonth().swaps || []).find(x => x.id === u.extra.swapEdit.id); if (s) Object.assign(s, u.extra.swapEdit.prev); }
   if (u.extra && u.extra.swapCancel) { const s = (curMonth().swaps || []).find(x => x.id === u.extra.swapCancel); if (s) s.status = 'active'; }
   applyChanges(u.changes.map(c => ({ code: c.code, day: c.day, from: c.to, to: c.from })), false);
   toast(`ย้อนกลับ ${u.changes.length} ช่อง`, 'info');
@@ -1302,6 +1313,7 @@ function render() {
   document.getElementById('toolbar').classList.toggle('hidden', App.fv !== 'grid' || locked);
   renderLockState(M, form, locked);
   document.getElementById('btnFit').classList.toggle('hidden', App.fv !== 'grid');
+  document.getElementById('btnCopyGrid').classList.toggle('hidden', App.fv !== 'grid');
   document.getElementById('btnUndo').classList.toggle('hidden', !form);
   document.getElementById('dashFilter').classList.toggle('hidden', form);
   const empty = !M && !(App.tab === 'dash' && D.period !== 'month');
@@ -1360,10 +1372,63 @@ function renderSummary() {
     card('from-green-700 to-emerald-800', 'ทำแทนวันหยุด', fmt(t.k) + ' วัน', `รอติ๊ก ${t.j} วัน`) +
     card('from-cyan-600 to-sky-700', 'OT วันหยุด', fmt(t.ot) + ' วัน', 'ติ๊กในช่อง OFF') +
     card('from-yellow-500 to-amber-600', 'เปลี่ยนวันหยุด', fmt(t.h) + ' วัน', 'หยุดแทนวันใหม่') +
-    card('from-orange-500 to-orange-700', 'ลา', fmt(t.leave) + ' วัน', 'ป่วย / กิจ / พักร้อน') +
+    card('from-orange-500 to-orange-700', 'ลา', fmt(t.leave) + ' วัน', 'ป่วย / กิจ / พักร้อน / ลา Extra') +
     card('from-rose-500 to-red-600', 'ขาดงาน', fmt(t.abs) + ' วัน', t.abs ? 'โปรดตรวจสอบ' : 'ไม่มีขาดงาน') +
     card('from-slate-500 to-slate-700', 'เวรรอติ๊ก', fmt(t.plan) + ' ช่อง', 'A/B/C + เวรทำแทน') + progressCard(rows);
   fx.count(document.getElementById('summary'), 'sum');
+}
+
+// ===== v16: แก้ "จากวันไหนไปวันไหน" ในบันทึกเดิม =====
+// คืนช่องของบันทึกเดิมก่อน (วันหยุดเดิม J/K → OFF, วันใหม่ H → เวรตามแผน) แล้วใส่ช่องตามวันที่ใหม่
+// คืน/ใส่เฉพาะฝั่งที่วันที่เปลี่ยนจริง — ฝั่งที่ไม่เปลี่ยนคงค่าเดิม (เช่น ช่องที่ติ๊ก "ทำแทน" ไปแล้วไม่ถูกล้าง)
+function planSwapCells(cells, plan, old, f, t, past) {
+  const c = cells.slice(), chF = f !== old.fromDay, chT = t !== old.toDay;
+  if (chF && (c[old.fromDay - 1] === 'J' || c[old.fromDay - 1] === 'K')) c[old.fromDay - 1] = 'O';
+  if (chT && c[old.toDay - 1] === 'H') c[old.toDay - 1] = plan || '.';
+  if (chF) c[f - 1] = past ? 'K' : 'J';
+  if (chT) c[t - 1] = 'H';
+  return c;
+}
+// แถวจำลองหลังถอนบันทึกเดิมออก — ใช้ตรวจคำเตือนของวันที่ใหม่ (ไม่ให้ช่องของบันทึกตัวเองมาเป็นคำเตือนเท็จ)
+function rowWithoutSwap(r, sw) {
+  const c = r.c.slice();
+  if (c[sw.fromDay - 1] === 'J' || c[sw.fromDay - 1] === 'K') c[sw.fromDay - 1] = 'O';
+  if (c[sw.toDay - 1] === 'H') c[sw.toDay - 1] = r.plan || '.';
+  return Object.assign({}, r, { c });
+}
+function commitSwapEdit(r, sw, f, t, reason, appr) {
+  const tk = todayKey(), past = App.mk < tk.mk || (App.mk === tk.mk && f < tk.d);
+  const cells = planSwapCells(r.c, r.plan, sw, f, t, past);
+  const ch = [...new Set([sw.fromDay, sw.toDay, f, t])].map(d => mkChange(r.code, d, cells[d - 1])).filter(Boolean);
+  const prev = { fromDay: sw.fromDay, toDay: sw.toDay, reason: sw.reason, approver: sw.approver, updatedBy: sw.updatedBy, updatedAt: sw.updatedAt };
+  const was = `${sw.fromDay} → ${sw.toDay}`;
+  Object.assign(sw, { fromDay: f, toDay: t, reason, approver: appr, updatedBy: App.user || '', updatedAt: new Date().toISOString() });
+  applyChanges(ch, true, `แก้ไขการเปลี่ยนวันหยุด ${r.name}: ${was} เป็น ${f} → ${t}`, { swapEdit: { id: sw.id, prev } });
+}
+// ค่าเริ่มต้นของฟอร์ม: วันหยุดเดิม = วัน OFF ถัดไป · วันใหม่ = วันเวรถัดจากนั้น (ตรงกับฟอร์มในแท็บ "รายการเปลี่ยนวันหยุด")
+function swapDefaults(r) {
+  const mk = App.mk, days = mDays(mk), t = todayKey(), start = mk === t.mk ? t.d : 1;
+  const o = r.c.findIndex((ch, i) => i + 1 >= start && ch === 'O'), from = o >= 0 ? o + 1 : start;
+  const w = r.c.findIndex((ch, i) => i + 1 > from && isPlan(ch) && ch !== 'J');
+  return { from, to: w >= 0 ? w + 1 : Math.min(days, from + 1) };
+}
+// รายการเปลี่ยนวันหยุดของเดือน แสดงใต้ตารางทั้งเดือน (แก้ไข/ยกเลิกได้ทันที)
+function gridSwapPanel(M, mk, locked) {
+  const vis = new Set(visibleRows().map(r => r.code)), byCode = {}; M.rows.forEach(r => byCode[r.code] = r);
+  const all = M.swaps || [], act = all.filter(s => s.status === 'active' && vis.has(s.code)).sort((a, b) => a.toDay - b.toDay);
+  const cancelled = all.filter(s => s.status === 'cancelled' && vis.has(s.code)).length;
+  const orphan = []; visibleRows().forEach(r => r.c.forEach((ch, i) => { if (ch === 'H' && !swapAt(M, r.code, i + 1)) orphan.push({ r, d: i + 1 }); }));
+  const rows = act.map(s => {
+    const r = byCode[s.code], fc = r ? r.c[s.fromDay - 1] : '.', tc = r ? r.c[s.toDay - 1] : '.';
+    const made = fc === 'K' ? 'done' : fc === 'J' ? 'wait' : (fc === 'X' || isLeave(fc)) ? 'miss' : 'other', m = MADE_TH[made];
+    return `<tr><td class="font-medium whitespace-nowrap">${esc(s.name || (r && r.name) || s.code)}<div class="text-[11px] muted">${esc(s.code)}</div></td>
+      <td class="whitespace-nowrap"><b>${dShort(mk, s.fromDay)}</b> → <b>${dShort(mk, s.toDay)}</b><div class="text-[11px]" style="color:${m[1]}">${m[0]}${tc !== 'H' ? ' · ช่องวันใหม่ถูกเปลี่ยนเป็นสถานะอื่น' : ''}</div></td>
+      <td class="max-w-[320px]">${esc(s.reason || '—')}</td><td class="whitespace-nowrap">${esc(s.approver || '—')}</td>
+      <td class="whitespace-nowrap">${locked ? '' : `<button class="btn btn-ghost !py-1 !px-2 text-xs" data-swedit="${esc(s.id)}">✏️ แก้ไข</button> <button class="btn btn-ghost !py-1 !px-2 text-xs" data-swcancel="${esc(s.id)}">✖ ยกเลิก</button>`}</td></tr>`;
+  }).join('');
+  const warn = orphan.length ? `<div class="rounded-lg p-2 mt-2 text-xs bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/30 dark:text-rose-200">⚠ ช่อง "หยุดแทน" ที่ยังไม่มีบันทึกเหตุผล ${orphan.length} ช่อง: ${orphan.slice(0, 6).map(o => `${esc(shortName(o.r.name))} (วันที่ ${o.d}${locked ? '' : ` <button class="underline font-semibold" data-swnew="${esc(o.r.code)}|${o.d}">+ เพิ่มเหตุผล</button>`})`).join(', ')}${orphan.length > 6 ? ' …' : ''}</div>` : '';
+  return `<div class="card p-3"><div class="flex flex-wrap items-center justify-between gap-2 mb-2"><h3 class="font-semibold text-sm">↔ การเปลี่ยนวันหยุด ${mLabel(mk)} <span class="muted font-normal">(${act.length} รายการ${cancelled ? ` · ยกเลิกแล้ว ${cancelled}` : ''})</span></h3>${locked ? '' : '<button class="btn btn-primary !py-1 !px-3 text-xs" data-swquick="1" title="เปิดฟอร์มบันทึกการเปลี่ยนวันหยุด (ไม่ต้องคลิกในตาราง)">+ เพิ่มรายการ</button>'}</div>
+    ${act.length ? `<div class="scroll-x"><table class="tbl w-full"><thead><tr><th class="text-left">พนักงาน</th><th class="text-left">วันหยุดเดิม → วันหยุดใหม่</th><th class="text-left">เหตุผล</th><th class="text-left">ผู้อนุมัติ</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>` : '<div class="text-xs muted">ยังไม่มีการเปลี่ยนวันหยุดในเดือนนี้</div>'}${warn}</div>`;
 }
 function swapAt(M, code, day) { return (M.swaps || []).find(s => s.status === 'active' && s.code === code && (s.fromDay === day || s.toDay === day)); }
 function cellHtml(r, i, today) {
@@ -1380,8 +1445,8 @@ function cellHtml(r, i, today) {
   const cls = 'cell' + mark + (hd ? ' holc' + (hd.t === 'gov' ? ' holg' : '') : '') + (App._flash && App._flash.has(r.code + '|' + (i + 1)) ? ' flash' : '') + (today ? ' today' : '') + (isCellDirty(App.mk, r, i) ? ' dirty' : '') + (App.swapSrc && App.swapSrc.code === r.code && App.swapSrc.day === i + 1 ? ' swapsrc' : '');
   const extra = isPlan(ch) ? (ch === 'J' ? 'border:1px dashed #059669;' : '') + 'font-weight:600;' : '';
   const sw = (ch === 'H' || ch === 'J' || ch === 'K') ? swapAt(M, r.code, i + 1) : null;
-  const sub = sw ? `<span class="swsub">${ch === 'H' ? '←' + sw.fromDay : '→' + sw.toDay}</span>` : ''; // แสดงคู่วันที่เปลี่ยนในช่องเลย ไม่ต้องคลิกดู
-  return `<td class="${cls}${sub ? ' hassub' : ''}" data-code="${esc(r.code)}" data-day="${i + 1}" title="${esc(r.name)} · วันที่ ${i + 1} · ${esc(ch === '?' ? (r.oth[i] || 'รหัสอื่นๆ') : st.label)}${esc(note)}" style="background:${st.bg};color:${st.fg};${extra}">${esc(label)}${sub}</td>`;
+  const sub = sw ? `<span class="swsub">${ch === 'H' ? 'จาก' + sw.fromDay : 'ไป' + sw.toDay}</span>` : ''; // แสดงคู่วันที่เปลี่ยนในช่องเลย ไม่ต้องคลิกดู
+  return `<td class="${cls}${sub ? ' hassub' : ''}${[...label].length > 4 ? ' long' : ''}" data-code="${esc(r.code)}" data-day="${i + 1}" title="${esc(r.name)} · วันที่ ${i + 1} · ${esc(ch === '?' ? (r.oth[i] || 'รหัสอื่นๆ') : st.label)}${esc(note)}" style="background:${st.bg};color:${st.fg};${extra}">${esc(label)}${sub}</td>`;
 }
 // แถบวันหยุดนักขัตฤกษ์ของเดือน (แสดงเหนือตารางเวร)
 function holidayStrip(mk) {
@@ -1390,7 +1455,7 @@ function holidayStrip(mk) {
   return `<div class="card p-2.5 flex flex-wrap items-center gap-1.5 text-xs"><span class="font-semibold mr-1">วันหยุดนักขัตฤกษ์ ${mLabel(mk)}:</span>${hs.length ? hs.map(chip).join('') : '<span class="muted">ไม่มีวันหยุดนักขัตฤกษ์ในเดือนนี้</span>'}<button class="btn btn-ghost !py-0.5 !px-2 !min-h-0 text-[11px] ml-auto" data-act2="holidays">📅 ปฏิทินวันหยุด</button></div>`;
 }
 function renderGrid() {
-  const mk = App.mk, days = mDays(mk), rows = visibleRows(), t = todayKey();
+  const mk = App.mk, days = mDays(mk), rows = visibleRows(), t = todayKey(), M0 = curMonth();
   const hols = App._hols = Array.from({ length: days }, (_, i) => holidayAt(mk, i + 1)); // ใช้ใน cellHtml (ไล่สีคอลัมน์วันหยุด)
   const wrapEl = document.getElementById('gridBlocks');
   // คำนวณความกว้างช่องวันให้ "พอดีจอ" — ถ้าแคบเกิน (มือถือ) จะเลื่อนแนวนอนแทน
@@ -1409,7 +1474,7 @@ function renderGrid() {
       <div class="gridwrap ${scroll ? 'scroll' : ''}"><table class="ws ${cw < 27 ? 'tight' : ''}" style="${scroll ? `width:${fixed + days * cw}px` : ''}"><colgroup><col class="c-no"><col class="c-name">${'<col class="c-day">'.repeat(days)}${'<col class="c-sum">'.repeat(6)}</colgroup><thead><tr>
       <th rowspan="2" class="stk0">No</th><th rowspan="2" class="text-left px-2 stk1">ชื่อ - สกุล</th>`;
     for (let d = 1; d <= days; d++) { const wd = wdOf(mk, d), hd = hols[d - 1]; h += `<th class="day ${wd === 0 || wd === 6 ? 'we' : ''} ${hd ? 'hol hol-' + hd.t : ''} ${t.mk === mk && t.d === d ? 'today' : ''}" data-hday="${d}" title="${hd ? '🎌 ' + esc(hd.n) + ' (' + HOL_T[hd.t] + ') · ' : ''}คลิกเพื่อติ๊กทั้งวัน">${WD_S[wd]}</th>`; }
-    h += `<th rowspan="2" title="มาปฏิบัติงาน (รวม สาย/OT/ทำแทน)">มา</th><th rowspan="2" title="มาสาย">สาย</th><th rowspan="2">OT</th><th rowspan="2" title="เปลี่ยนวันหยุด / ทำแทน">สลับ</th><th rowspan="2">ลา</th><th rowspan="2">ขาด</th></tr><tr>`;
+    h += `<th rowspan="2" title="มาปฏิบัติงาน (รวม สาย/OT/ทำแทน)">มา</th><th rowspan="2" title="มาสาย">สาย</th><th rowspan="2">OT</th><th rowspan="2" title="เปลี่ยนวันหยุด (หยุดแทน) / ทำแทน">↔</th><th rowspan="2">ลา</th><th rowspan="2">ขาด</th></tr><tr>`;
     for (let d = 1; d <= days; d++) { const hd = hols[d - 1]; h += `<th class="day ${hd ? 'hol hol-' + hd.t : ''} ${t.mk === mk && t.d === d ? 'today' : ''}" data-hday="${d}"${hd ? ` title="🎌 ${esc(hd.n)}"` : ''}>${d}</th>`; }
     h += '</tr></thead><tbody>';
     const gt = [];
@@ -1419,7 +1484,7 @@ function renderGrid() {
         const s = rowSum(r), made = s.k + s.j, bal = s.h === made;
         h += `<tr><td class="text-center text-[11px] muted stk0">${idx + 1}</td><td class="nm stk1"><button class="text-left w-full hover:text-indigo-600 block" data-edit="${esc(r.code)}" title="${esc(r.name)} · ${esc(r.code)} · หยุดประจำ: ${esc(r.remark || '-')} (คลิกเพื่อแก้ไข)"><div class="font-semibold text-[12px] truncate leading-tight">${esc(r.name)}</div><div class="text-[10px] muted truncate leading-tight">${esc(r.code)}${r.tag ? ' · ' + esc(r.tag) : ''}${r.remark ? ' · หยุด ' + esc(remarkShort(r.remark)) : ''}</div></button></td>`;
         for (let i = 0; i < days; i++) h += cellHtml(r, i, t.mk === mk && t.d === i + 1);
-        h += `<td class="sum text-emerald-600">${s.work}</td><td class="sum text-lime-600">${s.late || ''}</td><td class="sum text-cyan-600">${s.ot || ''}</td><td class="sum ${bal ? 'text-amber-600' : 'text-rose-600'}" title="เปลี่ยนหยุด ${s.h} / ทำแทน ${made}${bal ? '' : ' — ยังไม่สมดุล'}">${s.h || made ? `${s.h}/${made}` : ''}</td><td class="sum text-orange-600">${s.leave || ''}</td><td class="sum text-rose-600">${s.abs || ''}</td></tr>`;
+        h += `<td class="sum text-emerald-600">${s.work}</td><td class="sum text-lime-600">${s.late || ''}</td><td class="sum text-cyan-600">${s.ot || ''}</td><td class="sum ${bal ? 'text-amber-600' : 'text-rose-600'}" title="เปลี่ยนวันหยุด ${s.h} / ทำแทน ${made}${bal ? '' : ' — ยังไม่สมดุล'}">${s.h || made ? `${s.h}/${made}` : ''}</td><td class="sum text-orange-600">${s.leave || ''}</td><td class="sum text-rose-600">${s.abs || ''}</td></tr>`;
       });
       const per = []; for (let i = 0; i < days; i++) per.push(gr.filter(r => isWork(r.c[i])).length);
       gt.push({ gname, per });
@@ -1429,7 +1494,8 @@ function renderGrid() {
     h += `<tr class="tot"><td class="stk0"></td><td class="!text-left px-2 stk1 truncate">รวมยอด ${title}</td>${all.map(v => `<td>${v}</td>`).join('')}<td>${all.reduce((a, b) => a + b, 0)}</td><td colspan="5"></td></tr></tbody></table></div></div>`;
     html += h;
   });
-  html += `<div class="card p-2.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px]">${['W', 'Y', 'K', 'T', 'O', 'H', 'J', 'S', 'P', 'V', 'X', 'A', 'R'].map(k => `<span class="flex items-center gap-1"><span class="inline-grid place-items-center w-7 h-4 rounded text-[9px] font-bold" style="background:${ST[k].bg};color:${ST[k].fg};${isPlan(k) ? `border:1px dashed ${ST[k].fg}` : ''}">${ST[k].cell}</span>${k === 'A' ? 'เวรตามแผน A/B/C' : ST[k].label}</span>`).join('')}<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-500"></span>แก้ไขยังไม่บันทึก</span><span class="flex items-center gap-1"><span class="inline-block w-7 h-4 rounded hol-legend"></span>วันหยุดนักขัตฤกษ์</span></div>`;
+  html += gridSwapPanel(M0, mk, isLocked());
+  html += `<div class="card p-2.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px]">${['W', 'Y', 'K', 'T', 'O', 'H', 'J', 'S', 'P', 'V', 'E', 'X', 'A', 'R'].map(k => `<span class="flex items-center gap-1"><span class="inline-grid place-items-center w-7 h-4 rounded text-[9px] font-bold" style="background:${ST[k].bg};color:${ST[k].fg};${isPlan(k) ? `border:1px dashed ${ST[k].fg}` : ''}">${ST[k].cell}</span>${k === 'A' ? 'เวรตามแผน A/B/C' : ST[k].label}</span>`).join('')}<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-500"></span>แก้ไขยังไม่บันทึก</span><span class="flex items-center gap-1"><span class="inline-block w-7 h-4 rounded hol-legend"></span>วันหยุดนักขัตฤกษ์</span></div>`;
   const pos = [...wrapEl.querySelectorAll('.gridwrap')].map(e => e.scrollLeft);
   wrapEl.innerHTML = html || '<div class="card p-8 text-center muted">ไม่พบพนักงานตามเงื่อนไข</div>';
   wrapEl.querySelectorAll('.gridwrap').forEach((e, i) => { e.scrollLeft = pos[i] || (scroll && t.mk === mk && !App._scrolled ? Math.max(0, (t.d - 5) * cw) : 0); });
@@ -1446,16 +1512,16 @@ function renderDaily() {
   const rows = visibleRows(); const c = { W: 0, Y: 0, K: 0, T: 0, H: 0, O: 0, L: 0, X: 0, PL: 0 };
   rows.forEach(r => { const ch = r.c[d - 1] || '.'; if (ch === 'W') c.W++; else if (ch === 'Y') c.Y++; else if (ch === 'K') c.K++; else if (ch === 'T') c.T++; else if (ch === 'H') c.H++; else if (ch === 'O') c.O++; else if (isLeave(ch)) c.L++; else if (ch === 'X') c.X++; else if (isPlan(ch) || ch === '.') c.PL++; });
   const sb = (l, v, col) => `<div class="card p-2 text-center"><div class="text-[11px] muted">${l}</div><div class="text-lg font-bold font-head" style="color:${col}">${v}</div></div>`;
-  document.getElementById('dailyStats').innerHTML = sb('มา', c.W, '#059669') + sb('มาสาย', c.Y, '#65a30d') + sb('ทำแทน', c.K, '#047857') + sb('OT', c.T, '#0891b2') + sb('รอติ๊ก', c.PL, '#6366f1') + sb('OFF', c.O, '#64748b') + sb('เปลี่ยนหยุด', c.H, '#ca8a04') + sb('ลา', c.L, '#ea580c') + sb('ขาด', c.X, '#e11d48');
+  document.getElementById('dailyStats').innerHTML = sb('มา', c.W, '#059669') + sb('มาสาย', c.Y, '#65a30d') + sb('ทำแทน', c.K, '#047857') + sb('OT', c.T, '#0891b2') + sb('รอติ๊ก', c.PL, '#6366f1') + sb('OFF', c.O, '#64748b') + sb('เปลี่ยนวันหยุด', c.H, '#ca8a04') + sb('ลา', c.L, '#ea580c') + sb('ขาด', c.X, '#e11d48');
   const groups = [['d', 's', 'กลางวัน · ตรวจการ/หัวหน้าทีม'], ['d', 'g', 'กลางวัน · รปภ.'], ['n', 's', 'กลางคืน · ตรวจการ/หัวหน้าทีม'], ['n', 'g', 'กลางคืน · รปภ.']];
-  const btns = [['W', '✓ มา'], ['Y', '⏰ สาย'], ['K', 'ทำแทน'], ['T', 'OT'], ['O', 'OFF'], ['H', 'เปลี่ยนหยุด'], ['S', 'ป่วย'], ['P', 'กิจ'], ['V', 'พักร้อน'], ['X', 'ขาด']];
+  const btns = [['W', '✓ มา'], ['Y', '⏰ สาย'], ['K', 'ทำแทน'], ['T', 'OT'], ['O', 'OFF'], ['H', 'เปลี่ยนวันหยุด'], ['S', 'ป่วย'], ['P', 'กิจ'], ['V', 'พักร้อน'], ['E', 'ลา Extra'], ['X', 'ขาด']];
   let html = '';
   groups.forEach(([sh, ro, title]) => {
     const gr = rows.filter(r => r.shift === sh && r.role === ro); if (!gr.length) return;
     html += `<div class="card p-3"><div class="flex items-center justify-between mb-1"><h4 class="font-semibold text-sm">${title}</h4><span class="text-xs font-semibold text-emerald-600">มา ${gr.filter(r => isWork(r.c[d - 1])).length}/${gr.length}</span></div><div class="divide-y" style="border-color:var(--line)">`;
     gr.forEach(r => {
       const ch = r.c[d - 1] || '.', st = ST[ch] || ST['?'], dirty = isCellDirty(mk, r, d - 1);
-      html += `<div class="py-2"><div class="flex items-center gap-2 mb-1.5"><span class="inline-grid place-items-center w-10 h-7 rounded-lg text-[11px] font-bold shrink-0${App._flash && App._flash.has(r.code + '|' + d) ? ' flash-pop' : ''}" style="background:${st.bg};color:${st.fg};${isPlan(ch) || ch === '.' ? 'border:1px dashed #818cf8' : ''}">${esc(ch === '?' ? (r.oth[d - 1] || '?') : st.cell || '–')}</span><div class="min-w-0 flex-1"><div class="font-semibold text-sm truncate">${esc(r.name)} ${dirty ? '<span class="text-amber-500 text-xs">● ยังไม่บันทึก</span>' : ''}</div><div class="text-[11px] muted truncate">${esc(r.code)}${r.tag ? ' · ' + esc(r.tag) : ''} · หยุดประจำ ${esc(remarkShort(r.remark) || '-')}</div>${(() => { const sw = (ch === 'H' || ch === 'J' || ch === 'K') ? swapAt(curMonth(), r.code, d) : null; return sw ? `<div class="text-[11px] text-indigo-600 dark:text-indigo-300 truncate">↔ เปลี่ยนวันหยุด ${sw.fromDay} → ${sw.toDay} · ${esc(sw.reason)}</div>` : ch === 'H' ? '<div class="text-[11px] text-rose-600">⚠ เปลี่ยนหยุดยังไม่มีบันทึกเหตุผล</div>' : ''; })()}</div></div>
+      html += `<div class="py-2"><div class="flex items-center gap-2 mb-1.5"><span class="inline-grid place-items-center w-10 h-7 rounded-lg text-[11px] font-bold shrink-0${App._flash && App._flash.has(r.code + '|' + d) ? ' flash-pop' : ''}" style="background:${st.bg};color:${st.fg};${isPlan(ch) || ch === '.' ? 'border:1px dashed #818cf8' : ''}">${esc(ch === '?' ? (r.oth[d - 1] || '?') : st.cell || '–')}</span><div class="min-w-0 flex-1"><div class="font-semibold text-sm truncate">${esc(r.name)} ${dirty ? '<span class="text-amber-500 text-xs">● ยังไม่บันทึก</span>' : ''}</div><div class="text-[11px] muted truncate">${esc(r.code)}${r.tag ? ' · ' + esc(r.tag) : ''} · หยุดประจำ ${esc(remarkShort(r.remark) || '-')}</div>${(() => { const sw = (ch === 'H' || ch === 'J' || ch === 'K') ? swapAt(curMonth(), r.code, d) : null; return sw ? `<div class="text-[11px] text-indigo-600 dark:text-indigo-300 truncate">↔ เปลี่ยนวันหยุด ${sw.fromDay} → ${sw.toDay} · ${esc(sw.reason)}</div>` : ch === 'H' ? '<div class="text-[11px] text-rose-600">⚠ เปลี่ยนวันหยุดยังไม่มีบันทึกเหตุผล</div>' : ''; })()}</div></div>
         <div class="flex flex-wrap gap-1">${btns.map(([k, l]) => `<button class="sbtn" data-dset="${k}" data-code="${esc(r.code)}" aria-pressed="${ch === k}" style="${ch === k ? `background:${ST[k].bg};color:${ST[k].fg}` : ''}">${l}</button>`).join('')}<button class="sbtn" data-dset="plan" data-code="${esc(r.code)}" title="คืนเป็นเวรตามแผน">↺</button></div></div>`;
     });
     html += '</div></div>';
@@ -1484,11 +1550,11 @@ const D = { period: 'month', week: '', view: 'overview', f: { d1: 1, d2: 31, rol
 const DS = {
   W: { label: 'มาปฏิบัติงาน', color: '#10b981' }, Y: { label: 'มาสาย', color: '#84cc16' }, K: { label: 'มาทำแทนวันหยุด', color: '#047857' }, T: { label: 'มาทำ OT (วันหยุด)', color: '#0891b2' },
   O: { label: 'หยุด (OFF)', color: '#94a3b8' }, H: { label: 'เปลี่ยนวันหยุด', color: '#eab308' }, S: { label: 'ลาป่วย', color: '#f59e0b' },
-  P: { label: 'ลากิจ', color: '#8b5cf6' }, V: { label: 'พักร้อน', color: '#0ea5e9' }, X: { label: 'ขาดงาน', color: '#ef4444' },
+  P: { label: 'ลากิจ', color: '#8b5cf6' }, V: { label: 'พักร้อน', color: '#0ea5e9' }, E: { label: 'ลาแทนวันหยุดประจำปี (ลา Extra)', color: '#c026d3' }, X: { label: 'ขาดงาน', color: '#ef4444' },
   LA: { label: 'ลาล่วงหน้า (ยังไม่ถึงวัน)', color: '#fcd34d' }, PL: { label: 'เวรรอติ๊ก', color: '#c7d2fe' }, PT: { label: 'ติ๊กแล้ว (วันที่ยังติ๊กไม่ครบ)', color: '#a78bfa' },
   '?': { label: 'รหัสอื่นๆ', color: '#f472b6' }, R: { label: 'พ้นสภาพ/ลาออก', color: '#475569' }, '.': { label: 'ไม่มีข้อมูล', color: 'transparent' }
 };
-const DS_ORDER = ['W', 'Y', 'K', 'T', 'O', 'H', 'S', 'P', 'V', 'X', 'LA', 'PL', 'PT', '?', 'R'];
+const DS_ORDER = ['W', 'Y', 'K', 'T', 'O', 'H', 'S', 'P', 'V', 'E', 'X', 'LA', 'PL', 'PT', '?', 'R'];
 const statusOf = (ch) => isPlan(ch) ? 'PL' : (ch || '.');
 const SEG = [
   { key: 'ds', label: 'กลางวัน · ตรวจการ/หน.ทีม', shift: 'd', role: 's', color: '#4f46e5' },
@@ -1587,7 +1653,7 @@ const holCounts = (h) => !!h && h.t !== 'gov' && h.t !== 'obs';
 //      เดิมนับ "มา" ทันทีแต่ "ขาด" ไปเป็นลาล่วงหน้า → % มาปฏิบัติงานสูงเกินจริงระหว่างติ๊ก และยอดไม่ตรงกับตารางสรุปรายวันในรายงาน
 //      ตอนนี้ทุกตัวเลขสถิติคิดจาก "วันที่ยืนยันแล้ว" ชุดเดียวกันทั้งแดชบอร์ด/รายงาน/ส่งออก
 function recStats(r, conf, hol) {
-  const o = { W: 0, Y: 0, K: 0, T: 0, O: 0, H: 0, Oc: 0, Hc: 0, S: 0, P: 0, V: 0, X: 0, LA: 0, PL: 0, PT: 0, R: 0, '?': 0, '.': 0, HW: 0 };
+  const o = { W: 0, Y: 0, K: 0, T: 0, O: 0, H: 0, Oc: 0, Hc: 0, S: 0, P: 0, V: 0, E: 0, X: 0, LA: 0, PL: 0, PT: 0, R: 0, '?': 0, '.': 0, HW: 0 };
   r.c.forEach((ch, i) => {
     const st = statusOf(ch), pend = !!(conf && !conf[i]);
     if (pend && (isWork(st) || st === 'X')) { o.PT++; return; }
@@ -1597,17 +1663,17 @@ function recStats(r, conf, hol) {
     if (st === 'Y' || st === 'T' || st === 'K') { o.W++; o[st]++; }
     else o[st] = (o[st] || 0) + 1;
   });
-  o.leave = o.S + o.P + o.V; o.sched = o.W + o.leave + o.X; o.rate = o.sched > 0 ? o.W / o.sched : null;
+  o.leave = o.S + o.P + o.V + o.E; o.sched = o.W + o.leave + o.X; o.rate = o.sched > 0 ? o.W / o.sched : null;
   o.ontime = o.W > 0 ? (o.W - o.Y) / o.W : null;
   return o;
 }
 function computeView(def = periodDef()) {
   const dd = dashData();
   const rows = periodRows(def), conf = def.days.map(x => dd.months[x.mk] ? confirmedDays(x.mk).has(x.d) : false);
-  const tot = { W: 0, Y: 0, K: 0, T: 0, O: 0, H: 0, Oc: 0, Hc: 0, S: 0, P: 0, V: 0, X: 0, LA: 0, PL: 0, PT: 0, R: 0, '?': 0, '.': 0, HW: 0 };
+  const tot = { W: 0, Y: 0, K: 0, T: 0, O: 0, H: 0, Oc: 0, Hc: 0, S: 0, P: 0, V: 0, E: 0, X: 0, LA: 0, PL: 0, PT: 0, R: 0, '?': 0, '.': 0, HW: 0 };
   const hol = def.days.map(x => holCounts(holidayAt(x.mk, x.d)) ? holidayAt(x.mk, x.d) : null);
   const people = rows.map(r => { const s = recStats(r, conf, hol); Object.keys(tot).forEach(k => tot[k] += s[k] || 0); return { r, s }; });
-  tot.leave = tot.S + tot.P + tot.V; tot.sched = tot.W + tot.leave + tot.X;
+  tot.leave = tot.S + tot.P + tot.V + tot.E; tot.sched = tot.W + tot.leave + tot.X;
   const daily = def.days.map((x, i) => {
     const row = { i, ...x, conf: conf[i], seg: { ds: 0, dg: 0, ns: 0, ng: 0 }, W: 0, Y: 0, T: 0, K: 0, O: 0, L: 0, X: 0, PL: 0 };
     rows.forEach(r => { const ch = r.c[i]; if (isWork(ch)) { row.W++; row.seg[r.shift + r.role]++; if (ch === 'Y') row.Y++; if (ch === 'T') row.T++; if (ch === 'K') row.K++; } else if (isOff(ch)) row.O++; else if (isLeave(ch)) row.L++; else if (ch === 'X') row.X++; else if (isPlan(ch)) row.PL++; });
@@ -1705,7 +1771,7 @@ function renderKPIs(v) {
     ['from-sky-500 to-blue-600', '📅', 'กำลังพลเฉลี่ย/วัน', fmt(v.avgDay, 1), 'คน', v.minDay ? `ต่ำสุด ${v.minDay.W} คน (${thShort(v.minDay.dt)}) · สูงสุด ${v.maxDay.W}` : 'ยังไม่มีวันที่ยืนยันข้อมูล'],
     ['from-fuchsia-500 to-pink-600', '🎯', 'อัตราการมาปฏิบัติงาน', rate === null ? '-' : fmt(rate, 1), rate === null ? '' : '%', `มา ÷ (มา + ลา + ขาด) ${prate !== null && crate !== null ? delta(crate, prate, true) : ''}`],
     ['from-lime-500 to-green-600', '⏰', 'มาสาย', fmt(t.Y), 'ครั้ง', `${v.people.filter(x => x.s.Y > 0).length} คน · ตรงเวลา ${t.W ? fmt((t.W - t.Y) / t.W * 100, 1) + '%' : '-'}`],
-    ['from-amber-500 to-red-600', '🩺', 'ลา / ขาดงาน', `${fmt(t.leave)} / ${fmt(t.X)}`, 'วัน', `ป่วย ${t.S} · กิจ ${t.P} · พักร้อน ${t.V}${t.LA ? ` · ล่วงหน้า ${t.LA}` : ''}`],
+    ['from-amber-500 to-red-600', '🩺', 'ลา / ขาดงาน', `${fmt(t.leave)} / ${fmt(t.X)}`, 'วัน', `ป่วย ${t.S} · กิจ ${t.P} · พักร้อน ${t.V} · Extra ${t.E}${t.LA ? ` · ล่วงหน้า ${t.LA}` : ''}`],
     ['from-cyan-600 to-teal-700', '⏱️', 'OT / ทำแทนวันหยุด', `${fmt(t.T)} / ${fmt(t.K)}`, 'วัน', `เปลี่ยนวันหยุด ${t.H} วัน · OFF ${fmt(t.O)} วัน`],
     ['from-violet-500 to-indigo-700', '🗓️', 'เวรรอติ๊ก', fmt(t.PL), 'เวร', (v.lastConf ? `ยืนยันข้อมูลถึง ${thShort(v.lastConf.dt)} ${v.lastConf.dt.getFullYear() + 543}` : 'ยังไม่มีวันที่ยืนยัน') + (t.PT ? ` · ติ๊กแล้ว ${fmt(t.PT)} ช่อง (รอติ๊กให้ครบวัน)` : '')]
   ];
@@ -1771,7 +1837,7 @@ function renderTopLeave(v) {
   const box = document.getElementById('topLeaveBox');
   if (!top.length) { if (D.charts.chTopLeave) { D.charts.chTopLeave.destroy(); delete D.charts.chTopLeave; } box.innerHTML = '<div class="h-full grid place-items-center text-sm muted">🎉 ไม่มีการลา ขาด หรือมาสายในช่วงที่เลือก</div>'; return; }
   if (!document.getElementById('chTopLeave')) box.innerHTML = '<canvas id="chTopLeave"></canvas>';
-  mkChart('chTopLeave', { type: 'bar', data: { labels: top.map(p => p.r.name.replace(/^(นาย|นางสาว|นาง|น\.ส\.)\s*/, '')), datasets: [['Y', 'มาสาย'], ['S', 'ลาป่วย'], ['P', 'ลากิจ'], ['V', 'พักร้อน'], ['X', 'ขาดงาน']].map(([k, l]) => ({ label: l, data: top.map(p => p.s[k]), backgroundColor: DS[k].color, borderRadius: 4 })) },
+  mkChart('chTopLeave', { type: 'bar', data: { labels: top.map(p => p.r.name.replace(/^(นาย|นางสาว|นาง|น\.ส\.)\s*/, '')), datasets: [['Y', 'มาสาย'], ['S', 'ลาป่วย'], ['P', 'ลากิจ'], ['V', 'พักร้อน'], ['E', 'ลา Extra'], ['X', 'ขาดงาน']].map(([k, l]) => ({ label: l, data: top.map(p => p.s[k]), backgroundColor: DS[k].color, borderRadius: 4 })) },
     options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: legendB }, scales: { x: axis({ stacked: true, beginAtZero: true, ticks: { precision: 0 } }), y: axis({ stacked: true }) }, onClick: (e, els) => { if (els.length) openPerson(top[els[0].index].r.code); } } });
 }
 
@@ -1789,11 +1855,11 @@ function buildInsights(v) {
   const wa = offWd.map((o, i) => ({ i, a: o.n ? o.O / o.n : 0 })).filter((x, i) => offWd[i].n).sort((a, b) => b.a - a.a);
   if (wa.length > 1 && wa[0].a > 0) add(wa[0].a > wa[wa.length - 1].a + 2 ? 'warn' : 'info', '🛌', 'วันหยุดกระจุกตัว', `วัน${WD[wa[0].i]}มีคนหยุดเฉลี่ย ${fmt(wa[0].a, 1)} คน/วัน มากที่สุด (น้อยสุดวัน${WD[wa[wa.length - 1].i]} ${fmt(wa[wa.length - 1].a, 1)} คน)`);
   const unbal = v.rows.map(r => ({ r, h: r.c.filter(c => c === 'H').length, k: r.c.filter(c => c === 'K' || c === 'J').length })).filter(x => x.h !== x.k);
-  if (t.H || unbal.length) add(unbal.length ? 'warn' : 'good', '↔', 'สลับวันหยุด', unbal.length ? `ยังไม่สมดุลในช่วงนี้ ${unbal.length} คน: ${unbal.slice(0, 4).map(x => `${x.r.name} (เปลี่ยนหยุด ${x.h} / ทำแทน ${x.k})`).join(', ')}${unbal.length > 4 ? ' …' : ''}` : `เปลี่ยนวันหยุด ${t.H} ครั้ง และมีวันทำแทนครบทุกคน`);
+  if (t.H || unbal.length) add(unbal.length ? 'warn' : 'good', '↔', 'เปลี่ยนวันหยุด', unbal.length ? `ยังไม่สมดุลในช่วงนี้ ${unbal.length} คน: ${unbal.slice(0, 4).map(x => `${x.r.name} (เปลี่ยนวันหยุด ${x.h} / ทำแทน ${x.k})`).join(', ')}${unbal.length > 4 ? ' …' : ''}` : `เปลี่ยนวันหยุด ${t.H} ครั้ง และมีวันทำแทนครบทุกคน`);
   { const nn = swapList(v.def).filter(x => !x.s).length; if (nn) add('warn', '📝', 'เปลี่ยนวันหยุดโดยไม่มีบันทึกเหตุผล', `${nn} รายการ — เพิ่มเหตุผลได้ที่ ฟอร์มกรอก → บันทึกเปลี่ยนวันหยุด`); }
   if (t.T > 0) { const ot = v.people.filter(p => p.s.T > 0).sort((a, b) => b.s.T - a.s.T); add('info', '⏱️', 'มาทำ OT ในวันหยุด', `${t.T} วัน จาก ${ot.length} คน — มากสุด ${ot[0].r.name} (${ot[0].s.T} วัน)`); }
   const top = v.people.filter(p => p.s.leave + p.s.X > 0).sort((a, b) => (b.s.leave + b.s.X) - (a.s.leave + a.s.X));
-  if (top.length) { const p = top[0]; add(p.s.leave + p.s.X >= 4 ? 'warn' : 'info', '🩺', 'ลา/ขาดมากที่สุด', `${p.r.name} (${p.r.code}) รวม ${p.s.leave + p.s.X} วัน — ป่วย ${p.s.S} · กิจ ${p.s.P} · พักร้อน ${p.s.V} · ขาด ${p.s.X} · ผู้ลา/ขาดทั้งหมด ${top.length} คน`); }
+  if (top.length) { const p = top[0]; add(p.s.leave + p.s.X >= 4 ? 'warn' : 'info', '🩺', 'ลา/ขาดมากที่สุด', `${p.r.name} (${p.r.code}) รวม ${p.s.leave + p.s.X} วัน — ป่วย ${p.s.S} · กิจ ${p.s.P} · พักร้อน ${p.s.V} · Extra ${p.s.E} · ขาด ${p.s.X} · ผู้ลา/ขาดทั้งหมด ${top.length} คน`); }
   if (t.X > 0) add('bad', '⚠️', 'มีการขาดงาน', `รวม ${t.X} วัน: ${v.people.filter(p => p.s.X > 0).slice(0, 6).map(p => `${p.r.name} (${p.s.X})`).join(', ')}`);
   if (v.confDaily.length) { const pf = v.people.filter(p => p.s.sched > 0 && p.s.W === p.s.sched && !p.s.Y); add('good', '🏅', 'มาครบและตรงเวลา 100%', `${pf.length} จาก ${v.people.length} คน ไม่มีลา/ขาด/สาย (${pct(pf.length, v.people.length, 0)})`); }
   let adj = 0; const an = new Set();
@@ -1803,7 +1869,7 @@ function buildInsights(v) {
   if (adj) add('warn', '🔁', 'ลาป่วยติดวันหยุด', `${adj} ครั้ง (${an.size} คน) — ${[...an].slice(0, 4).join(', ')}${an.size > 4 ? ' …' : ''}`);
   let dev = 0, offT = 0;
   v.rows.forEach(r => { const rd = remarkSet(r.remark); if (!rd.size) return; r.c.forEach((ch, i) => { if (ch !== 'O') return; offT++; if (!rd.has(v.daily[i].wd)) dev++; }); });
-  if (offT) add(dev ? 'info' : 'good', '📋', 'OFF ตรงตามวันหยุดประจำ', dev ? `${fmt(offT - dev)}/${fmt(offT)} วัน (${pct(offT - dev, offT)}) · OFF นอกวันประจำโดยไม่ได้ใช้ "สลับวันหยุด" ${dev} ครั้ง` : `OFF ทั้งหมด ${fmt(offT)} วัน ตรงตามวันหยุดประจำ 100%`);
+  if (offT) add(dev ? 'info' : 'good', '📋', 'OFF ตรงตามวันหยุดประจำ', dev ? `${fmt(offT - dev)}/${fmt(offT)} วัน (${pct(offT - dev, offT)}) · OFF นอกวันประจำโดยไม่ได้ใช้ "เปลี่ยนวันหยุด" ${dev} ครั้ง` : `OFF ทั้งหมด ${fmt(offT)} วัน ตรงตามวันหยุดประจำ 100%`);
   const chk = [...new Set(v.def.days.map(x => x.mk))].flatMap(mk => (dashData().months[mk] || {}).chk || []);
   if (chk.length) { const f = chk.find(c => c.formula), d = chk.find(c => c.diffs.length), ex = d && d.diffs[0];
     add('bad', '🧮', 'สูตรยอดรวมในไฟล์ Excel ต้นฉบับไม่ถูกต้อง', `${chk.length} จุด${f ? ` เช่น ${f.grp} สูตร ${f.formula} ควรเป็น ${f.expect}` : ''}${ex ? ` · ${d.grp} วันที่ ${ex[0]} นับจริง ${ex[1]} แต่ Excel แสดง ${ex[2]}` : ''} — แอปใช้ค่านับจริง`, 'xchk'); }
@@ -1826,13 +1892,13 @@ function renderInsights(v) {
 /* ---------- ตารางรายบุคคล ---------- */
 const COLS = [
   { k: 'code', l: 'รหัส' }, { k: 'name', l: 'ชื่อ - สกุล' }, { k: 'role', l: 'ตำแหน่ง' }, { k: 'shift', l: 'ผลัด' },
-  { k: 'W', l: 'มา', n: 1 }, { k: 'Y', l: 'สาย', n: 1 }, { k: 'K', l: 'ทำแทน', n: 1 }, { k: 'T', l: 'OT', n: 1 }, { k: 'O', l: 'OFF', n: 1 }, { k: 'H', l: 'เปลี่ยนหยุด', n: 1 },
-  { k: 'S', l: 'ป่วย', n: 1 }, { k: 'P', l: 'กิจ', n: 1 }, { k: 'V', l: 'พักร้อน', n: 1 }, { k: 'X', l: 'ขาด', n: 1 }, { k: 'HW', l: '🎌 นักขัตฯ', n: 1 }, { k: 'leave', l: 'ลา+ขาด', n: 1 },
+  { k: 'W', l: 'มา', n: 1 }, { k: 'Y', l: 'สาย', n: 1 }, { k: 'K', l: 'ทำแทน', n: 1 }, { k: 'T', l: 'OT', n: 1 }, { k: 'O', l: 'OFF', n: 1 }, { k: 'H', l: 'เปลี่ยนวันหยุด', n: 1 },
+  { k: 'S', l: 'ป่วย', n: 1 }, { k: 'P', l: 'กิจ', n: 1 }, { k: 'V', l: 'พักร้อน', n: 1 }, { k: 'E', l: 'ลา Extra', n: 1 }, { k: 'X', l: 'ขาด', n: 1 }, { k: 'HW', l: '🎌 นักขัตฯ', n: 1 }, { k: 'leave', l: 'ลา+ขาด', n: 1 },
   { k: 'PL', l: 'รอติ๊ก', n: 1 }, { k: 'rate', l: '% มา', n: 1 }, { k: 'remark', l: 'หยุดประจำ' }
 ];
 function rowVal(p, k) {
   if (k === 'leave') return p.s.leave + p.s.X; if (k === 'rate') return p.s.rate ?? -1;
-  if (['W', 'Y', 'K', 'T', 'O', 'H', 'S', 'P', 'V', 'X', 'PL', 'HW'].includes(k)) return p.s[k];
+  if (['W', 'Y', 'K', 'T', 'O', 'H', 'S', 'P', 'V', 'E', 'X', 'PL', 'HW'].includes(k)) return p.s[k];
   if (k === 'role') return p.r.role === 's' ? 'ตรวจการ' : 'รปภ.';
   return p.r[k] || '';
 }
@@ -1847,7 +1913,7 @@ function renderTable(v) {
   const body = slice.map(p => { const r = p.s.rate, rc = r === null ? '' : r >= .97 ? 'text-emerald-600' : r >= .9 ? 'text-amber-600' : 'text-rose-600';
     return `<tr data-person="${esc(p.r.code)}"><td class="font-mono text-xs">${esc(p.r.code)}</td><td class="font-medium whitespace-nowrap">${esc(p.r.name)}</td><td class="whitespace-nowrap"><span class="chip">${p.r.role === 's' ? esc(p.r.tag || 'ตรวจการ') : 'รปภ.'}</span></td><td class="whitespace-nowrap">${p.r.shift === 'n' ? 'กลางคืน' : 'กลางวัน'}</td>
       <td class="text-right font-semibold text-emerald-600">${p.s.W}</td><td class="text-right text-lime-600 font-semibold">${nz(p.s.Y)}</td><td class="text-right">${nz(p.s.K)}</td><td class="text-right text-cyan-600">${nz(p.s.T)}</td><td class="text-right">${p.s.O}</td><td class="text-right text-amber-600">${nz(p.s.H)}</td>
-      <td class="text-right">${nz(p.s.S)}</td><td class="text-right">${nz(p.s.P)}</td><td class="text-right">${nz(p.s.V)}</td><td class="text-right ${p.s.X ? 'text-rose-600 font-bold' : ''}">${nz(p.s.X)}</td><td class="text-right font-semibold">${nz(p.s.leave + p.s.X)}</td>
+      <td class="text-right">${nz(p.s.S)}</td><td class="text-right">${nz(p.s.P)}</td><td class="text-right">${nz(p.s.V)}</td><td class="text-right">${nz(p.s.E)}</td><td class="text-right ${p.s.X ? 'text-rose-600 font-bold' : ''}">${nz(p.s.X)}</td><td class="text-right font-semibold">${nz(p.s.leave + p.s.X)}</td>
       <td class="text-right muted">${nz(p.s.PL)}</td><td class="text-right font-semibold ${rc}">${r === null ? '-' : fmt(r * 100, 1) + '%'}</td><td class="whitespace-nowrap muted">${esc(p.r.remark)}</td></tr>`; }).join('');
   document.getElementById('tblPeople').innerHTML = `<thead><tr>${th}</tr></thead><tbody>${body || `<tr><td colspan="${COLS.length}" class="text-center muted py-6">ไม่มีพนักงานตามเงื่อนไข</td></tr>`}</tbody>`;
   document.getElementById('tblCount').textContent = `${rows.length} คน · ${v.def.label}`;
@@ -1872,12 +1938,12 @@ function renderTrend() {
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: legendB, tooltip: { callbacks: { afterBody: (it) => { const r = rows[it[0].dataIndex]; return `อัตรากำลัง ${r.heads} คน · ยืนยัน ${r.conf}/${r.days} วัน · ${r.src}`; } } } },
       scales: { x: axis(), y: axis({ beginAtZero: true }), y1: axis({ beginAtZero: true, position: 'right', grid: { display: false } }) }, onClick: (e, els) => { if (els.length) gotoMonth(rows[els[0].index].k); } } });
   mkChart('chTrend2', { data: { labels: rows.map(r => r.short), datasets: [
-    ...[['Y', 'มาสาย'], ['S', 'ลาป่วย'], ['P', 'ลากิจ'], ['V', 'พักร้อน'], ['X', 'ขาดงาน'], ['T', 'OT']].map(([k, l]) => ({ type: 'bar', label: l, data: rows.map(r => r[k]), backgroundColor: DS[k].color, stack: k === 'T' ? 'o' : k === 'Y' ? 'y' : 'l', yAxisID: 'y' })),
+    ...[['Y', 'มาสาย'], ['S', 'ลาป่วย'], ['P', 'ลากิจ'], ['V', 'พักร้อน'], ['E', 'ลา Extra'], ['X', 'ขาดงาน'], ['T', 'OT']].map(([k, l]) => ({ type: 'bar', label: l, data: rows.map(r => r[k]), backgroundColor: DS[k].color, stack: k === 'T' ? 'o' : k === 'Y' ? 'y' : 'l', yAxisID: 'y' })),
     { type: 'line', label: '% มาปฏิบัติงาน', data: rows.map(r => r.rate === null ? null : +r.rate.toFixed(1)), borderColor: '#4f46e5', backgroundColor: '#4f46e5', tension: .3, yAxisID: 'y1' }] },
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: legendB }, scales: { x: axis({ stacked: true }), y: axis({ stacked: true, beginAtZero: true }), y1: axis({ position: 'right', suggestedMin: 85, max: 100, grid: { display: false }, ticks: { callback: (x) => x + '%' } }) }, onClick: (e, els) => { if (els.length) gotoMonth(rows[els[0].index].k); } } });
-  const H = ['เดือน', 'แหล่งข้อมูล', 'อัตรากำลัง', 'ยืนยัน', 'แรงงาน', 'เฉลี่ย/วัน', 'สาย', 'OT', 'ทำแทน', 'เปลี่ยนหยุด', 'ป่วย', 'กิจ', 'พักร้อน', 'ขาด', '% มา'];
+  const H = ['เดือน', 'แหล่งข้อมูล', 'อัตรากำลัง', 'ยืนยัน', 'แรงงาน', 'เฉลี่ย/วัน', 'สาย', 'OT', 'ทำแทน', 'เปลี่ยนวันหยุด', 'ป่วย', 'กิจ', 'พักร้อน', 'ลา Extra', 'ขาด', '% มา'];
   const nz = (x) => x || '';
-  document.getElementById('tblTrend').innerHTML = `<thead><tr>${H.map((h, i) => `<th class="${i > 1 ? 'text-right' : 'text-left'}">${h}</th>`).join('')}</tr></thead><tbody>${rows.slice().reverse().map(r => `<tr data-month="${r.k}" class="${r.k === App.mk ? 'bg-indigo-50 dark:bg-indigo-950/40' : ''}"><td class="font-medium whitespace-nowrap">${r.label}</td><td class="text-xs muted whitespace-nowrap">${esc(r.src)}</td><td class="text-right">${r.heads}</td><td class="text-right">${r.conf}/${r.days}</td><td class="text-right font-semibold">${fmt(r.W)}</td><td class="text-right">${fmt(r.avg, 1)}</td><td class="text-right">${nz(r.Y)}</td><td class="text-right">${nz(r.T)}</td><td class="text-right">${nz(r.K)}</td><td class="text-right">${nz(r.H)}</td><td class="text-right">${nz(r.S)}</td><td class="text-right">${nz(r.P)}</td><td class="text-right">${nz(r.V)}</td><td class="text-right ${r.X ? 'text-rose-600 font-semibold' : ''}">${nz(r.X)}</td><td class="text-right font-semibold">${r.rate === null ? '-' : fmt(r.rate, 1) + '%'}</td></tr>`).join('')}</tbody>`;
+  document.getElementById('tblTrend').innerHTML = `<thead><tr>${H.map((h, i) => `<th class="${i > 1 ? 'text-right' : 'text-left'}">${h}</th>`).join('')}</tr></thead><tbody>${rows.slice().reverse().map(r => `<tr data-month="${r.k}" class="${r.k === App.mk ? 'bg-indigo-50 dark:bg-indigo-950/40' : ''}"><td class="font-medium whitespace-nowrap">${r.label}</td><td class="text-xs muted whitespace-nowrap">${esc(r.src)}</td><td class="text-right">${r.heads}</td><td class="text-right">${r.conf}/${r.days}</td><td class="text-right font-semibold">${fmt(r.W)}</td><td class="text-right">${fmt(r.avg, 1)}</td><td class="text-right">${nz(r.Y)}</td><td class="text-right">${nz(r.T)}</td><td class="text-right">${nz(r.K)}</td><td class="text-right">${nz(r.H)}</td><td class="text-right">${nz(r.S)}</td><td class="text-right">${nz(r.P)}</td><td class="text-right">${nz(r.V)}</td><td class="text-right">${nz(r.E)}</td><td class="text-right ${r.X ? 'text-rose-600 font-semibold' : ''}">${nz(r.X)}</td><td class="text-right font-semibold">${r.rate === null ? '-' : fmt(r.rate, 1) + '%'}</td></tr>`).join('')}</tbody>`;
 }
 function gotoMonth(k) { App.mk = k; D.f.d1 = 1; D.f.d2 = mDays(k); D.period = 'month'; D.view = 'overview'; App.tab = 'dash'; saveLocal(); buildMonthSelect(); render(); toast(`เปิดข้อมูล ${mLabel(k)}`, 'info'); }
 
@@ -1902,7 +1968,7 @@ function openPerson(code, mk = App.mk) {
   const stat = (l, val, c) => `<div class="card p-2.5"><div class="text-[11px] muted">${l}</div><div class="text-lg font-bold font-head" style="color:${c}">${val}</div></div>`;
   const rs = rowSum(r);
   openModal(`${esc(r.name)}<div class="text-xs muted font-normal">รหัส ${esc(r.code)} · ${r.role === 's' ? esc(r.tag || 'ตรวจการ/หัวหน้าทีม') : 'รปภ.'} · ${r.shift === 'n' ? 'กลางคืน' : 'กลางวัน'} · ${mLabel(mk)} · หยุดประจำ ${esc(r.remark || '-')}</div>`,
-    `<div class="grid grid-cols-3 md:grid-cols-6 gap-2 mb-3">${stat('มาปฏิบัติงาน', s.W + ' วัน', '#10b981')}${stat('มาสาย', s.Y + ' ครั้ง', '#65a30d')}${stat('OT / ทำแทน', `${s.T} / ${s.K}`, '#0891b2')}${stat('เปลี่ยนหยุด', `${rs.h} (ทำแทน ${rs.k + rs.j})`, rs.h === rs.k + rs.j ? '#ca8a04' : '#e11d48')}${stat('ลา / ขาด', `${s.leave} / ${s.X}`, '#f59e0b')}${stat('% มา', s.rate === null ? '-' : fmt(s.rate * 100, 1) + '%', '#4f46e5')}</div>
+    `<div class="grid grid-cols-3 md:grid-cols-6 gap-2 mb-3">${stat('มาปฏิบัติงาน', s.W + ' วัน', '#10b981')}${stat('มาสาย', s.Y + ' ครั้ง', '#65a30d')}${stat('OT / ทำแทน', `${s.T} / ${s.K}`, '#0891b2')}${stat('เปลี่ยนวันหยุด', `${rs.h} (ทำแทน ${rs.k + rs.j})`, rs.h === rs.k + rs.j ? '#ca8a04' : '#e11d48')}${stat('ลา / ขาด', `${s.leave} / ${s.X}`, '#f59e0b')}${stat('% มา', s.rate === null ? '-' : fmt(s.rate * 100, 1) + '%', '#4f46e5')}</div>
      <div class="grid grid-cols-7 gap-1 mb-3">${cal}</div>
      ${hist.length > 1 ? '<h4 class="font-semibold text-sm mb-1">ประวัติย้อนหลัง (สูงสุด 12 เดือน)</h4><div class="h-[190px] mb-3"><canvas id="chEmp"></canvas></div>' : ''}
      ${mk === App.mk ? `<div class="flex justify-end"><button class="btn btn-primary" data-edit="${esc(r.code)}">✏️ แก้ไขข้อมูลพนักงาน</button></div>` : ''}`);
@@ -1916,7 +1982,7 @@ function openPerson(code, mk = App.mk) {
 /* ---------- ส่งออกสรุป ---------- */
 function personRows(v) {
   return v.people.map(p => ({ 'รหัส': p.r.code, 'ชื่อ - สกุล': p.r.name, 'ตำแหน่ง': p.r.role === 's' ? (p.r.tag || 'ตรวจการ/หัวหน้าทีม') : 'รปภ.', 'ผลัด': p.r.shift === 'n' ? 'กลางคืน' : 'กลางวัน',
-    'มาปฏิบัติงาน (รวม)': p.s.W, 'มาสาย': p.s.Y, 'ทำแทนวันหยุด': p.s.K, 'OT วันหยุด': p.s.T, 'OFF': p.s.O, 'เปลี่ยนวันหยุด': p.s.H, 'ลาป่วย': p.s.S, 'ลากิจ': p.s.P, 'พักร้อน': p.s.V, 'ขาดงาน': p.s.X, 'มาทำงานวันหยุดนักขัตฤกษ์': p.s.HW, 'ลาล่วงหน้า': p.s.LA, 'เวรรอติ๊ก': p.s.PL, 'ติ๊กแล้ว (วันที่ยังไม่ครบ)': p.s.PT,
+    'มาปฏิบัติงาน (รวม)': p.s.W, 'มาสาย': p.s.Y, 'ทำแทนวันหยุด': p.s.K, 'OT วันหยุด': p.s.T, 'OFF': p.s.O, 'เปลี่ยนวันหยุด': p.s.H, 'ลาป่วย': p.s.S, 'ลากิจ': p.s.P, 'พักร้อน': p.s.V, 'ลาแทนวันหยุดประจำปี (ลา Extra)': p.s.E, 'ขาดงาน': p.s.X, 'มาทำงานวันหยุดนักขัตฤกษ์': p.s.HW, 'ลาล่วงหน้า': p.s.LA, 'เวรรอติ๊ก': p.s.PL, 'ติ๊กแล้ว (วันที่ยังไม่ครบ)': p.s.PT,
     '% มาปฏิบัติงาน': p.s.rate === null ? '' : +(p.s.rate * 100).toFixed(1), 'วันหยุดประจำ': p.r.remark }));
 }
 const stamp = () => (D.cur ? `${D.cur.def.type}_${D.cur.def.key}` : App.mk);
@@ -1963,7 +2029,7 @@ function renderSwaps(v) {
   const chip = (k, l, c) => `<button class="card px-3 py-2 text-left ${f === k ? 'ring-2 ring-indigo-500' : ''}" data-swf="${k}"><div class="text-[11px] muted">${l}</div><div class="text-xl font-bold font-head" style="color:${c}">${cnt[k]}</div></button>`;
   document.getElementById('swapStats').innerHTML = chip('all', 'ทั้งหมดในช่วงนี้', '#4f46e5') + chip('active', 'ใช้งาน', '#059669') + chip('wait', 'ยังไม่ได้ทำแทน', '#6366f1') + chip('none', 'ไม่มีบันทึกเหตุผล', '#e11d48') + chip('cancelled', 'ยกเลิกแล้ว', '#64748b');
   const rows = shown.map(x => {
-    if (!x.s) return `<tr class="bg-rose-50/60 dark:bg-rose-950/20"><td class="whitespace-nowrap muted">—</td><td class="font-medium whitespace-nowrap">${esc(x.r.name)}<div class="text-[11px] muted">${esc(x.r.code)}</div></td><td class="muted">ไม่ระบุ</td><td class="whitespace-nowrap">${dShort(x.mk, x.toDay)}</td><td colspan="3" class="text-rose-600 text-sm">⚠ มีช่อง "เปลี่ยนหยุด" แต่ไม่มีบันทึกเหตุผล</td><td><span class="chip !bg-rose-100 !text-rose-700">ไม่มีบันทึก</span></td><td>${x.mk === App.mk ? `<button class="btn btn-primary !py-1 !px-2 text-xs" data-swnew="${esc(x.r.code)}|${x.toDay}">+ เพิ่มเหตุผล</button>` : `<button class="btn btn-ghost !py-1 !px-2 text-xs" data-month="${x.mk}">เปิดเดือน</button>`}</td></tr>`;
+    if (!x.s) return `<tr class="bg-rose-50/60 dark:bg-rose-950/20"><td class="whitespace-nowrap muted">—</td><td class="font-medium whitespace-nowrap">${esc(x.r.name)}<div class="text-[11px] muted">${esc(x.r.code)}</div></td><td class="muted">ไม่ระบุ</td><td class="whitespace-nowrap">${dShort(x.mk, x.toDay)}</td><td colspan="3" class="text-rose-600 text-sm">⚠ มีช่อง "เปลี่ยนวันหยุด" แต่ไม่มีบันทึกเหตุผล</td><td><span class="chip !bg-rose-100 !text-rose-700">ไม่มีบันทึก</span></td><td>${x.mk === App.mk ? `<button class="btn btn-primary !py-1 !px-2 text-xs" data-swnew="${esc(x.r.code)}|${x.toDay}">+ เพิ่มเหตุผล</button>` : `<button class="btn btn-ghost !py-1 !px-2 text-xs" data-month="${x.mk}">เปิดเดือน</button>`}</td></tr>`;
     const s = x.s, m = MADE_TH[x.made] || MADE_TH.other, can = s.status === 'cancelled';
     return `<tr class="${can ? 'opacity-55' : ''}"><td class="whitespace-nowrap text-xs">${s.createdAt ? esc(new Date(s.createdAt).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' })) : '—'}</td>
       <td class="font-medium whitespace-nowrap">${esc(s.name || (x.r && x.r.name) || s.code)}<div class="text-[11px] muted">${esc(s.code)}</div></td><td class="whitespace-nowrap">${x.r ? (x.r.shift === 'n' ? 'กลางคืน' : 'กลางวัน') : '-'}</td>
@@ -2007,7 +2073,7 @@ function deepAnalysis(v) {
         conf: cd.length, days: ds.length, W, L, X, Y, avg: cd.length ? W / cd.length : 0, rate: W + L + X ? W / (W + L + X) : null }; });
   }
   // 2) รูปแบบการลา/ขาด: ประเภท · ลาติดวันหยุด · ลาวันจันทร์/ศุกร์ เทียบสัดส่วนวันทำงานจันทร์/ศุกร์
-  const lp = { total: 0, S: 0, P: 0, V: 0, X: 0, adj: 0, sickAdj: 0, monFri: 0, schedMF: 0, sched: 0, people: new Map() };
+  const lp = { total: 0, S: 0, P: 0, V: 0, E: 0, X: 0, adj: 0, sickAdj: 0, monFri: 0, schedMF: 0, sched: 0, people: new Map() };
   v.rows.forEach(r => r.c.forEach((ch, i) => {
     if (!conf[i]) return;
     const wd = v.daily[i].wd, mf = wd === 1 || wd === 5;
@@ -2084,8 +2150,8 @@ function renderDeep(v) {
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <div class="card p-4"><h3 class="font-semibold mb-2">📅 ${A.bucketTitle}</h3><div class="scroll-x"><table class="tbl w-full"><thead><tr><th class="text-left">ช่วง</th><th class="text-left">เฉลี่ย/วัน</th><th class="text-right">% มา</th><th class="text-right">สาย</th><th class="text-right">ลา</th><th class="text-right">ขาด</th></tr></thead><tbody>${bucketRows || '<tr><td colspan="6" class="muted text-center">ไม่มีข้อมูล</td></tr>'}</tbody></table></div></div>
       <div class="card p-4"><h3 class="font-semibold mb-2">🩺 รูปแบบการลา / ขาดงาน</h3>
-        ${lp.total ? `<div class="flex h-4 rounded-full overflow-hidden mb-1.5 bg-slate-100">${bar(lp.S, '#f59e0b', 'ลาป่วย')}${bar(lp.P, '#8b5cf6', 'ลากิจ')}${bar(lp.V, '#0ea5e9', 'พักร้อน')}${bar(lp.X, '#ef4444', 'ขาด')}</div>
-        <div class="flex flex-wrap gap-x-3 text-xs mb-3"><span>🟧 ป่วย ${lp.S}</span><span>🟪 กิจ ${lp.P}</span><span>🟦 พักร้อน ${lp.V}</span><span>🟥 ขาด ${lp.X}</span><b>รวม ${lp.total} วัน</b></div>
+        ${lp.total ? `<div class="flex h-4 rounded-full overflow-hidden mb-1.5 bg-slate-100">${bar(lp.S, '#f59e0b', 'ลาป่วย')}${bar(lp.P, '#8b5cf6', 'ลากิจ')}${bar(lp.V, '#0ea5e9', 'พักร้อน')}${bar(lp.E, '#c026d3', 'ลา Extra')}${bar(lp.X, '#ef4444', 'ขาด')}</div>
+        <div class="flex flex-wrap gap-x-3 text-xs mb-3"><span>🟧 ป่วย ${lp.S}</span><span>🟪 กิจ ${lp.P}</span><span>🟦 พักร้อน ${lp.V}</span><span><span style="color:#c026d3">■</span> Extra ${lp.E}</span><span>🟥 ขาด ${lp.X}</span><b>รวม ${lp.total} วัน</b></div>
         <div class="grid grid-cols-2 gap-2 text-sm"><div class="rounded-xl p-2.5 bg-amber-50 dark:bg-amber-900/20"><div class="text-[11px] muted">ลา/ขาด ติดวันหยุด</div><div class="text-lg font-bold">${lp.adj} <span class="text-xs font-normal">(${pctTxt(lp.adj / lt, 0)})</span></div><div class="text-[11px] muted">ลาป่วยติดวันหยุด ${lp.sickAdj} วัน</div></div>
           <div class="rounded-xl p-2.5 bg-violet-50 dark:bg-violet-900/20"><div class="text-[11px] muted">ลา/ขาด วันจันทร์-ศุกร์</div><div class="text-lg font-bold">${pctTxt(lp.mfShare, 0)}</div><div class="text-[11px] ${lp.mfShare > lp.mfBase * 1.3 && lp.total >= 5 ? 'text-rose-600 font-semibold' : 'muted'}">ปกติควรใกล้ ${pctTxt(lp.mfBase, 0)} (สัดส่วนวันทำงาน จ./ศ.)</div></div></div>
         <div class="text-xs mt-2"><b>ลา/ขาดตั้งแต่ 3 ครั้ง:</b> ${lp.repeat.length ? lp.repeat.slice(0, 6).map(x => `${esc(shortName(x.r.name))} (${x.n})`).join(', ') : 'ไม่มี'}</div>` : '<div class="text-sm muted">ไม่มีการลา/ขาดงานในช่วงนี้ 🎉</div>'}</div>
@@ -2129,13 +2195,13 @@ function deepReportHtml(v, secNo) {
   const rateOf = (c) => { const s = c.W + c.L + c.X; return s && (c.conf || c.total) ? fmt(c.W / s * 100, c.total || isY(v.def) ? 1 : 0) + '%' : '-'; };
   const daily = `<table style="border-collapse:collapse;font-size:${fs}px;width:100%;table-layout:fixed"><colgroup><col style="width:150px">${dcols.map(() => `<col style="width:${cw}px">`).join('')}<col style="width:70px"></colgroup>
     <thead><tr><th style="${th}text-align:left;padding-left:4px">สถานะ \ ${isY(v.def) ? 'เดือน' : 'วันที่'}</th>${dcols.map(c => `<th style="${th}${c.hol ? 'background:#fecdd3;color:#9f1239;' : c.wd === 0 || c.wd === 6 ? 'color:#e11d48;' : ''}">${esc(c.label)}</th>`).join('')}<th style="${th}">รวม</th></tr></thead><tbody>
-    ${drow('มาปฏิบัติงาน (คน)', c => c.W || (c.conf ? 0 : ''), 'font-weight:700;color:#047857;')}${drow('— มาสาย', c => c.Y || '')}${drow('— OT / ทำแทน', c => c.TK || '')}${drow('ลา', c => c.L || '')}${drow('ขาดงาน', c => c.X || '', 'color:#b91c1c;')}${drow('หยุด / เปลี่ยนหยุด', c => c.O || '')}${drow('เวรรอติ๊ก', c => c.PL || '', 'color:#6366f1;')}${drow('% มาปฏิบัติงาน', rateOf, 'font-weight:700;background:#f8fafc;')}</tbody></table>`;
+    ${drow('มาปฏิบัติงาน (คน)', c => c.W || (c.conf ? 0 : ''), 'font-weight:700;color:#047857;')}${drow('— มาสาย', c => c.Y || '')}${drow('— OT / ทำแทน', c => c.TK || '')}${drow('ลา', c => c.L || '')}${drow('ขาดงาน', c => c.X || '', 'color:#b91c1c;')}${drow('หยุด / เปลี่ยนวันหยุด', c => c.O || '')}${drow('เวรรอติ๊ก', c => c.PL || '', 'color:#6366f1;')}${drow('% มาปฏิบัติงาน', rateOf, 'font-weight:700;background:#f8fafc;')}</tbody></table>`;
   return { top: `${rptSec(secNo, `ความหนาแน่นกำลังพลแยกกลุ่ม (${H.unit === 'คน' ? 'คนต่อวัน' : 'เฉลี่ยคนต่อวัน'}) — เขียว = เต็มกำลัง · เหลือง = 60–80% ของสูงสุด · แดง = ต่ำกว่า 60%${D.target ? ` · แถบแดงในแถวรวม = ต่ำกว่าเป้า ${D.target} คน (${A.below.length} วัน)` : ''}`)}${heat}
     <div style="margin-top:6px">${rptSec(secNo + 1, `ตารางสรุป${isY(v.def) ? 'รายเดือน' : 'รายวัน'} (คน) — สีเทา = ยังไม่ยืนยันข้อมูล · รวม มา/ลา/ขาด และ % มา คิดเฉพาะวันที่ยืนยันแล้ว (ตรงกับสรุปภาพรวม)`)}${daily}</div>
 `, bottom: `
     <div style="display:grid;grid-template-columns:1.05fr 1fr 1fr;gap:10px;margin-top:6px">
       <div>${rptSec(secNo + 2, A.bucketTitle)}${bk}</div>
-      <div>${rptSec(secNo + 3, 'รูปแบบการลา / ขาดงาน')}${box('สรุป', lp.total ? `ลา/ขาดรวม <b>${lp.total}</b> วัน (ป่วย ${lp.S} · กิจ ${lp.P} · พักร้อน ${lp.V} · ขาด ${lp.X})<br>ลา/ขาดติดวันหยุด <b>${lp.adj}</b> วัน (${pctTxt(lp.adj / lt, 0)}) · ลาป่วยติดวันหยุด ${lp.sickAdj} วัน<br>ลา/ขาดวันจันทร์-ศุกร์ <b>${pctTxt(lp.mfShare, 0)}</b> (สัดส่วนวันทำงาน จ./ศ. ${pctTxt(lp.mfBase, 0)})${lp.mfShare > lp.mfBase * 1.3 && lp.total >= 5 ? ' <b style="color:#dc2626">— สูงกว่าปกติ ควรติดตาม</b>' : ''}<br>ลา/ขาดตั้งแต่ 3 ครั้ง: ${lp.repeat.length ? lp.repeat.slice(0, 6).map(x => `${esc(shortName(x.r.name))} (${x.n})`).join(', ') : 'ไม่มี'}` : 'ไม่มีการลา/ขาดงานในช่วงนี้')}
+      <div>${rptSec(secNo + 3, 'รูปแบบการลา / ขาดงาน')}${box('สรุป', lp.total ? `ลา/ขาดรวม <b>${lp.total}</b> วัน (ป่วย ${lp.S} · กิจ ${lp.P} · พักร้อน ${lp.V} · Extra ${lp.E} · ขาด ${lp.X})<br>ลา/ขาดติดวันหยุด <b>${lp.adj}</b> วัน (${pctTxt(lp.adj / lt, 0)}) · ลาป่วยติดวันหยุด ${lp.sickAdj} วัน<br>ลา/ขาดวันจันทร์-ศุกร์ <b>${pctTxt(lp.mfShare, 0)}</b> (สัดส่วนวันทำงาน จ./ศ. ${pctTxt(lp.mfBase, 0)})${lp.mfShare > lp.mfBase * 1.3 && lp.total >= 5 ? ' <b style="color:#dc2626">— สูงกว่าปกติ ควรติดตาม</b>' : ''}<br>ลา/ขาดตั้งแต่ 3 ครั้ง: ${lp.repeat.length ? lp.repeat.slice(0, 6).map(x => `${esc(shortName(x.r.name))} (${x.n})`).join(', ') : 'ไม่มี'}` : 'ไม่มีการลา/ขาดงานในช่วงนี้')}
         <div style="height:6px"></div>${box('การเปลี่ยนวันหยุด', `ใช้งาน <b>${sw.active}</b> · ทำแทนแล้ว ${sw.done} · รอทำแทน ${sw.wait} · ไม่ได้มาทำแทน ${sw.miss} · ยกเลิก ${sw.cancelled}${sw.none ? ` · <b style="color:#dc2626">ไม่มีบันทึกเหตุผล ${sw.none}</b>` : ''}<br>เหตุผลที่พบบ่อย: ${sw.reasons.length ? sw.reasons.map(([t, n]) => `${esc(t)} (${n})`).join(', ') : '-'}`)}</div>
       <div>${rptSec(secNo + 4, 'จัดอันดับรายบุคคล')}${box(`มาครบ ไม่สาย ไม่ลา (${rk.perfect.length} คน)`, rk.perfect.length ? rk.perfect.slice(0, 14).map(n => esc(shortName(n))).join(', ') + (rk.perfect.length > 14 ? ` และอีก ${rk.perfect.length - 14} คน` : '') : '-')}
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px">${box('% มาต่ำสุด', li(rk.low, p => `${esc(shortName(p.r.name))} <b>${pctTxt(p.s.rate)}</b>`, 'ไม่มีผู้ที่มาต่ำกว่า 100%'))}${box('OT + ทำแทนมากสุด', li(rk.ot, p => `${esc(shortName(p.r.name))} <b>${p.s.T + p.s.K}</b>`, '-'))}${box('มาสายบ่อย', li(rk.late, p => `${esc(shortName(p.r.name))} <b>${p.s.Y}</b>`, 'ไม่มี'))}${box('ทำงานวันนักขัตฤกษ์', li(rk.hw, p => `${esc(shortName(p.r.name))} <b>${p.s.HW}</b>`, '-'))}</div></div>
@@ -2186,7 +2252,7 @@ function buildReportPages(v, host, scale = 1) {
   host.innerHTML = '';
   const t = v.tot, rate = t.sched ? fmt(t.W / t.sched * 100, 1) + '%' : '-', pages = [], charts = [];
   const kp = [['อัตรากำลัง', fmt(v.heads) + ' คน', `ตก./หน.ทีม ${v.sup} · รปภ. ${v.guard}`, RC.navy], ['แรงงานรวม', fmt(t.W) + ' คน-วัน', 'รวม สาย/OT/ทำแทน', '#047857'], ['เฉลี่ยต่อวัน', fmt(v.avgDay, 1) + ' คน', v.minDay ? `ต่ำสุด ${v.minDay.W} · สูงสุด ${v.maxDay.W}` : '-', '#0369a1'], ['% มาปฏิบัติงาน', rate, 'มา ÷ (มา+ลา+ขาด)', '#7c3aed'],
-    ['มาสาย', fmt(t.Y) + ' ครั้ง', `ตรงเวลา ${t.W ? fmt((t.W - t.Y) / t.W * 100, 1) + '%' : '-'}`, '#4d7c0f'], ['ลา / ขาด', `${t.leave} / ${t.X} วัน`, `ป่วย ${t.S} · กิจ ${t.P} · พร. ${t.V}`, '#b45309'], ['OT / ทำแทน', `${t.T} / ${t.K} วัน`, `เปลี่ยนวันหยุด ${t.H}`, '#0e7490'], ['เวรรอติ๊ก', fmt(t.PL) + ' เวร', `ยืนยันแล้ว ${v.confDaily.length}/${v.daily.length} วัน${t.PT ? ` · ติ๊กแล้วรอครบ ${fmt(t.PT)}` : ''}`, '#475569']];
+    ['มาสาย', fmt(t.Y) + ' ครั้ง', `ตรงเวลา ${t.W ? fmt((t.W - t.Y) / t.W * 100, 1) + '%' : '-'}`, '#4d7c0f'], ['ลา / ขาด', `${t.leave} / ${t.X} วัน`, `ป่วย ${t.S} · กิจ ${t.P} · พร. ${t.V} · EX ${t.E}`, '#b45309'], ['OT / ทำแทน', `${t.T} / ${t.K} วัน`, `เปลี่ยนวันหยุด ${t.H}`, '#0e7490'], ['เวรรอติ๊ก', fmt(t.PL) + ' เวร', `ยืนยันแล้ว ${v.confDaily.length}/${v.daily.length} วัน${t.PT ? ` · ติ๊กแล้วรอครบ ${fmt(t.PT)}` : ''}`, '#475569']];
   const kpi = `<div style="display:grid;grid-template-columns:repeat(8,1fr);gap:7px">${kp.map(([l, val, s, c]) => `<div style="border:1px solid ${RC.line};border-top:4px solid ${c};border-radius:8px;padding:5px 8px;background:#fff"><div style="font-size:10.5px;color:${RC.muted}">${l}</div><div style="font-family:Prompt;font-weight:700;font-size:16px;color:${c};line-height:1.3">${val}</div><div style="font-size:9.5px;color:${RC.muted};white-space:nowrap;overflow:hidden">${s}</div></div>`).join('')}</div>`;
   const segRows = SEG.map(s => { const ps = v.people.filter(p => p.r.shift + p.r.role === s.key); if (!ps.length) return ''; const sm = (f) => ps.reduce((a, p) => a + f(p.s), 0); const W = sm(x => x.W), L = sm(x => x.leave), X = sm(x => x.X); return `<tr><td style="${TD}">${s.label}</td>${[ps.length, W, sm(x => x.Y), sm(x => x.T), sm(x => x.K), sm(x => x.O + x.H), L, X].map(n => `<td style="${TD}text-align:right">${fmt(n)}</td>`).join('')}<td style="${TD}text-align:right;font-weight:700">${pct(W, W + L + X)}</td></tr>`; }).join('');
   const segTotal = `<tr style="background:${RC.soft};font-weight:700"><td style="${TD}">รวม</td>${[v.heads, t.W, t.Y, t.T, t.K, t.O + t.H, t.leave, t.X].map(n => `<td style="${TD}text-align:right">${fmt(n)}</td>`).join('')}<td style="${TD}text-align:right">${rate}</td></tr>`;
@@ -2245,7 +2311,7 @@ function buildReportPages(v, host, scale = 1) {
     parts.forEach((part, pi) => {
       const body = part.map(p => `<tr style="height:19px"><td style="${TD}text-align:center">${++no}</td>${nameCell(p)}<td style="${TD}text-align:center">${p.r.shift === 'n' ? 'คืน' : 'วัน'}</td>${p.r.c.map((ch, j) => { const st = ST[ch] || ST['?']; const lab = ch === 'W' ? '✓' : ch === '?' ? (p.r.oth[j] || '') : st.cell; return `<td style="${TD}text-align:center;background:${isPlan(ch) || ch === '.' ? '#fff' : st.bg + '33'};color:${isPlan(ch) ? '#a5b4fc' : RC.text};font-weight:600">${esc(lab)}</td>`; }).join('')}${[p.s.W, p.s.Y, p.s.T, p.s.leave, p.s.X].map(n => `<td style="${TD}text-align:center">${n || ''}</td>`).join('')}</tr>`).join('');
       const last = pi === parts.length - 1;
-      mkPage(`__H${pages.length + 1}__${rptSec(sec, `ตารางการมาปฏิบัติงานรายวัน (${ppl.length} คน)${parts.length > 1 ? ` · ส่วนที่ ${pi + 1}/${parts.length}` : ''}`)}<table style="width:100%;border-collapse:collapse;font-size:11px;line-height:1.15">${head}${body}</table>${last ? `<div style="font-size:9.5px;color:${RC.muted};margin-top:4px">✓ = มา · สาย = มาสาย · OT = มาวันหยุด · แทน = ทำแทนวันหยุด · สลับ = เปลี่ยนวันหยุด · ป/ก/พร = ลา · ข = ขาด · A/B/C = เวรรอติ๊ก</div>${rptNotes(v)}${rptSign()}` : ''}${rptFooter()}`);
+      mkPage(`__H${pages.length + 1}__${rptSec(sec, `ตารางการมาปฏิบัติงานรายวัน (${ppl.length} คน)${parts.length > 1 ? ` · ส่วนที่ ${pi + 1}/${parts.length}` : ''}`)}<table style="width:100%;border-collapse:collapse;font-size:11px;line-height:1.15">${head}${body}</table>${last ? `<div style="font-size:9.5px;color:${RC.muted};margin-top:4px">✓ = มา · สาย = มาสาย · OT = มาวันหยุด · แทน = ทำแทนวันหยุด · ↔ = เปลี่ยนวันหยุด (หยุดแทน/ทำแทน) · ป/ก/พร = ลา · ข = ขาด · A/B/C = เวรรอติ๊ก</div>${rptNotes(v)}${rptSign()}` : ''}${rptFooter()}`);
     });
   } else {
     const parts = chunk(ppl, 48, cap), fs = 10.8;
@@ -2371,13 +2437,13 @@ function cellPop(code, day, x, y) {
   const days = mDays(App.mk), cur = r.c[day - 1];
   const opts = Array.from({ length: days }, (_, i) => i + 1).filter(d => d !== day).map(d => `<option value="${d}">${d} (${WD_S[wdOf(App.mk, d)]})${isWork(r.c[d - 1]) ? ' · ติ๊กแล้ว' : ''}</option>`).join('');
   showPop(x, y, `<div class="px-3 py-1 text-xs muted">${esc(r.name)} · วัน${WD[wdOf(App.mk, day)]}ที่ ${day}</div>
-    ${['W', 'Y', 'K', 'T', 'O', 'H', 'S', 'P', 'V', 'X'].map(k => popItem(`data-pset="${k}"`, k, ST[k].label)).join('')}
+    ${['W', 'Y', 'K', 'T', 'O', 'H', 'S', 'P', 'V', 'E', 'X'].map(k => popItem(`data-pset="${k}"`, k, ST[k].label)).join('')}
     ${popItem('data-pset="J"', 'J', 'เวรทำแทน (รอติ๊ก)')}
     ${(() => { const sw = swapAt(curMonth(), code, day); return sw ? popItem(`data-swedit="${esc(sw.id)}"`, null, '📝 ดู/แก้ไขบันทึกเหตุผลการเปลี่ยนวันหยุด') : cur === 'H' ? popItem(`data-swnew="${esc(code)}|${day}"`, null, '📝 เพิ่มบันทึกเหตุผล (ยังไม่มี)') : ''; })()}
     ${popItem('data-pset="plan"', null, `↺ คืนเป็นเวร ${esc(r.plan || '')}`)}${popItem('data-pset="clear"', null, '⌫ ล้างช่อง')}
-    <div class="border-t mt-1 pt-2 px-3 pb-1" style="border-color:var(--line)"><div class="text-xs font-semibold mb-1">↔ สลับวันหยุด${isOff(cur) ? '' : ' (ใช้วันนี้เป็นวันหยุดเดิม)'}</div>
+    <div class="border-t mt-1 pt-2 px-3 pb-1" style="border-color:var(--line)"><div class="text-xs font-semibold mb-1">↔ เปลี่ยนวันหยุด${isOff(cur) ? '' : ' (ใช้วันนี้เป็นวันหยุดเดิม)'}</div>
       <div class="flex gap-1"><select id="swapTo" class="inp !py-1 text-xs">${opts}</select><button class="btn btn-primary !py-1 !px-2 text-xs" id="swapGo">ย้าย</button></div>
-      <div class="text-[10px] muted mt-1">วันนี้ → เวรทำแทน · วันที่เลือก → เปลี่ยนหยุด</div></div>`);
+      <div class="text-[10px] muted mt-1">วันนี้ → ทำแทน · วันที่เลือก → หยุดแทน</div></div>`);
   App.popTarget = { code, day };
   document.getElementById('swapGo').onclick = () => { const to = +document.getElementById('swapTo').value; hidePop(); swapDayOff(code, day, to); };
 }
@@ -2439,15 +2505,15 @@ function attachSwapNote(code, toDay) {
   openSwapModal(r, from, toDay, { id: newId(), code, name: r.name, fromDay: from, toDay, reason: '', approver: '', status: 'active', createdBy: App.user || '', createdAt: new Date().toISOString(), _attach: true });
 }
 /* หน้าต่างบันทึกการเปลี่ยนวันหยุด — บังคับใส่เหตุผล เพื่อใช้ตรวจสอบย้อนหลัง */
-// ตรวจก่อนเปลี่ยนวันหยุด (ใช้ร่วมกันทั้งหน้าต่างในตาราง และฟอร์มในแท็บ "เปลี่ยนวันหยุด")
-function swapWarnings(r, fromDay, toDay) {
+// ตรวจก่อนเปลี่ยนวันหยุด (ใช้ร่วมกันทั้งหน้าต่างในตาราง และฟอร์มในแท็บ "รายการเปลี่ยนวันหยุด")
+function swapWarnings(r, fromDay, toDay, ignoreId) {
   const mk = App.mk, warn = [];
   if (!isOff(r.c[fromDay - 1]) && !remarkSet(r.remark).has(wdOf(mk, fromDay))) warn.push(`วันที่ ${fromDay} ไม่ใช่วันหยุด (OFF) ของพนักงาน`);
   if (isOff(r.c[toDay - 1])) warn.push(`วันที่ ${toDay} เป็นวันหยุดอยู่แล้ว — ควรเลือกวันทำงานเป็นวันหยุดใหม่`);
-  if (isWork(r.c[toDay - 1])) warn.push(`วันที่ ${toDay} ติ๊กมาปฏิบัติงานแล้ว — จะถูกเปลี่ยนเป็น "เปลี่ยนหยุด"`);
+  if (isWork(r.c[toDay - 1])) warn.push(`วันที่ ${toDay} ติ๊กมาปฏิบัติงานแล้ว — จะถูกเปลี่ยนเป็น "หยุดแทน"`);
   if (isLeave(r.c[toDay - 1]) || r.c[toDay - 1] === 'X') warn.push(`วันที่ ${toDay} มีบันทึกลา/ขาด — จะถูกแทนที่`);
   if (r.c[fromDay - 1] === 'R' || r.c[toDay - 1] === 'R') warn.push('พนักงานพ้นสภาพในวันที่เลือก');
-  if ((curMonth().swaps || []).some(s => s.status === 'active' && s.code === r.code && (s.fromDay === fromDay || s.toDay === toDay || s.toDay === fromDay || s.fromDay === toDay))) warn.push('มีบันทึกการเปลี่ยนวันหยุดของวันที่เลือกอยู่แล้ว');
+  if ((curMonth().swaps || []).some(s => s.id !== ignoreId && s.status === 'active' && s.code === r.code && (s.fromDay === fromDay || s.toDay === toDay || s.toDay === fromDay || s.fromDay === toDay))) warn.push('มีบันทึกการเปลี่ยนวันหยุดของวันที่เลือกอยู่แล้ว');
   return warn;
 }
 // ฟอร์มบันทึกการเปลี่ยนวันหยุด (แท็บในหน้าฟอร์มกรอก) — ทางเลือกแทนการคลิกในตาราง
@@ -2475,11 +2541,11 @@ function renderSwapForm() {
     <div class="flex flex-wrap gap-1.5 mt-1.5">${SWAP_REASONS.map(x => `<button type="button" class="chip !text-[12px]" data-sfr="${esc(x)}">${esc(x)}</button>`).join('')}</div>
     <div class="flex flex-wrap items-end gap-3 mt-3"><label class="text-sm flex-1 min-w-[12rem]">ผู้อนุมัติ (ถ้ามี)<input id="sfAppr" class="inp mt-1" maxlength="100" value="${esc(F.appr || '')}" placeholder="เช่น หัวหน้าแผนก"></label>
       <button class="btn btn-ghost" id="sfReset">ล้าง</button><button class="btn btn-primary" id="sfOk">💾 บันทึกการเปลี่ยนวันหยุด</button></div>
-    <p class="text-[11px] muted mt-2">ผู้บันทึก: ${esc(App.user || '(ยังไม่ได้ตั้งชื่อ)')} · หลังบันทึก ช่องวันหยุดเดิมจะเป็น "แทน →วันใหม่" และวันใหม่เป็น "สลับ ←วันเดิม" · กด "บันทึก" ด้านบนเพื่อส่งขึ้น Google Sheets</p>`;
+    <p class="text-[11px] muted mt-2">ผู้บันทึก: ${esc(App.user || '(ยังไม่ได้ตั้งชื่อ)')} · หลังบันทึก ช่องวันหยุดเดิมจะเป็น "แทน ไปวันใหม่" และวันใหม่เป็น "หยุดแทน จากวันเดิม" · กด "บันทึก" ด้านบนเพื่อส่งขึ้น Google Sheets</p>`;
   const $ = (id) => document.getElementById(id);
   const stTag = (d) => { const ch = r.c[d - 1] || '.'; return `<span class="inline-grid place-items-center px-1.5 h-5 rounded text-[10px] font-bold" style="background:${ST[ch].bg};color:${ST[ch].fg || 'var(--text)'};border:1px solid var(--line)">${esc(ST[ch].cell || '–')}</span> ${esc(ST[ch].label)}`; };
   const preview = () => { const f = +$('sfFrom').value, to = +$('sfTo').value, w = f === to ? ['วันหยุดเดิมและวันใหม่ต้องเป็นคนละวัน'] : swapWarnings(r, f, to);
-    $('sfPreview').innerHTML = `<div class="grid sm:grid-cols-2 gap-2 text-xs"><div class="rounded-lg p-2" style="background:var(--head)">วันที่ ${f} ปัจจุบัน: ${stTag(f)} → จะเป็น <b>มาทำแทน</b></div><div class="rounded-lg p-2" style="background:var(--head)">วันที่ ${to} ปัจจุบัน: ${stTag(to)} → จะเป็น <b>เปลี่ยนหยุด</b></div></div>${w.length ? `<div class="rounded-lg p-2 mt-2 text-xs bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-900/30 dark:text-amber-100">⚠ ${w.map(esc).join('<br>⚠ ')}</div>` : ''}`; };
+    $('sfPreview').innerHTML = `<div class="grid sm:grid-cols-2 gap-2 text-xs"><div class="rounded-lg p-2" style="background:var(--head)">วันที่ ${f} ปัจจุบัน: ${stTag(f)} → จะเป็น <b>มาทำแทน</b></div><div class="rounded-lg p-2" style="background:var(--head)">วันที่ ${to} ปัจจุบัน: ${stTag(to)} → จะเป็น <b>หยุดแทน</b></div></div>${w.length ? `<div class="rounded-lg p-2 mt-2 text-xs bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-900/30 dark:text-amber-100">⚠ ${w.map(esc).join('<br>⚠ ')}</div>` : ''}`; };
   preview();
   $('sfCode').onchange = (e) => { F.code = e.target.value; F.from = 0; renderSwapForm(); };
   $('sfFrom').onchange = (e) => { F.from = +e.target.value; preview(); };
@@ -2500,17 +2566,25 @@ function renderSwapForm() {
 const SWAP_REASONS = ['ติดธุระส่วนตัว', 'สลับวันหยุดกับเพื่อนร่วมงาน', 'ความต้องการของหน่วยงาน', 'งานกิจกรรม/อีเวนต์พิเศษ', 'กำลังพลไม่เพียงพอ'];
 function openSwapModal(r, fromDay, toDay, edit) {
   if (isLocked()) { lockedToast(); return; }
+  // v16: เรียกโดยไม่ระบุพนักงาน (ปุ่ม "บันทึกเปลี่ยนวันหยุด" ในหน้าตาราง) → แสดงช่องเลือกพนักงานในฟอร์มเลย
+  const pick = !r; let pool = [];
+  if (pick) {
+    const ord = { ds: 0, dg: 1, ns: 2, ng: 3 };
+    pool = (curMonth().rows || []).filter(x => !x.c.every(ch => ch === 'R')).slice().sort((a, b) => (ord[a.shift + a.role] - ord[b.shift + b.role]) || a.order - b.order);
+    if (!pool.length) { toast('ไม่มีพนักงานในเดือนนี้', 'warn'); return; }
+    r = pool[0]; const df = swapDefaults(r); fromDay = df.from; toDay = df.to;
+  }
+  const dateLocked = !!edit && !edit._attach && edit.status !== 'active'; // รายการที่ยกเลิกแล้วแก้วันที่ไม่ได้
   const mk = App.mk, days = mDays(mk), dt = (d) => `วัน${WD[wdOf(mk, d)]}ที่ ${d} ${mLabel(mk)}`;
   const st = (d) => { const ch = r.c[d - 1] || '.'; return `<span class="inline-grid place-items-center px-1.5 h-5 rounded text-[10px] font-bold" style="background:${ST[ch].bg};color:${ST[ch].fg || 'var(--text)'};border:1px solid var(--line)">${esc(ST[ch].cell || '–')}</span> ${esc(ST[ch].label)}`;  };
-  const warn = edit ? [] : swapWarnings(r, fromDay, toDay);
   const opt = (sel) => Array.from({ length: days }, (_, i) => i + 1).map(d => `<option value="${d}" ${d === sel ? 'selected' : ''}>${d} (${WD_S[wdOf(mk, d)]})</option>`).join('');
   openModal(edit && edit._attach ? '📝 เพิ่มบันทึกเหตุผลการเปลี่ยนวันหยุด' : edit ? '✏️ แก้ไขบันทึกการเปลี่ยนวันหยุด' : '↔ บันทึกการเปลี่ยนวันหยุด', `
-    <div class="card p-3 mb-3"><div class="font-semibold">${esc(r.name)} <span class="muted text-sm">(${esc(r.code)}) · หยุดประจำ ${esc(r.remark || '-')}</span></div></div>
+    ${pick ? `<label class="block text-sm mb-3">พนักงาน<select id="swEmp" class="inp mt-1">${pool.map(x => `<option value="${esc(x.code)}">${esc(x.name)} (${esc(x.code)}) · ${x.shift === 'n' ? 'กลางคืน' : 'กลางวัน'} · หยุด${esc(remarkShort(x.remark) || '-')}</option>`).join('')}</select></label>` : `<div class="card p-3 mb-3"><div class="font-semibold">${esc(r.name)} <span class="muted text-sm">(${esc(r.code)}) · หยุดประจำ ${esc(r.remark || '-')}</span></div></div>`}
     <div class="grid sm:grid-cols-2 gap-3 mb-3 text-sm">
-      <label>วันหยุดเดิม → มาทำแทน<select id="swFrom" class="inp mt-1" ${edit && !edit._attach ? 'disabled' : ''}>${opt(fromDay)}</select><div class="text-xs muted mt-1" id="swFromSt">${st(fromDay)}</div></label>
-      <label>วันหยุดใหม่ (หยุดแทน)<select id="swTo" class="inp mt-1" ${edit && !edit._attach ? 'disabled' : ''}>${opt(toDay)}</select><div class="text-xs muted mt-1" id="swToSt">${st(toDay)}</div></label>
+      <label>วันหยุดเดิม → มาทำแทน<select id="swFrom" class="inp mt-1" ${dateLocked ? 'disabled' : ''}>${opt(fromDay)}</select><div class="text-xs muted mt-1" id="swFromSt">${st(fromDay)}</div></label>
+      <label>วันหยุดใหม่ (หยุดแทน)<select id="swTo" class="inp mt-1" ${dateLocked ? 'disabled' : ''}>${opt(toDay)}</select><div class="text-xs muted mt-1" id="swToSt">${st(toDay)}</div></label>
     </div>
-    ${warn.length ? `<div class="rounded-xl p-2.5 mb-3 text-sm bg-amber-50 text-amber-800 border border-amber-200">⚠ ${warn.map(esc).join('<br>⚠ ')}</div>` : ''}
+    <div id="swWarnBox"></div>
     <label class="block text-sm">เหตุผลการเปลี่ยนวันหยุด *<textarea id="swReason" rows="2" maxlength="300" class="inp mt-1" placeholder="ระบุเหตุผล">${esc(edit ? edit.reason : '')}</textarea></label>
     <div class="flex flex-wrap gap-1.5 mt-1.5 mb-3">${SWAP_REASONS.map(t => `<button type="button" class="chip !text-[12px]" data-rs="${esc(t)}">${esc(t)}</button>`).join('')}</div>
     <label class="block text-sm mb-1">ผู้อนุมัติ (ถ้ามี)<input id="swAppr" class="inp mt-1" maxlength="100" value="${esc(edit ? edit.approver : '')}" placeholder="เช่น หัวหน้าแผนก"></label>
@@ -2519,7 +2593,22 @@ function openSwapModal(r, fromDay, toDay, edit) {
       <div class="flex gap-2"><button class="btn btn-ghost" id="swClose">ปิด</button><button class="btn btn-primary" id="swOk">${edit && edit._attach ? 'บันทึกเหตุผล' : edit ? 'บันทึกการแก้ไข' : 'ยืนยันเปลี่ยนวันหยุด'}</button></div></div>`);
   const $ = (id) => document.getElementById(id);
   document.querySelectorAll('[data-rs]').forEach(b => b.onclick = () => { const t = $('swReason'); t.value = t.value.trim() ? t.value.trim() + ' · ' + b.dataset.rs : b.dataset.rs; t.focus(); });
-  if (!edit || edit._attach) { $('swFrom').onchange = () => $('swFromSt').innerHTML = st(+$('swFrom').value); $('swTo').onchange = () => $('swToSt').innerHTML = st(+$('swTo').value); }
+  const warnHtml = (w) => w.length ? `<div class="rounded-xl p-2.5 mb-3 text-sm bg-amber-50 text-amber-800 border border-amber-200">⚠ ${w.map(esc).join('<br>⚠ ')}</div>` : '';
+  // คำเตือนตามโหมด: ใหม่ = ตรวจตามช่องปัจจุบัน · แก้ไขวันที่ = ตรวจบนแถวที่ถอนบันทึกเดิมออกแล้ว (ไม่นับบันทึกตัวเองซ้ำ)
+  const calcWarn = () => {
+    const f = +$('swFrom').value, t = +$('swTo').value;
+    if (edit && edit._attach) return [];
+    if (f === t) return ['วันหยุดเดิมและวันใหม่ต้องเป็นคนละวัน'];
+    if (!edit) return swapWarnings(r, f, t);
+    if (dateLocked) return [];
+    const w = swapWarnings(rowWithoutSwap(r, edit), f, t, edit.id);
+    if (f !== edit.fromDay && r.c[edit.fromDay - 1] === 'K') w.push(`วันที่ ${edit.fromDay} ติ๊กมาทำแทนไว้แล้ว — จะถูกเปลี่ยนกลับเป็น OFF`);
+    return w;
+  };
+  const refresh = () => { $('swFromSt').innerHTML = st(+$('swFrom').value); $('swToSt').innerHTML = st(+$('swTo').value); $('swWarnBox').innerHTML = warnHtml(calcWarn()); };
+  refresh();
+  if (!dateLocked) { $('swFrom').onchange = refresh; $('swTo').onchange = refresh; }
+  if (pick) $('swEmp').onchange = (e) => { r = pool.find(x => x.code === e.target.value) || r; const df = swapDefaults(r); $('swFrom').value = df.from; $('swTo').value = df.to; refresh(); };
   $('swClose').onclick = closeModal;
   $('swOk').onclick = () => {
     const reason = $('swReason').value.trim().replace(/\s+/g, ' '), appr = $('swAppr').value.trim();
@@ -2530,9 +2619,16 @@ function openSwapModal(r, fromDay, toDay, edit) {
       const M = curMonth(); M.swaps = M.swaps || []; M.swaps.push(rec); M.edited = true; App.undo.push({ mk: App.mk, changes: [], extra: { swapAdd: rec.id } });
       saveLocal(); closeModal(); render(); toast('เพิ่มบันทึกเหตุผลแล้ว — กดบันทึกเพื่อส่งขึ้น Sheets', 'success'); return;
     }
+    if (edit && !dateLocked && (+$('swFrom').value !== edit.fromDay || +$('swTo').value !== edit.toDay)) { // v16: แก้วันที่ในบันทึกเดิม → ปรับช่องในตารางให้ตรง
+      const f2 = +$('swFrom').value, t2 = +$('swTo').value;
+      if (f2 === t2) { toast('วันหยุดเดิมและวันใหม่ต้องเป็นคนละวัน', 'error'); return; }
+      if (calcWarn().some(w => /มีบันทึกการเปลี่ยนวันหยุด|พ้นสภาพ/.test(w))) { toast('ไม่สามารถบันทึกซ้ำ/บันทึกให้ผู้พ้นสภาพได้ — ตรวจสอบคำเตือน', 'error'); return; }
+      closeModal(); commitSwapEdit(r, edit, f2, t2, reason, appr); return;
+    }
     if (edit) { edit.reason = reason; edit.approver = appr; edit.updatedBy = App.user || ''; edit.updatedAt = new Date().toISOString(); curMonth().edited = true; saveLocal(); closeModal(); render(); toast('แก้ไขบันทึกแล้ว — กดบันทึกเพื่อส่งขึ้น Sheets', 'success'); return; }
     const f = +$('swFrom').value, t = +$('swTo').value;
     if (f === t) { toast('วันหยุดเดิมและวันใหม่ต้องเป็นคนละวัน', 'error'); return; }
+    if (calcWarn().some(w => /มีบันทึกการเปลี่ยนวันหยุด|พ้นสภาพ/.test(w))) { toast('ไม่สามารถบันทึกซ้ำ/บันทึกให้ผู้พ้นสภาพได้ — ตรวจสอบคำเตือน', 'error'); return; }
     closeModal(); commitSwap(r, f, t, reason, appr);
   };
   if ($('swCancel')) $('swCancel').onclick = async () => { closeModal(); if (await confirmBox('ยกเลิกการเปลี่ยนวันหยุด', `ยกเลิกรายการของ ${edit.name} (วันที่ ${edit.fromDay} → ${edit.toDay})? ระบบจะคืนช่องเป็น OFF/เวรตามแผน และเก็บประวัติว่า "ยกเลิก" ไว้`, 'ยกเลิกรายการ', 'btn-danger')) cancelSwap(App.mk, edit.id); };
@@ -2552,7 +2648,7 @@ function openEmployee(code) {
       <label>รหัสเวรตามแผน<select id="ePlan" class="inp mt-1">${['A', 'B', 'C'].map(p => `<option ${r.plan === p ? 'selected' : ''}>${p}</option>`).join('')}</select></label>
     </div>
     <div class="mt-3 text-sm">วันหยุดประจำ (Remark)<div class="flex flex-wrap gap-2 mt-1">${[1, 2, 3, 4, 5, 6, 0].map(i => `<label class="flex items-center gap-1 px-2 py-1 rounded-lg border" style="border-color:var(--line)"><input type="checkbox" class="eWd" value="${i}" ${rs.has(i) ? 'checked' : ''}>${WD[i]}</label>`).join('')}</div></div>
-    <label class="mt-3 flex items-start gap-2 text-sm"><input type="checkbox" id="eRegen" ${isNew ? 'checked' : ''}><span>เปลี่ยนวันหยุดประจำถาวร: จัดแผนวันหยุดใหม่ทั้งเดือน <span class="muted">(เฉพาะช่องที่ยังไม่ได้ติ๊ก/ลา/สลับ — ถ้าเปลี่ยนเฉพาะบางวัน ให้ใช้เครื่องมือ "↔ สลับวันหยุด" แทน)</span></span></label>
+    <label class="mt-3 flex items-start gap-2 text-sm"><input type="checkbox" id="eRegen" ${isNew ? 'checked' : ''}><span>เปลี่ยนวันหยุดประจำถาวร: จัดแผนวันหยุดใหม่ทั้งเดือน <span class="muted">(เฉพาะช่องที่ยังไม่ได้ติ๊ก/ลา/สลับ — ถ้าเปลี่ยนเฉพาะบางวัน ให้ใช้เครื่องมือ "↔ เปลี่ยนวันหยุด" แทน)</span></span></label>
     <div class="flex flex-wrap justify-between gap-2 mt-5">${isNew ? '<span></span>' : '<button class="btn btn-danger" id="eDel">🗑 ลบออกจากเดือนนี้</button>'}<div class="flex gap-2"><button class="btn btn-ghost" id="eCancel">ยกเลิก</button><button class="btn btn-primary" id="eSave">บันทึก</button></div></div>`);
   document.getElementById('eCancel').onclick = closeModal;
   document.getElementById('eSave').onclick = () => {
@@ -2740,7 +2836,7 @@ function exportWs() {
     const all = []; for (let i = 0; i < days; i++) all.push(tot.reduce((a, x) => a + x[1][i], 0));
     aoa.push(['รวมยอด', '', ''].concat(all, [all.reduce((a, b) => a + b, 0), '']));
   });
-  aoa.push([]); aoa.push(['', '', 'หมายเหตุ: 1 = มา · OT = มาวันหยุด · ทำแทน = มาทำแทนวันหยุดที่เปลี่ยน · เปลี่ยนหยุด = หยุดวันใหม่ · แผนทำแทน = เวรทำแทนรอติ๊ก']);
+  aoa.push([]); aoa.push(['', '', 'หมายเหตุ: 1 = มา · OT = มาวันหยุด · ทำแทน = มาทำแทนวันหยุดที่เปลี่ยน · หยุดแทน = หยุดวันใหม่ (เปลี่ยนวันหยุด) · แผนทำแทน = เวรทำแทนรอติ๊ก']);
   // วันหยุดนักขัตฤกษ์ไว้ท้ายตาราง (ไม่แทรกระหว่างหัวตาราง — ไฟล์ยังนำกลับเข้าแอปได้ตรงทุกช่อง)
   const hs = holidaysOfMonth(mk); if (hs.length) aoa.push(['', '', 'วันหยุดนักขัตฤกษ์: ' + hs.map(h => `${+h.d.slice(8)} ${TH_MONTHS_S[+mk.slice(5) - 1]} ${h.n}${h.t === 'gov' ? ' (เฉพาะราชการ)' : ''}`).join(' · ')]);
   const ws = XLSX.utils.aoa_to_sheet(aoa); ws['!merges'] = merges;
@@ -2760,7 +2856,7 @@ async function exportWsPdf() {
       const rh = Math.max(11, Math.min(19, Math.floor(590 / (br.length + new Set(br.map(r => r.role)).size + 3)))), fs = rh <= 14 ? 9 : 10.5;
       let t = `<table style="font-size:${fs}px"><thead><tr><th style="width:20px">No</th><th style="width:42px">CODE</th><th style="text-align:left;padding-left:3px">Name</th>`;
       for (let d = 1; d <= days; d++) { const w = wdOf(mk, d), hd = holidayAt(mk, d); t += `<th style="width:23px;${w === 0 || w === 6 || hd ? 'color:#e11d48;' : ''}${hd ? 'background:#fecdd3;' : ''}">${WD_S[w]}<br>${d}</th>`; }
-      t += '<th style="width:26px">มา</th><th style="width:22px">OT</th><th style="width:30px">สลับ</th><th style="width:22px">ลา</th><th style="width:66px">Remark</th></tr></thead><tbody>';
+      t += '<th style="width:26px">มา</th><th style="width:22px">OT</th><th style="width:30px">↔</th><th style="width:22px">ลา</th><th style="width:66px">Remark</th></tr></thead><tbody>';
       const tot = [];
       [['s', 'ตรวจการ - หัวหน้าทีม'], ['g', 'ร.ป.ภ.']].forEach(([ro, g]) => {
         const gr = br.filter(r => r.role === ro); if (!gr.length) return;
@@ -2771,7 +2867,7 @@ async function exportWsPdf() {
       const all = []; for (let i = 0; i < days; i++) all.push(tot.reduce((a, p) => a + p[i], 0));
       t += `<tr style="height:${rh}px;background:#d1fae5;font-weight:700"><td colspan="3" style="padding-left:3px">รวมยอด</td>${all.map(v => `<td style="text-align:center">${v}</td>`).join('')}<td style="text-align:center">${all.reduce((a, b) => a + b, 0)}</td><td colspan="4"></td></tr></tbody></table>`;
       const p = document.createElement('div'); p.className = 'rpt';
-      p.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #4f46e5;padding-bottom:6px;margin-bottom:8px"><div><div style="font-family:Prompt;font-size:19px;font-weight:700">WORKING SCHEDULE · ตารางการปฏิบัติงาน ${title}</div><div style="font-size:12.5px;color:#475569">${DEPT} · ${ORG} · ประจำเดือน ${mLabel(mk)}</div></div><div style="font-size:10.5px;color:#64748b;text-align:right">พิมพ์เมื่อ ${now.getDate()} ${TH_M[now.getMonth()]} ${now.getFullYear() + 543}<br>1=มา · OT=มาวันหยุด · แทน=ทำแทนวันหยุด · สลับ=เปลี่ยนวันหยุด · ป/ก/พร=ลา · ข=ขาด</div></div>${t}
+      p.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #4f46e5;padding-bottom:6px;margin-bottom:8px"><div><div style="font-family:Prompt;font-size:19px;font-weight:700">WORKING SCHEDULE · ตารางการปฏิบัติงาน ${title}</div><div style="font-size:12.5px;color:#475569">${DEPT} · ${ORG} · ประจำเดือน ${mLabel(mk)}</div></div><div style="font-size:10.5px;color:#64748b;text-align:right">พิมพ์เมื่อ ${now.getDate()} ${TH_M[now.getMonth()]} ${now.getFullYear() + 543}<br>1=มา · OT=มาวันหยุด · แทน=ทำแทนวันหยุด · ↔=เปลี่ยนวันหยุด (หยุดแทน/ทำแทน) · ป/ก/พร=ลา · ข=ขาด</div></div>${t}
         <div style="position:absolute;bottom:20px;right:60px;text-align:center;font-size:12.5px">ลงชื่อ ....................................... ผู้จัดทำ<br>( ${esc(App.user || '.......................................')} )<br>วันที่ ........../........../..........</div>`;
       stage.appendChild(p); pages.push(p);
     });
@@ -2861,7 +2957,7 @@ function handleEvents() {
   $('hdrLogo').onclick = () => showSplash(false);
   // มือถือ: ซ่อนตัวกรองรองไว้ใต้ปุ่ม เพื่อให้เห็นกราฟ/ตัวเลขได้เร็วขึ้น
   $('btnDashFilter').onclick = () => { const o = $('dashFilter2').classList.toggle('open'); $('btnDashFilter').setAttribute('aria-expanded', String(o)); $('btnDashFilter').textContent = o ? '⚙️ ซ่อนตัวกรอง ▴' : '⚙️ ตัวกรองเพิ่มเติม (วันที่ / ตำแหน่ง / สถานะ / เป้า) ▾'; };
-  $('toolbar').onclick = (e) => { const b = e.target.closest('[data-tool]'); if (!b) return; App.tool = b.dataset.tool; App.swapSrc = null; buildToolbar(); if (App.tool === 'swap') toast('สลับวันหยุด: คลิกช่องวันหยุดเดิม แล้วคลิกวันใหม่ที่จะหยุดแทน (แถวเดียวกัน)', 'info', 5000); render(); };
+  $('toolbar').onclick = (e) => { const b = e.target.closest('[data-tool]'); if (!b) return; App.tool = b.dataset.tool; App.swapSrc = null; buildToolbar(); if (App.tool === 'swap') toast('เปลี่ยนวันหยุด: คลิกช่องวันหยุดเดิม แล้วคลิกวันใหม่ที่จะหยุดแทน (แถวเดียวกัน)', 'info', 5000); render(); };
   // ตัวกรองแดชบอร์ด
   $('fD1').onchange = (e) => { D.f.d1 = +e.target.value; if (D.f.d1 > D.f.d2) D.f.d2 = D.f.d1; buildDayOptions(); render(); };
   $('fD2').onchange = (e) => { D.f.d2 = +e.target.value; if (D.f.d2 < D.f.d1) D.f.d1 = D.f.d2; buildDayOptions(); render(); };
@@ -2880,7 +2976,7 @@ function handleEvents() {
     hidePop(); longP = false;
     if (isLocked()) { if (e.pointerType !== 'mouse') { const code = td.dataset.code, day = +td.dataset.day, x = e.clientX, y = e.clientY; pressT = setTimeout(() => cellPop(code, day, x, y), 450); } else lockedToast(); return; }
     const code = td.dataset.code, day = +td.dataset.day;
-    if (App.tool === 'swap') { // สลับวันหยุดแบบ 2 คลิก
+    if (App.tool === 'swap') { // เปลี่ยนวันหยุดแบบ 2 คลิก
       if (!App.swapSrc) { App.swapSrc = { code, day }; render(); toast(`เลือกวันหยุดเดิม: วันที่ ${day} — คลิกวันใหม่ในแถวเดียวกัน`, 'info'); }
       else if (App.swapSrc.code !== code) { toast('ต้องเลือกวันใหม่ในแถวของพนักงานคนเดียวกัน', 'warn'); }
       else { const s = App.swapSrc; App.swapSrc = null; swapDayOff(code, s.day, day); }
@@ -2926,6 +3022,8 @@ function handleEvents() {
     const pr = e.target.closest('[data-person]'); if (pr) { openPerson(pr.dataset.person, pr.dataset.pmk || App.mk); return; }
     const ra = e.target.closest('#dv-report [data-act]'); if (ra) { runExport(ra.dataset.act); return; }
     const se = e.target.closest('[data-swedit]'); if (se) { hidePop(); editSwap(se.dataset.swedit); return; }
+    const sq = e.target.closest('[data-swquick]'); if (sq) { hidePop(); if (isLocked()) { lockedToast(); return; } openSwapModal(null); return; }
+    const sc = e.target.closest('[data-swcancel]'); if (sc) { const id = sc.dataset.swcancel, sw = (curMonth().swaps || []).find(x => x.id === id); if (sw) confirmBox('ยกเลิกการเปลี่ยนวันหยุด', `ยกเลิกรายการของ ${sw.name} (วันที่ ${sw.fromDay} → ${sw.toDay})? ระบบจะคืนช่องเป็น OFF/เวรตามแผน และเก็บประวัติว่า "ยกเลิก" ไว้`, 'ยกเลิกรายการ', 'btn-danger').then(ok => { if (ok) cancelSwap(App.mk, id); }); return; }
     const sn = e.target.closest('[data-swnew]'); if (sn) { hidePop(); const [c, d] = sn.dataset.swnew.split('|'); attachSwapNote(c, +d); return; }
     const sf = e.target.closest('[data-swf]'); if (sf) { D.swapFilter = sf.dataset.swf; render(); return; }
     if (e.target.closest('#btnSwapXlsx')) { try { if (typeof XLSX === 'undefined') throw new Error('โหลดไลบรารี Excel ไม่สำเร็จ'); exportSwapsXlsx(); } catch (err) { toast(err.message, 'error'); } return; }
@@ -2937,6 +3035,7 @@ function handleEvents() {
   $('dayChips').onclick = (e) => { const b = e.target.closest('[data-dchip]'); if (b) { App.day = +b.dataset.dchip; render(); } };
   $('btnTickAllDay').onclick = () => tickWholeDay(App.day);
   $('btnPending').onclick = openPending;
+  $('btnCopyGrid').onclick = () => openDailySummary(App.day); // v16: ปุ่มเดียวกันในหน้าตารางทั้งเดือน
   $('btnCopyDay').onclick = () => openDailySummary(App.day); // v14: เปิดหน้าต่างเลือกผลัด (ทุกผลัด/กลางวัน/กลางคืน) ก่อนคัดลอก
   document.addEventListener('click', (e) => { const a = e.target.closest('[data-act2]'); if (!a) return; const v = a.dataset.act2; if (v === 'unlock' || v === 'lock') openLockModal(); else if (v === 'pending') openPending(); else if (v === 'xchk') openXchk(App.mk); else if (v === 'holidays') openHolidays(); });
   $('dailyList').onclick = (e) => {
