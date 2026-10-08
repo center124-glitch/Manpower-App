@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <!--
-  SBK Manpower App v20 — ระบบตรวจเช็คการมาปฏิบัติงาน + แดชบอร์ดวิเคราะห์อัตรากำลังพล (รวมในแอปเดียว)
+  SBK Manpower App v21 — ระบบตรวจเช็คการมาปฏิบัติงาน + แดชบอร์ดวิเคราะห์อัตรากำลังพล (รวมในแอปเดียว)
+  v21: การ์ดรายละเอียดเมื่อชี้/แตะช่องตอนตารางล็อก ครอบคลุมทุกช่องที่ไม่ใช่วันมาปกติ (สาย/OT/ทำแทน/หยุดแทน/ลาทุกชนิด/ขาด) · พื้นหลังฟอร์ม–แดชบอร์ดสีสันต่างกัน · แก้ข้อความแจ้ง (toast) ค้างไม่หาย · จัดแถบเมนูด้านบนใหม่ (แท็บหลักอยู่กลางหัว, ตัวกรองรวมเข้าแถบควบคุม)
   v20: จัดแถบเมนูบนตารางใหม่ (แถวแท็บ+ปุ่มสั่งงาน / แถวเครื่องมือแบ่งกลุ่ม) · ปุ่มล็อก/ปลดล็อกเปลี่ยนสีชัดเจน + ป้ายสถานะ · ชี้/แตะช่องที่เปลี่ยนวันหยุดตอนตารางล็อก → การ์ดรายละเอียด
   v19: ติ๊ก/ยกเลิกติ๊กทั้งวัน เลือกผลัดได้ (กลางวัน/กลางคืน/ทั้งสองผลัด) · ช่องตารางบนมือถือ/แท็บเล็ตใช้ข้อความย่อ (หยุด/รอ, ←12/→13) ไม่ให้ล้นช่อง
   v18: กันกดพลาด — ล็อกการแก้ไขตาราง (ปลดด้วยปุ่ม ✏️, ล็อกเองเมื่อไม่ใช้ 3 นาที/ออกจากแอป), ถามยืนยันเมื่อติ๊กล่วงหน้า/ลากหลายช่อง/ติ๊กทั้งวัน,
@@ -317,14 +318,54 @@
   .swtip-w { color: #be123c; line-height: 1.4; }
   .ws td.cell.long { font-size: 8.5px; letter-spacing: -.3px; } .ws.tight td.cell.long { font-size: 7.5px; }
   #miTheme { display: none; } @media (max-width: 639px) { #miTheme { display: block; } }
+  /* ===== v21: พื้นหลังสีสันแยกหน้า · จัดหัวเรื่อง/แถบควบคุมใหม่ ===== */
+  /* ฟอร์ม = เขียวมรกต/ฟ้า/เหลืองอุ่น · แดชบอร์ด = คราม/ม่วง/ชมพู — เห็นต่างกันชัดเจนทันทีที่สลับหน้า */
+  body::before { background: radial-gradient(1100px 700px at 0% 0%, var(--g1), transparent 60%), radial-gradient(900px 650px at 100% 0%, var(--g2), transparent 60%),
+                 radial-gradient(1000px 700px at 100% 100%, var(--g3), transparent 60%), radial-gradient(800px 700px at 0% 100%, var(--g4), transparent 60%), var(--bgl); }
+  body.mode-form { --g1: rgba(16,185,129,.50); --g2: rgba(14,165,233,.42); --g3: rgba(250,204,21,.38); --g4: rgba(20,184,166,.42); --acc: #059669; --bgl: linear-gradient(160deg,#ecfdf5,#e0f2fe 55%,#fefce8); }
+  body.mode-dash { --g1: rgba(99,102,241,.50); --g2: rgba(236,72,153,.36); --g3: rgba(139,92,246,.46); --g4: rgba(14,165,233,.34); --acc: #6366f1; --bgl: linear-gradient(160deg,#eef2ff,#f5f3ff 55%,#fdf2f8); }
+  .dark body.mode-form { --g1: rgba(16,185,129,.22); --g2: rgba(56,189,248,.16); --g3: rgba(234,179,8,.10); --g4: rgba(20,184,166,.18); --bgl: linear-gradient(160deg,#04201c,#0a1a2b 55%,#1c1706); }
+  .dark body.mode-dash { --g1: rgba(99,102,241,.28); --g2: rgba(236,72,153,.14); --g3: rgba(139,92,246,.24); --g4: rgba(14,165,233,.14); --bgl: linear-gradient(160deg,#17153d,#1a1036 55%,#2a0f27); }
+  body.mode-form header#hdr { background: linear-gradient(90deg, rgba(236,253,245,.95), rgba(224,242,254,.95)) !important; border-bottom: 3px solid #10b981; }
+  body.mode-dash header#hdr { background: linear-gradient(90deg, rgba(238,242,255,.95), rgba(250,232,255,.95)) !important; border-bottom: 3px solid #6366f1; }
+  .dark body.mode-form header#hdr { background: linear-gradient(90deg, rgba(4,32,28,.94), rgba(10,26,43,.94)) !important; }
+  .dark body.mode-dash header#hdr { background: linear-gradient(90deg, rgba(23,21,61,.94), rgba(42,15,39,.94)) !important; }
+  body.mode-form .card { border-color: rgba(16,185,129,.30); } body.mode-dash .card { border-color: rgba(99,102,241,.30); }
+  .ctl { box-shadow: inset 0 3px 0 var(--acc, #6366f1), 0 1px 2px rgba(15,23,42,.05); padding-top: .75rem; }
+  /* หัวเรื่อง: [โลโก้+ชื่อ] [แท็บหลักกลาง] [ปุ่มสั่งงาน] — ไม่มีพื้นที่ว่างกลางหัว */
+  .hdr-top { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: .5rem .75rem; }
+  .hdr-brand { grid-column: 1; } .hdr-acts { grid-column: 2; justify-self: end; }
+  .hdr-tabs { grid-column: 1 / -1; display: flex; justify-content: center; gap: .5rem; }
+  .hdr-tabs .main-tab { flex: 0 1 380px; justify-content: center; padding: .4rem 1rem; }
+  @media (min-width: 1100px) {
+    .hdr-top { grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); }
+    .hdr-brand { grid-column: 1; grid-row: 1; } .hdr-tabs { grid-column: 2; grid-row: 1; } .hdr-acts { grid-column: 3; grid-row: 1; }
+    .hdr-tabs .main-tab { flex: none; }
+  }
+  @media (min-width: 768px) and (max-width: 1535px) { .hdr-acts .md-hide { display: none !important; } .ctl-acts #btnCopyGrid .xs-hide, .ctl-acts #btnUndo .xs-hide { display: none !important; } }
+  @media (max-width: 1359px) { .hdr-tabs .main-tab small { display: none; } .hdr-tabs .main-tab { padding: .45rem 1.1rem; } }
+  /* ตัวกรอง (เดือน/ผลัด/ค้นหา) ย้ายเข้าแถบควบคุมของแต่ละหน้า โดย render() */
+  .ctl-filters { margin-left: auto; min-width: 0; }
+  .fgrp { display: flex; align-items: center; gap: .4rem; min-width: 0; padding: .2rem; border-radius: .8rem; background: rgba(99,102,241,.06); border: 1px solid var(--line); }
+  .fgrp .inp { width: auto; border-radius: .6rem; } .fgrp #inpQ { width: 11rem; flex: 1 1 11rem; }
+  @media (min-width: 1024px) { .ctl-dv { margin-left: auto; } .ctl-dv.seg { width: auto; } }
+  .ctl-sub { padding-top: .5rem; border-top: 1px dashed var(--line); }
+  .ctl-acts { margin-left: auto; }
+  @media (max-width: 1535px) { .ctl-acts .btn { padding: .38rem .6rem; } }
+  @media (max-width: 767px) { .ctl-filters { width: 100%; margin-left: 0; } .fgrp { width: 100%; flex-wrap: wrap; } .fgrp #selMonth { flex: 1 1 8rem; } .fgrp #inpQ { flex: 1 1 100%; width: auto; } .ctl-dv.seg { width: 100%; } }
+  .tip-hint { font-size: .72rem; color: var(--muted); padding-top: .45rem; border-top: 1px dashed var(--line); line-height: 1.5; }
+  .tip-hint b { color: #4f46e5; } .dark .tip-hint b { color: #a5b4fc; }
+  .swtip { animation: fi .12s ease; } .swtip-h { display: flex; align-items: center; gap: .35rem; }
+  .swtip-run { color: #4338ca; } .dark .swtip-run { color: #a5b4fc; }
+  #toasts > .toast { cursor: pointer; }
 </style>
 </head>
 <body class="min-h-screen">
 
 <!-- ===================== HEADER ===================== -->
 <header id="hdr" class="relative sm:sticky top-0 z-40 backdrop-blur bg-white/90 dark:bg-slate-900/90 border-b border-slate-200 dark:border-slate-800">
-  <div class="max-w-[1800px] mx-auto px-3 sm:px-4 py-2 flex flex-wrap items-center gap-2">
-    <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+  <div class="max-w-[1800px] mx-auto px-3 sm:px-4 py-2 hdr-top">
+    <div class="hdr-brand flex items-center gap-2 sm:gap-3 min-w-0">
       <img src="data:image/png;base64,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" alt="SBK Manpower" class="w-10 h-10 rounded-xl shadow-lg shrink-0 cursor-pointer" id="hdrLogo" title="แสดงหน้าโลโก้">
       <div class="min-w-0">
         <h1 class="text-[15px] sm:text-lg font-bold truncate"><span class="xs-hide">อัตรากำลังพล · แผนกลานจอดและจราจร</span><span class="sm-hide">SBK Manpower</span></h1>
@@ -334,7 +375,11 @@
         </div>
       </div>
     </div>
-    <div class="flex items-center gap-1.5 sm:gap-2 ml-auto shrink-0">
+    <nav class="hdr-tabs" role="tablist" id="topTabs">
+      <button class="main-tab" data-tab="form">📝 <span>ฟอร์มกรอก<small>ติ๊กตารางเวร · เช็ครายวัน</small></span></button>
+      <button class="main-tab" data-tab="dash">📊 <span>แดชบอร์ด<small>สถิติ · กราฟ · รายงาน</small></span></button>
+    </nav>
+    <div class="hdr-acts flex items-center gap-1.5 sm:gap-2 shrink-0">
       <button class="btn btn-ghost" id="btnReload" title="โหลดข้อมูลล่าสุดจาก Google Sheets">⟳ <span class="md-hide">โหลดจาก Sheets</span></button>
       <span class="relative inline-flex">
         <button class="btn btn-success" id="btnSave" title="บันทึกขึ้น Google Sheets (Ctrl+S)">💾 <span class="xxs-hide">บันทึก</span></button>
@@ -382,24 +427,17 @@
       <button class="btn btn-ghost xs-hide" id="btnTheme" aria-label="สลับโหมดมืด/สว่าง"><span id="themeIcon">🌙</span></button>
     </div>
   </div>
-  <!-- เมนูหลัก 2 ส่วน + ตัวกรองร่วม (เดือน/ผลัด/ค้นหา ใช้ทั้งฟอร์มและแดชบอร์ด) -->
-  <div class="max-w-[1800px] mx-auto px-3 sm:px-4 pb-2 flex flex-wrap items-center gap-2">
-    <nav class="flex gap-2" role="tablist" id="topTabs">
-      <button class="main-tab" data-tab="form">📝 <span>ฟอร์มกรอก<small>ติ๊กตารางเวร · เช็ครายวัน</small></span></button>
-      <button class="main-tab" data-tab="dash">📊 <span>แดชบอร์ด<small>สถิติ · กราฟ · รายงาน</small></span></button>
-    </nav>
-    <div class="flex items-center gap-2 w-full md:w-auto md:ml-auto">
-      <select id="selMonth" class="inp !py-1.5 font-semibold shrink-0 !w-auto min-w-[9.6rem]" title="เดือน"></select>
-      <select id="selShift" class="inp !w-auto !py-1.5 shrink-0" title="ผลัด"><option value="all">ทุกผลัด</option><option value="d">กลางวัน</option><option value="n">กลางคืน</option></select>
-      <input id="inpQ" type="search" class="inp !py-1.5 flex-1 min-w-0 md:!w-40 md:flex-none" placeholder="🔍 ชื่อ / รหัส" autocomplete="off" enterkeyhint="search">
-    </div>
-  </div>
   <!-- เมนูย่อย: ฟอร์มกรอก -->
   <div id="toolRow" class="max-w-[1800px] mx-auto px-3 sm:px-4 pb-2">
     <div class="ctl">
       <div class="ctl-head">
         <div class="seg hscroll" role="tablist"><button data-fv="grid">🗓️ ตารางทั้งเดือน</button><button data-fv="daily">📱 เช็ครายวัน</button><button data-fv="swaps">📋 รายการเปลี่ยนวันหยุด</button></div>
         <button id="btnPending" class="hidden pend-btn" title="วันที่ค้างติ๊ก"></button>
+        <div id="slotForm" class="ctl-filters"><div id="filterGroup" class="fgrp">
+          <select id="selMonth" class="inp !py-1.5 font-semibold shrink-0 !w-auto min-w-[9.6rem]" title="เดือน"></select>
+          <select id="selShift" class="inp !w-auto !py-1.5 shrink-0" title="ผลัด"><option value="all">ทุกผลัด</option><option value="d">กลางวัน</option><option value="n">กลางคืน</option></select>
+          <input id="inpQ" type="search" class="inp !py-1.5 flex-1 min-w-0" placeholder="🔍 ชื่อ / รหัส" autocomplete="off" enterkeyhint="search">
+        </div></div>
         <div class="ctl-acts">
           <button class="btn btn-ghost" id="btnEditLock" title="กันกดพลาด: ต้องปลดล็อกก่อนจึงจะแก้ตารางได้">🔒 ล็อกอยู่</button>
           <button class="btn btn-ghost" id="btnCopyGrid" title="คัดลอกสรุปประจำวัน (เลือกวัน/ผลัดได้) แล้วนำไปวางใน LINE">📋<span class="xs-hide"> คัดลอกสรุป</span></button>
@@ -411,19 +449,22 @@
         <div class="ctl-lab"><span>เครื่องมือ</span><span id="editChip" class="ed-chip"></span></div>
         <div id="toolbar"></div>
       </div>
+      <div id="tipHint" class="tip-hint hidden">💡 ตารางล็อกอยู่: <b>ชี้เมาส์</b> (มือถือ: <b>แตะ</b>) ที่ช่อง มาสาย · OT · ทำแทน · เปลี่ยนวันหยุด · ลาทุกชนิด · ขาด เพื่อดูรายละเอียด</div>
     </div>
   </div>
   <!-- เมนูย่อย: แดชบอร์ด -->
-  <div id="dashFilter" class="hidden max-w-[1800px] mx-auto px-3 sm:px-4 pb-2 space-y-1.5">
-    <div class="flex flex-wrap items-center gap-2">
+  <div id="dashFilter" class="hidden max-w-[1800px] mx-auto px-3 sm:px-4 pb-2">
+   <div class="ctl">
+    <div class="ctl-head">
       <div class="seg shrink-0" role="tablist"><button data-period="week">รายสัปดาห์</button><button data-period="month">รายเดือน</button><button data-period="year">รายปี</button></div>
       <span id="weekWrap" class="hidden"><select id="weekSel" class="inp !w-auto !py-1 text-xs"></select></span>
       <span id="yearWrap" class="hidden"><select id="yearSel" class="inp !w-auto !py-1 text-xs"></select></span>
       <span class="chip !text-xs font-semibold" id="periodBadge"></span>
-      <div class="seg hscroll max-w-full w-full lg:w-auto lg:ml-auto" role="tablist"><button data-dv="overview">📊 ภาพรวม</button><button data-dv="people">👤 รายบุคคล</button><button data-dv="trend">📈 แนวโน้ม</button><button data-dv="report">📄 รายงาน</button></div>
+      <div id="slotDash" class="ctl-filters"></div>
+      <div class="seg hscroll max-w-full w-full lg:w-auto ctl-dv" role="tablist"><button data-dv="overview">📊 ภาพรวม</button><button data-dv="people">👤 รายบุคคล</button><button data-dv="trend">📈 แนวโน้ม</button><button data-dv="report">📄 รายงาน</button></div>
     </div>
     <button class="btn btn-ghost !py-1 !px-3 text-xs mob-only w-full" id="btnDashFilter" aria-expanded="false">⚙️ ตัวกรองเพิ่มเติม (วันที่ / ตำแหน่ง / สถานะ / เป้า) ▾</button>
-    <div class="flex flex-wrap items-center gap-2 text-xs" id="dashFilter2">
+    <div class="flex flex-wrap items-center gap-2 text-xs ctl-sub" id="dashFilter2">
       <label id="rangeWrap" class="flex items-center gap-1 muted">วันที่ <select id="fD1" class="inp !w-auto !py-1"></select> ถึง <select id="fD2" class="inp !w-auto !py-1"></select></label>
       <label class="flex items-center gap-1 muted">ตำแหน่ง <select id="fRole" class="inp !w-auto !py-1"><option value="all">ทั้งหมด</option><option value="s">ตรวจการ/หน.ทีม</option><option value="g">รปภ.</option></select></label>
       <label class="flex items-center gap-1 muted">สถานะ <select id="fStatus" class="inp !w-auto !py-1"></select></label>
@@ -431,6 +472,7 @@
       <div id="activeChips" class="flex flex-wrap gap-1.5"></div>
       <button class="btn btn-ghost !py-1 !px-2 text-xs ml-auto" id="btnResetFilter">ล้างตัวกรอง</button>
     </div>
+   </div>
   </div>
 </header>
 <input type="file" id="fileInput" accept=".xlsx,.xls,.xlsm,.json" multiple class="hidden">
@@ -540,7 +582,7 @@
   </div>
   </section>
 
-  <footer class="text-center text-xs muted py-5">SBK Manpower App v10 · แผนกลานจอดและจราจร · ศูนย์การค้า ซีคอนบางแค</footer>
+  <footer class="text-center text-xs muted py-5">SBK Manpower App v21 · แผนกลานจอดและจราจร · ศูนย์การค้า ซีคอนบางแค</footer>
 </main>
 
 <!-- แถบเมนูล่างสำหรับมือถือ (แสดงเฉพาะจอ < 768px) — ใช้ปุ่มชุดเดียวกับเมนูหลัก -->
@@ -940,22 +982,45 @@ function takeSnapshot(mk) {
 const curMonth = () => App.store.months[App.mk];
 /* ---------- v7: ปิดยอดเดือน / วันที่ค้างติ๊ก ---------- */
 const isLocked = (mk = App.mk) => { const M = App.store.months[mk]; return !!(M && M.lock && M.lock.locked); };
-// ===== v20: การ์ดรายละเอียดเมื่อชี้/แตะช่องที่ "เปลี่ยนวันหยุด" ตอนตารางล็อก (ดูอย่างเดียว) =====
-// แสดงเฉพาะช่องที่เปลี่ยนจากวันทำงานปกติ: หยุดแทน (H) · ทำแทน (K) · รอทำแทน (J)
+// ===== v21: การ์ดรายละเอียดเมื่อชี้/แตะช่องที่ "เปลี่ยนจากวันมาทำงานปกติ" ตอนตารางล็อก (ดูอย่างเดียว) =====
+// แสดงเฉพาะ: มาสาย Y · OT T · ทำแทน K · หยุดแทน H · รอทำแทน J · ลาป่วย S · ลากิจ P · พักร้อน V · ลา Extra E · ขาด X · รหัสอื่น ?
+// ไม่แสดงเมื่อเป็น: มาปกติ W · OFF ตามตาราง O · เวรตามแผนที่ยังไม่ติ๊ก A/B/C · พ้นสภาพ R · ช่องว่าง
 const viewOnly = () => isLocked() || (!!App.guard && !App.editOn);
+const TIP_SET = new Set(['Y', 'T', 'K', 'H', 'J', 'S', 'P', 'V', 'E', 'X', '?']);
 function swapTipHtml(code, day) {
   const M = curMonth(), r = M && M.rows.find(x => x.code === code); if (!r) return '';
-  const ch = r.c[day - 1]; if (ch !== 'H' && ch !== 'J' && ch !== 'K') return '';
-  const sw = swapAt(M, code, day), st = ST[ch];
-  const head = ch === 'H' ? 'หยุดแทน · วันหยุดใหม่' : ch === 'K' ? 'ทำแทนวันหยุด · มาทำงานแล้ว' : 'รอทำแทนวันหยุด · ยังไม่ติ๊ก';
+  const i = day - 1, ch = r.c[i]; if (!TIP_SET.has(ch)) return '';
+  const st = ST[ch], isSwap = ch === 'H' || ch === 'J' || ch === 'K';
+  const bg = st.bg === 'transparent' ? '#059669' : st.bg, fg = st.bg === 'transparent' ? '#fff' : st.fg;
+  const label = ch === '?' ? (r.oth[i] || 'รหัสอื่นๆ') : st.label;
+  const icon = isSwap ? '↔' : isLeave(ch) ? '🌴' : ch === 'Y' ? '⏰' : ch === 'T' ? '🕒' : ch === 'X' ? '⛔' : 'ℹ';
   const row = (k, v) => `<div class="swtip-r"><span>${k}</span><b>${v}</b></div>`;
-  let h = `<div class="swtip-h" style="background:${st.bg};color:${st.fg}">↔ ${head}</div><div class="swtip-b"><div class="swtip-n">${esc(r.name)} <small>${esc(r.code)}</small></div>`;
-  if (!sw) return h + row('วันที่', esc(dShort(App.mk, day))) + `<div class="swtip-w">⚠ ช่องนี้เปลี่ยนวันหยุดแต่ยังไม่มีบันทึกเหตุผล<br>ปลดล็อกแล้วคลิกขวา/กดค้างที่ช่องเพื่อเพิ่ม</div></div>`;
-  const fc = r.c[sw.fromDay - 1], when = (iso) => { try { return new Date(iso).toLocaleString('th-TH', { day: 'numeric', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit' }); } catch (e) { return ''; } };
-  const made = fc === 'K' ? '✔ ทำแทนแล้ว' : fc === 'J' ? '⏳ รอทำแทน' : 'ตอนนี้เป็น ' + esc((ST[fc] || ST['?']).label);
-  h += row('วันหยุดเดิม', esc(dShort(App.mk, sw.fromDay))) + row('วันหยุดใหม่', esc(dShort(App.mk, sw.toDay))) + row('การทำแทน', made) + row('เหตุผล', esc(sw.reason || '—')) + row('ผู้อนุมัติ', esc(sw.approver || '—'));
-  if (sw.createdBy || sw.createdAt) h += row('บันทึกโดย', esc((sw.createdBy || '—') + (sw.createdAt ? ' · ' + when(sw.createdAt) : '')));
-  if (sw.updatedBy || sw.updatedAt) h += row('แก้ไขล่าสุด', esc((sw.updatedBy || '—') + (sw.updatedAt ? ' · ' + when(sw.updatedAt) : '')));
+  const hd = App._hols && App._hols[i], mn = TH_MONTHS_S[+App.mk.slice(5) - 1];
+  const head = ch === 'H' ? 'หยุดแทน · วันหยุดใหม่' : ch === 'K' ? 'ทำแทนวันหยุด · มาทำงานแล้ว' : ch === 'J' ? 'รอทำแทนวันหยุด · ยังไม่ติ๊ก' : label;
+  const pos = [r.tag, SHIFT_TH[r.shift]].filter(Boolean).join(' · ');
+  let h = `<div class="swtip-h" style="background:${bg};color:${fg}">${icon} ${esc(head)}</div><div class="swtip-b"><div class="swtip-n">${esc(r.name)} <small>${esc(r.code)}</small></div>`;
+  if (pos) h += row('ตำแหน่ง/ผลัด', esc(pos));
+  h += row('วันที่', esc(dShort(App.mk, day)) + (hd ? ` · 🎌 ${esc(hd.n)}` : ''));
+  if (r.remark) h += row('หยุดประจำ', esc(r.remark));
+  if (isSwap) {
+    const sw = swapAt(M, code, day);
+    if (!sw) return h + `<div class="swtip-w">⚠ ช่องนี้เปลี่ยนวันหยุดแต่ยังไม่มีบันทึกเหตุผล<br>ปลดล็อกแล้วคลิกขวา/กดค้างที่ช่องเพื่อเพิ่ม</div></div>`;
+    const fc = r.c[sw.fromDay - 1], when = (iso) => { try { return new Date(iso).toLocaleString('th-TH', { day: 'numeric', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit' }); } catch (e) { return ''; } };
+    const made = fc === 'K' ? '✔ ทำแทนแล้ว' : fc === 'J' ? '⏳ รอทำแทน' : 'ตอนนี้เป็น ' + esc((ST[fc] || ST['?']).label);
+    h += row('วันหยุดเดิม', esc(dShort(App.mk, sw.fromDay))) + row('วันหยุดใหม่', esc(dShort(App.mk, sw.toDay))) + row('การทำแทน', made) + row('เหตุผล', esc(sw.reason || '—')) + row('ผู้อนุมัติ', esc(sw.approver || '—'));
+    if (sw.createdBy || sw.createdAt) h += row('บันทึกโดย', esc((sw.createdBy || '—') + (sw.createdAt ? ' · ' + when(sw.createdAt) : '')));
+    if (sw.updatedBy || sw.updatedAt) h += row('แก้ไขล่าสุด', esc((sw.updatedBy || '—') + (sw.updatedAt ? ' · ' + when(sw.updatedAt) : '')));
+    return h + '</div>';
+  }
+  // สถานะที่ไม่ใช่การเปลี่ยนวันหยุด: ลา/สาย/OT/ขาด/รหัสอื่น
+  const total = r.c.slice(0, mDays(App.mk)).filter(x => x === ch).length;
+  if (ch !== '?') { // ช่วงที่ต่อเนื่อง (เช่น ลาป่วย 5–7 ต.ค.)
+    const n = mDays(App.mk); let a = i, b = i; while (a > 0 && r.c[a - 1] === ch) a--; while (b < n - 1 && r.c[b + 1] === ch) b++;
+    if (b > a) h += row('ช่วงต่อเนื่อง', `<span class="swtip-run">${a + 1}–${b + 1} ${mn} (${b - a + 1} วัน)</span>`);
+    h += row('เดือนนี้สะสม', `${fmt(total)} ${ch === 'Y' ? 'ครั้ง' : 'วัน'}`);
+  }
+  const note = ch === 'Y' ? 'นับเป็นวันมาปฏิบัติงาน' : ch === 'T' ? 'มาทำงานในวันหยุด (OT)' : isLeave(ch) ? 'ไม่นับเป็นวันมาปฏิบัติงาน' : ch === 'X' ? 'ไม่ได้มาปฏิบัติงาน' : '';
+  if (note) h += row('หมายเหตุ', note);
   return h + '</div>';
 }
 function swapTipEl() { let el = document.getElementById('swTip'); if (!el) { el = document.createElement('div'); el.id = 'swTip'; el.className = 'swtip'; el.style.display = 'none'; document.body.appendChild(el); } return el; }
@@ -986,10 +1051,11 @@ function editBtnUpdate(monthLocked) {
   const on = !!App.guard && !!App.editOn, lk = !!App.guard && !App.editOn;
   b.classList.toggle('hidden', !App.guard || !!monthLocked || App.fv === 'swaps');
   b.classList.toggle('ed-on', on); b.classList.toggle('is-locked', lk);
-  b.innerHTML = on ? '✏️ ปลดล็อกแล้ว<span class="xs-hide"> · แตะเพื่อล็อก</span>' : '🔒 ล็อกอยู่<span class="xs-hide"> · แตะเพื่อปลดล็อก</span>';
+  b.innerHTML = on ? '✏️ ปลดล็อกแล้ว<span class="xs-hide lg2-hide"> · แตะเพื่อล็อก</span>' : '🔒 ล็อกอยู่<span class="xs-hide lg2-hide"> · แตะเพื่อปลดล็อก</span>';
   b.title = on ? 'ปลดล็อกอยู่ — แก้ตารางได้ (ล็อกเองเมื่อไม่ใช้ 3 นาที) · แตะเพื่อล็อก' : 'ตารางล็อกอยู่ (ดูอย่างเดียว) — แตะเพื่อปลดล็อกก่อนแก้ไข';
   const chip = document.getElementById('editChip');
-  if (chip) { chip.classList.toggle('hidden', !App.guard); chip.classList.toggle('on', on); chip.textContent = on ? '✏️ แก้ไขได้' : '🔒 ดูอย่างเดียว'; chip.title = on ? '' : 'ชี้เมาส์/แตะช่องที่เปลี่ยนวันหยุดเพื่อดูรายละเอียด'; }
+  if (chip) { chip.classList.toggle('hidden', !App.guard); chip.classList.toggle('on', on); chip.textContent = on ? '✏️ แก้ไขได้' : '🔒 ดูอย่างเดียว'; chip.title = on ? '' : 'ชี้เมาส์/แตะช่องที่ไม่ใช่วันมาปกติ (สาย/OT/เปลี่ยนวันหยุด/ลา/ขาด) เพื่อดูรายละเอียด'; }
+  const hint = document.getElementById('tipHint'); if (hint) hint.classList.toggle('hidden', !(App.fv === 'grid' && (monthLocked || lk)));
   const tb = document.getElementById('toolbar'), gb = document.getElementById('gridBlocks');
   if (tb) tb.classList.toggle('guarded', lk); if (gb) { gb.classList.toggle('guarded', lk); gb.classList.toggle('editing', on); }
   const mi = document.getElementById('miGuard'); if (mi) mi.textContent = '🛡️ โหมดกันกดพลาด: ' + (App.guard ? 'เปิดอยู่ (แตะเพื่อปิด)' : 'ปิดอยู่ (แตะเพื่อเปิด)');
@@ -1475,6 +1541,7 @@ function render() {
   const keepY = window.scrollY, viewKey = App.tab + '|' + App.fv + '|' + App.mk + '|' + (App.tab === 'dash' ? D.view + D.period : '');
   const M = curMonth(), form = App.tab === 'form';
   document.body.classList.toggle('mode-form', form); document.body.classList.toggle('mode-dash', !form);
+  { const slot = document.getElementById(form ? 'slotForm' : 'slotDash'), fg = document.getElementById('filterGroup'); if (slot && fg && fg.parentElement !== slot) slot.appendChild(fg); } // v21: ตัวกรองเดือน/ผลัด/ค้นหา อยู่ในแถบควบคุมของหน้านั้น (ต้องทำก่อน updateStickyOffset)
   document.querySelectorAll('.main-tab').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === App.tab)));
   document.querySelectorAll('[data-fv]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.fv === App.fv)));
   document.getElementById('toolRow').classList.toggle('hidden', !form);
@@ -3056,11 +3123,20 @@ async function exportWsPdf() {
    8) UI HELPERS
    ===================================================================== */
 function toast(msg, type = 'info', ms = 3200, action) {
+  // v21: แก้ข้อความแจ้งค้างไม่หาย — เดิมมี return ก่อนบรรทัด setTimeout ทำให้ตัวตั้งเวลาปิดไม่เคยทำงาน
+  const box = document.getElementById('toasts');
+  while (box.children.length >= 4) box.firstChild.remove(); // กันซ้อนกันเต็มจอ
   const el = document.createElement('div'); el.className = `toast ${{ success: 'bg-emerald-600', error: 'bg-rose-600', info: 'bg-slate-800', warn: 'bg-amber-600' }[type]} text-white text-sm px-4 py-2.5 rounded-xl shadow-xl max-w-md`;
   el.textContent = ({ success: '✔ ', error: '✖ ', info: 'ℹ ', warn: '⚠ ' }[type]) + msg;
-  if (action) { const b = document.createElement('button'); b.textContent = action.label; b.className = 'ml-3 underline font-semibold whitespace-nowrap'; b.onclick = () => { action.fn(); el.remove(); }; el.appendChild(b); }
-  document.getElementById('toasts').appendChild(el); return el;
-  setTimeout(() => { el.style.transition = 'opacity .3s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, ms);
+  el.title = 'แตะเพื่อปิด';
+  let timer = null;
+  const close = () => { clearTimeout(timer); if (!el.isConnected) return; el.style.transition = 'opacity .3s, transform .3s'; el.style.opacity = '0'; el.style.transform = 'translateY(8px)'; setTimeout(() => el.remove(), 300); };
+  const life = Math.max(ms, Math.min(8000, 1600 + String(msg).length * 40)); // ข้อความยาวอยู่นานพอให้อ่านทัน
+  const arm = (t) => { clearTimeout(timer); timer = setTimeout(close, t); };
+  if (action) { const b = document.createElement('button'); b.textContent = action.label; b.className = 'ml-3 underline font-semibold whitespace-nowrap'; b.onclick = () => { action.fn(); clearTimeout(timer); el.remove(); }; el.appendChild(b); }
+  el.onclick = (e) => { if (!e.target.closest('button')) close(); };
+  el.onmouseenter = () => clearTimeout(timer); el.onmouseleave = () => arm(1500); // เอาเมาส์วางอ่านได้ ไม่หายกลางคัน
+  box.appendChild(el); arm(life); return el;
 }
 function setBtnLoading(btn, on, text) {
   if (on) { btn.dataset.html = btn.innerHTML; btn.disabled = true; btn.innerHTML = `<span class="spin"></span><span>${text}</span>`; }
@@ -3156,7 +3232,7 @@ function handleEvents() {
   grid.addEventListener('pointerdown', (e) => {
     const td = e.target.closest('td.cell'); if (!td || e.button === 2) return;
     hidePop(); longP = false;
-    if (isLocked()) { if (e.pointerType !== 'mouse') { const code = td.dataset.code, day = +td.dataset.day, x = e.clientX, y = e.clientY; pressT = setTimeout(() => cellPop(code, day, x, y), 450); } else lockedToast(); return; }
+    if (isLocked()) { if (e.pointerType !== 'mouse' && swapTipShow(td, e.clientX, e.clientY, 5000)) return; if (e.pointerType !== 'mouse') { const code = td.dataset.code, day = +td.dataset.day, x = e.clientX, y = e.clientY; pressT = setTimeout(() => cellPop(code, day, x, y), 450); } else lockedToast(); return; }
     if (App.guard && !App.editOn) { if (!(e.pointerType !== 'mouse' && swapTipShow(td, e.clientX, e.clientY, 5000))) { swapTipHide(); canEdit(); } return; } // ตารางล็อก: แตะช่องเปลี่ยนวันหยุด → ดูรายละเอียด
     if (!canEdit()) return; // v18: กันกดพลาด
     const code = td.dataset.code, day = +td.dataset.day;
@@ -3606,6 +3682,8 @@ function openInstall() {
 }
 document.addEventListener('DOMContentLoaded', init);
 
+/* v21: ความสูงหัวเรื่องเปลี่ยน (ย้ายตัวกรอง/ย่อขยายจอ) → ปรับตำแหน่งตรึงหัวตารางให้ตรงเสมอ */
+if (window.ResizeObserver) { const _h = document.getElementById('hdr'); if (_h) new ResizeObserver(() => updateStickyOffset()).observe(_h); }
 </script>
 </body>
 </html>
