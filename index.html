@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <!--
-  SBK Manpower App v17 — ระบบตรวจเช็คการมาปฏิบัติงาน + แดชบอร์ดวิเคราะห์อัตรากำลังพล (รวมในแอปเดียว)
+  SBK Manpower App v20 — ระบบตรวจเช็คการมาปฏิบัติงาน + แดชบอร์ดวิเคราะห์อัตรากำลังพล (รวมในแอปเดียว)
+  v20: จัดแถบเมนูบนตารางใหม่ (แถวแท็บ+ปุ่มสั่งงาน / แถวเครื่องมือแบ่งกลุ่ม) · ปุ่มล็อก/ปลดล็อกเปลี่ยนสีชัดเจน + ป้ายสถานะ · ชี้/แตะช่องที่เปลี่ยนวันหยุดตอนตารางล็อก → การ์ดรายละเอียด
+  v19: ติ๊ก/ยกเลิกติ๊กทั้งวัน เลือกผลัดได้ (กลางวัน/กลางคืน/ทั้งสองผลัด) · ช่องตารางบนมือถือ/แท็บเล็ตใช้ข้อความย่อ (หยุด/รอ, ←12/→13) ไม่ให้ล้นช่อง
+  v18: กันกดพลาด — ล็อกการแก้ไขตาราง (ปลดด้วยปุ่ม ✏️, ล็อกเองเมื่อไม่ใช้ 3 นาที/ออกจากแอป), ถามยืนยันเมื่อติ๊กล่วงหน้า/ลากหลายช่อง/ติ๊กทั้งวัน,
+       toast "↶ ย้อนกลับ" ทุกครั้งที่แก้, แตะขณะเลื่อนจอไม่ถือว่าติ๊ก, ปิด/เปิดโหมดกันกดพลาดได้ที่เมนู
   v17: ยุบปุ่มซ้ำ — ตัดปุ่ม "📝 บันทึกเปลี่ยนวันหยุด" บนแถบเครื่องมือ (ซ้ำกับแท็บ) เหลือปุ่ม "+ เพิ่มรายการ" ในแผงใต้ตาราง · เปลี่ยนชื่อแท็บเป็น "📋 รายการเปลี่ยนวันหยุด" ให้ต่างจากเครื่องมือ "↔ เปลี่ยนวันหยุด"
   v16: ปุ่ม "คัดลอกสรุป" และ "บันทึกเปลี่ยนวันหยุด" ในหน้าตารางทั้งเดือน, ช่องแสดง "จาก/ไป วันที่" ชัดขึ้น, รายการเปลี่ยนวันหยุดใต้ตาราง (แก้ไข/ยกเลิกได้),
        แก้ "จากวันไหนไปวันไหน" ในบันทึกเดิมได้ (ช่องในตารางปรับตามอัตโนมัติ + ย้อนกลับได้), ใช้คำว่า "เปลี่ยนวันหยุด" คำเดียว (ตัดคำว่า "สลับ")
@@ -102,7 +106,7 @@
   .ws th.day:hover { background: #c7d2fe; color:#312e81; }
   .ws col.c-no { width: 26px; } .ws col.c-name { width: 176px; } .ws col.c-day { width: var(--cw); } .ws col.c-sum { width: 31px; }
   .ws td.nm { text-align: left; padding: 1px 6px; overflow: hidden; }
-  .ws td.cell { height: 28px; text-align: center; cursor: pointer; user-select: none; font-weight: 700; font-size: 10.5px; position: relative; overflow: hidden; white-space: nowrap; }
+  .ws td.cell { height: 28px; text-align: center; cursor: pointer; user-select: none; font-weight: 700; font-size: 10.5px; position: relative; overflow: hidden; white-space: nowrap; text-overflow: clip; max-width: var(--cw); }
   .ws.tight td.cell { font-size: 9px; letter-spacing: -.3px; }
   .ws td.cell:hover { outline: 2px solid #6366f1; outline-offset: -2px; z-index: 1; }
   .ws td.today, .ws th.today { box-shadow: inset 0 0 0 2px #f59e0b; }
@@ -274,6 +278,43 @@
   .ws td.cell.hassub { line-height: 1; padding-top: 1px; }
   .ws td.cell .swsub { display: block; font-size: 9px; font-weight: 800; line-height: 1; margin-top: 1px; opacity: .95; letter-spacing: -.2px; }
   .ws.tight td.cell .swsub { font-size: 8px; }
+  #toolbar.guarded { opacity: .45; } #gridBlocks.guarded td.cell { cursor: not-allowed; }
+  /* ===== v20: แถบควบคุมด้านบนตาราง ===== */
+  .ctl { background: var(--card); border: 1px solid var(--line); border-radius: 1rem; padding: .55rem .6rem; display: flex; flex-direction: column; gap: .5rem; box-shadow: 0 1px 2px rgba(15,23,42,.05); }
+  .ctl-head { display: flex; align-items: center; gap: .5rem .6rem; flex-wrap: wrap; }
+  .ctl-head .seg { max-width: 100%; background: rgba(99,102,241,.07); }
+  .ctl-acts { display: flex; align-items: center; gap: .4rem; margin-left: auto; flex-wrap: wrap; justify-content: flex-end; }
+  .ctl-acts .btn { padding: .38rem .75rem; font-size: .78rem; min-height: 34px; }
+  .ctl-tools { display: flex; align-items: center; gap: .7rem; padding-top: .5rem; border-top: 1px dashed var(--line); }
+  .ctl-lab { display: flex; flex-direction: column; align-items: flex-start; gap: .25rem; flex-shrink: 0; font-size: .7rem; font-weight: 700; color: var(--muted); }
+  .ed-chip { font-size: .66rem; font-weight: 700; padding: .08rem .5rem; border-radius: 999px; background: #fef3c7; color: #92400e; white-space: nowrap; }
+  .ed-chip.on { background: #d1fae5; color: #065f46; } .dark .ed-chip { background: #422006; color: #fde68a; } .dark .ed-chip.on { background: #064e3b; color: #a7f3d0; }
+  #toolbar { display: flex; align-items: center; gap: .4rem .85rem; flex: 1; min-width: 0; transition: opacity .2s; }
+  #toolbar .tg { display: flex; align-items: center; gap: .3rem; padding-right: .85rem; border-right: 1px solid var(--line); }
+  #toolbar .tg:last-child { border-right: 0; padding-right: 0; }
+  #toolbar .tg-t { font-size: .64rem; font-weight: 700; color: var(--muted); margin-right: .1rem; white-space: nowrap; }
+  #btnEditLock { font-weight: 700; border-width: 2px; }
+  #btnEditLock.is-locked { background: #fef3c7; border-color: #f59e0b; color: #92400e; }
+  .dark #btnEditLock.is-locked { background: #422006; border-color: #d97706; color: #fde68a; }
+  #btnEditLock.ed-on { background: #059669; border-color: #047857; color: #fff; animation: edpulse 2s infinite; }
+  @keyframes edpulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(16,185,129,.5); } 50% { box-shadow: 0 0 0 6px rgba(16,185,129,0); } }
+  #gridBlocks.editing .card { box-shadow: 0 0 0 2px rgba(16,185,129,.5); }
+  @media (min-width: 768px) { #toolbar { flex-wrap: wrap; } }
+  @media (max-width: 767px) {
+    .ctl-head .seg { width: 100%; } .ctl-head .seg button { flex: 1 0 auto; }
+    .ctl-acts { width: 100%; margin-left: 0; justify-content: stretch; } .ctl-acts #btnEditLock { flex: 1 1 auto; } .ctl-acts .btn { min-height: 40px; }
+    .ctl-tools { flex-direction: column; align-items: stretch; gap: .35rem; }
+    .ctl-lab { flex-direction: row; align-items: center; gap: .5rem; }
+    #toolbar { overflow-x: auto; flex: none; width: 100%; flex-wrap: nowrap; scrollbar-width: none; -webkit-overflow-scrolling: touch; } #toolbar::-webkit-scrollbar { display: none; }
+    #toolbar > * { flex-shrink: 0; }
+  }
+  /* การ์ดรายละเอียดการเปลี่ยนวันหยุด (ชี้เมาส์/แตะช่องตอนตารางล็อก) */
+  .swtip { position: fixed; z-index: 80; width: max-content; max-width: min(320px, calc(100vw - 16px)); background: var(--card); color: var(--text); border: 1px solid var(--line); border-radius: .8rem; box-shadow: 0 12px 32px -8px rgba(15,23,42,.4); overflow: hidden; font-size: .78rem; pointer-events: none; }
+  .swtip-h { padding: .36rem .7rem; font-weight: 700; }
+  .swtip-b { padding: .5rem .7rem .6rem; display: grid; gap: .24rem; }
+  .swtip-n { font-weight: 700; } .swtip-n small { color: var(--muted); font-weight: 500; }
+  .swtip-r { display: grid; grid-template-columns: 5.6rem 1fr; gap: .5rem; } .swtip-r span { color: var(--muted); } .swtip-r b { font-weight: 600; word-break: break-word; }
+  .swtip-w { color: #be123c; line-height: 1.4; }
   .ws td.cell.long { font-size: 8.5px; letter-spacing: -.3px; } .ws.tight td.cell.long { font-size: 7.5px; }
   #miTheme { display: none; } @media (max-width: 639px) { #miTheme { display: block; } }
 </style>
@@ -331,6 +372,7 @@
           <button class="mi w-full text-left px-3 py-2 rounded-lg hover:bg-indigo-50 dark:hover:bg-slate-800" data-act="months">🗂️ จัดการรายการเดือน (แสดง/ซ่อน)</button>
           <button class="mi w-full text-left px-3 py-2 rounded-lg hover:bg-indigo-50 dark:hover:bg-slate-800" data-act="log">🕘 ประวัติการแก้ไขล่าสุด</button>
           <div class="border-t my-1" style="border-color:var(--line)"></div>
+          <button class="mi w-full text-left px-3 py-2 rounded-lg hover:bg-indigo-50 dark:hover:bg-slate-800" data-act="guard" id="miGuard">🛡️ โหมดกันกดพลาด</button>
           <button class="mi w-full text-left px-3 py-2 rounded-lg hover:bg-indigo-50 dark:hover:bg-slate-800" data-act="theme" id="miTheme">🌗 สลับโหมดมืด / สว่าง</button>
           <button class="mi w-full text-left px-3 py-2 rounded-lg hover:bg-indigo-50 dark:hover:bg-slate-800" data-act="install">📲 ติดตั้งแอป / เพิ่มไอคอนลงหน้าจอ</button>
           <button class="mi w-full text-left px-3 py-2 rounded-lg hover:bg-indigo-50 dark:hover:bg-slate-800" data-act="settings">⚙️ ตั้งค่าการเชื่อมต่อ / ผู้บันทึก</button>
@@ -353,13 +395,23 @@
     </div>
   </div>
   <!-- เมนูย่อย: ฟอร์มกรอก -->
-  <div id="toolRow" class="max-w-[1800px] mx-auto px-3 sm:px-4 pb-2 flex flex-wrap items-center gap-1.5">
-    <div class="seg mr-1 hscroll max-w-full" role="tablist"><button data-fv="grid">🗓️ ตารางทั้งเดือน</button><button data-fv="daily">📱 เช็ครายวัน</button><button data-fv="swaps">📋 รายการเปลี่ยนวันหยุด</button></div>
-    <button id="btnPending" class="hidden pend-btn" title="วันที่ค้างติ๊ก"></button>
-    <div id="toolbar" class="hscroll xl:flex-wrap items-center gap-1.5 order-last w-full xl:order-none xl:w-auto pb-0.5"></div>
-    <button class="btn btn-ghost !py-1 !px-2 text-xs" id="btnCopyGrid" title="คัดลอกสรุปประจำวัน (เลือกวัน/ผลัดได้) แล้วนำไปวางใน LINE">📋<span class="lg2-hide"> คัดลอกสรุป</span></button>
-    <button class="btn btn-ghost !py-1 !px-2 text-xs ml-auto" id="btnUndo" title="ย้อนกลับ (Ctrl+Z)" disabled>↶<span class="lg2-hide"> ย้อนกลับ</span></button>
-    <button class="btn btn-ghost !py-1 !px-2 text-xs xs-hide" id="btnFit" title="สลับ: พอดีจอ / ขยายช่อง">⤢ พอดีจอ</button>
+  <div id="toolRow" class="max-w-[1800px] mx-auto px-3 sm:px-4 pb-2">
+    <div class="ctl">
+      <div class="ctl-head">
+        <div class="seg hscroll" role="tablist"><button data-fv="grid">🗓️ ตารางทั้งเดือน</button><button data-fv="daily">📱 เช็ครายวัน</button><button data-fv="swaps">📋 รายการเปลี่ยนวันหยุด</button></div>
+        <button id="btnPending" class="hidden pend-btn" title="วันที่ค้างติ๊ก"></button>
+        <div class="ctl-acts">
+          <button class="btn btn-ghost" id="btnEditLock" title="กันกดพลาด: ต้องปลดล็อกก่อนจึงจะแก้ตารางได้">🔒 ล็อกอยู่</button>
+          <button class="btn btn-ghost" id="btnCopyGrid" title="คัดลอกสรุปประจำวัน (เลือกวัน/ผลัดได้) แล้วนำไปวางใน LINE">📋<span class="xs-hide"> คัดลอกสรุป</span></button>
+          <button class="btn btn-ghost" id="btnUndo" title="ย้อนกลับ (Ctrl+Z)" disabled>↶<span class="xs-hide"> ย้อนกลับ</span></button>
+          <button class="btn btn-ghost xs-hide" id="btnFit" title="สลับ: พอดีจอ / ขยายช่อง">⤢ พอดีจอ</button>
+        </div>
+      </div>
+      <div id="toolPalette" class="ctl-tools">
+        <div class="ctl-lab"><span>เครื่องมือ</span><span id="editChip" class="ed-chip"></span></div>
+        <div id="toolbar"></div>
+      </div>
+    </div>
   </div>
   <!-- เมนูย่อย: แดชบอร์ด -->
   <div id="dashFilter" class="hidden max-w-[1800px] mx-auto px-3 sm:px-4 pb-2 space-y-1.5">
@@ -771,13 +823,13 @@ const ST = {
   K: { label: 'มาทำแทนวันหยุด', cell: 'แทน', sheet: 'ทำแทน', bg: '#047857', fg: '#fff' },
   T: { label: 'มาทำ OT (วันหยุด)', cell: 'OT', sheet: 'OT', bg: '#0891b2', fg: '#fff' },
   O: { label: 'หยุด (OFF)', cell: 'OFF', sheet: 'OFF', bg: '#cbd5e1', fg: '#334155' },
-  H: { label: 'เปลี่ยนวันหยุด (หยุดแทน)', cell: 'หยุดแทน', sheet: 'เปลี่ยนหยุด', bg: '#fde68a', fg: '#92400e' },
+  H: { label: 'เปลี่ยนวันหยุด (หยุดแทน)', cell: 'หยุดแทน', m: 'หยุด', sheet: 'เปลี่ยนหยุด', bg: '#fde68a', fg: '#92400e' },
   S: { label: 'ลาป่วย', cell: 'ป', sheet: 'ลาป่วย', bg: '#f59e0b', fg: '#fff' },
   P: { label: 'ลากิจ', cell: 'ก', sheet: 'ลากิจ', bg: '#8b5cf6', fg: '#fff' },
   V: { label: 'พักร้อน', cell: 'พร', sheet: 'พักร้อน', bg: '#0ea5e9', fg: '#fff' },
   E: { label: 'ลาแทนวันหยุดประจำปี (ลา Extra)', cell: 'EX', sheet: 'ลาExtra', bg: '#c026d3', fg: '#fff' },
   X: { label: 'ขาดงาน', cell: 'ข', sheet: 'ขาด', bg: '#ef4444', fg: '#fff' },
-  J: { label: 'เวรทำแทน (รอติ๊ก)', cell: 'รอแทน', sheet: 'แผนทำแทน', bg: 'transparent', fg: '#059669' },
+  J: { label: 'เวรทำแทน (รอติ๊ก)', cell: 'รอแทน', m: 'รอ', sheet: 'แผนทำแทน', bg: 'transparent', fg: '#059669' },
   A: { label: 'เวรตามแผน A', cell: 'A', sheet: 'A', bg: 'transparent', fg: '#818cf8' },
   B: { label: 'เวรตามแผน B', cell: 'B', sheet: 'B', bg: 'transparent', fg: '#818cf8' },
   C: { label: 'เวรตามแผน C', cell: 'C', sheet: 'C', bg: 'transparent', fg: '#818cf8' },
@@ -888,6 +940,94 @@ function takeSnapshot(mk) {
 const curMonth = () => App.store.months[App.mk];
 /* ---------- v7: ปิดยอดเดือน / วันที่ค้างติ๊ก ---------- */
 const isLocked = (mk = App.mk) => { const M = App.store.months[mk]; return !!(M && M.lock && M.lock.locked); };
+// ===== v20: การ์ดรายละเอียดเมื่อชี้/แตะช่องที่ "เปลี่ยนวันหยุด" ตอนตารางล็อก (ดูอย่างเดียว) =====
+// แสดงเฉพาะช่องที่เปลี่ยนจากวันทำงานปกติ: หยุดแทน (H) · ทำแทน (K) · รอทำแทน (J)
+const viewOnly = () => isLocked() || (!!App.guard && !App.editOn);
+function swapTipHtml(code, day) {
+  const M = curMonth(), r = M && M.rows.find(x => x.code === code); if (!r) return '';
+  const ch = r.c[day - 1]; if (ch !== 'H' && ch !== 'J' && ch !== 'K') return '';
+  const sw = swapAt(M, code, day), st = ST[ch];
+  const head = ch === 'H' ? 'หยุดแทน · วันหยุดใหม่' : ch === 'K' ? 'ทำแทนวันหยุด · มาทำงานแล้ว' : 'รอทำแทนวันหยุด · ยังไม่ติ๊ก';
+  const row = (k, v) => `<div class="swtip-r"><span>${k}</span><b>${v}</b></div>`;
+  let h = `<div class="swtip-h" style="background:${st.bg};color:${st.fg}">↔ ${head}</div><div class="swtip-b"><div class="swtip-n">${esc(r.name)} <small>${esc(r.code)}</small></div>`;
+  if (!sw) return h + row('วันที่', esc(dShort(App.mk, day))) + `<div class="swtip-w">⚠ ช่องนี้เปลี่ยนวันหยุดแต่ยังไม่มีบันทึกเหตุผล<br>ปลดล็อกแล้วคลิกขวา/กดค้างที่ช่องเพื่อเพิ่ม</div></div>`;
+  const fc = r.c[sw.fromDay - 1], when = (iso) => { try { return new Date(iso).toLocaleString('th-TH', { day: 'numeric', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit' }); } catch (e) { return ''; } };
+  const made = fc === 'K' ? '✔ ทำแทนแล้ว' : fc === 'J' ? '⏳ รอทำแทน' : 'ตอนนี้เป็น ' + esc((ST[fc] || ST['?']).label);
+  h += row('วันหยุดเดิม', esc(dShort(App.mk, sw.fromDay))) + row('วันหยุดใหม่', esc(dShort(App.mk, sw.toDay))) + row('การทำแทน', made) + row('เหตุผล', esc(sw.reason || '—')) + row('ผู้อนุมัติ', esc(sw.approver || '—'));
+  if (sw.createdBy || sw.createdAt) h += row('บันทึกโดย', esc((sw.createdBy || '—') + (sw.createdAt ? ' · ' + when(sw.createdAt) : '')));
+  if (sw.updatedBy || sw.updatedAt) h += row('แก้ไขล่าสุด', esc((sw.updatedBy || '—') + (sw.updatedAt ? ' · ' + when(sw.updatedAt) : '')));
+  return h + '</div>';
+}
+function swapTipEl() { let el = document.getElementById('swTip'); if (!el) { el = document.createElement('div'); el.id = 'swTip'; el.className = 'swtip'; el.style.display = 'none'; document.body.appendChild(el); } return el; }
+function swapTipMove(x, y) {
+  const el = swapTipEl(), w = el.offsetWidth, h = el.offsetHeight; let L = x + 16, T = y + 18;
+  if (L + w > innerWidth - 8) L = Math.max(8, x - w - 16);
+  if (T + h > innerHeight - 8) T = Math.max(8, y - h - 14);
+  el.style.left = L + 'px'; el.style.top = T + 'px';
+}
+function swapTipHide() {
+  clearTimeout(App._tipT); const el = document.getElementById('swTip'); if (el) el.style.display = 'none';
+  const td = App._tipTd; if (td) { if (td._t != null) td.setAttribute('title', td._t); App._tipTd = null; }
+}
+function swapTipShow(td, x, y, autoMs) {
+  const html = swapTipHtml(td.dataset.code, +td.dataset.day); if (!html) return false;
+  if (App._tipTd !== td) { swapTipHide(); td._t = td.getAttribute('title'); td.removeAttribute('title'); App._tipTd = td; } // ซ่อน tooltip เดิมของเบราว์เซอร์ไม่ให้ซ้อนกัน
+  const el = swapTipEl(); el.innerHTML = html; el.style.display = 'block'; swapTipMove(x, y);
+  clearTimeout(App._tipT); if (autoMs) App._tipT = setTimeout(swapTipHide, autoMs);
+  return true;
+}
+// ===== v18: ป้องกันการกดพลาด =====
+// 1) ล็อกการแก้ไขตาราง (ค่าเริ่มต้นเปิด) — ปลดด้วยปุ่ม ✏️ แล้วล็อกเองเมื่อไม่ใช้ 3 นาที หรือเมื่อสลับ/ซ่อนแอป
+// 2) ถามยืนยันเมื่อเสี่ยง: ติ๊กมาล่วงหน้า (วันที่ยังไม่ถึง) · เปลี่ยนทีเดียวหลายช่อง · ติ๊ก/ยกเลิกทั้งวัน
+// 3) ทุกครั้งที่แก้จะมี toast "↶ ย้อนกลับ" ให้กดแก้ได้ทันที
+const EDIT_IDLE_MS = 180000, BULK_CONFIRM = 8;
+function editBtnUpdate(monthLocked) {
+  const b = document.getElementById('btnEditLock'); if (!b) return;
+  const on = !!App.guard && !!App.editOn, lk = !!App.guard && !App.editOn;
+  b.classList.toggle('hidden', !App.guard || !!monthLocked || App.fv === 'swaps');
+  b.classList.toggle('ed-on', on); b.classList.toggle('is-locked', lk);
+  b.innerHTML = on ? '✏️ ปลดล็อกแล้ว<span class="xs-hide"> · แตะเพื่อล็อก</span>' : '🔒 ล็อกอยู่<span class="xs-hide"> · แตะเพื่อปลดล็อก</span>';
+  b.title = on ? 'ปลดล็อกอยู่ — แก้ตารางได้ (ล็อกเองเมื่อไม่ใช้ 3 นาที) · แตะเพื่อล็อก' : 'ตารางล็อกอยู่ (ดูอย่างเดียว) — แตะเพื่อปลดล็อกก่อนแก้ไข';
+  const chip = document.getElementById('editChip');
+  if (chip) { chip.classList.toggle('hidden', !App.guard); chip.classList.toggle('on', on); chip.textContent = on ? '✏️ แก้ไขได้' : '🔒 ดูอย่างเดียว'; chip.title = on ? '' : 'ชี้เมาส์/แตะช่องที่เปลี่ยนวันหยุดเพื่อดูรายละเอียด'; }
+  const tb = document.getElementById('toolbar'), gb = document.getElementById('gridBlocks');
+  if (tb) tb.classList.toggle('guarded', lk); if (gb) { gb.classList.toggle('guarded', lk); gb.classList.toggle('editing', on); }
+  const mi = document.getElementById('miGuard'); if (mi) mi.textContent = '🛡️ โหมดกันกดพลาด: ' + (App.guard ? 'เปิดอยู่ (แตะเพื่อปิด)' : 'ปิดอยู่ (แตะเพื่อเปิด)');
+}
+function lockEdit(quiet) { swapTipHide(); clearTimeout(App._editT); const was = App.editOn; App.editOn = false; editBtnUpdate(isLocked()); if (was && !quiet) toast('🔒 ล็อกการแก้ไขแล้ว', 'info', 1800); }
+function unlockEdit() { swapTipHide(); App.editOn = true; bumpEdit(); editBtnUpdate(isLocked()); toast('✏️ เปิดแก้ไขแล้ว — ล็อกเองเมื่อไม่ได้ใช้ 3 นาที', 'info', 2200); }
+function bumpEdit() { clearTimeout(App._editT); if (App.guard && App.editOn) App._editT = setTimeout(() => { lockEdit(true); toast('🔒 ล็อกการแก้ไขอัตโนมัติ (ไม่ได้ใช้งาน 3 นาที)', 'info', 2500); }, EDIT_IDLE_MS); }
+function canEdit() {
+  if (!App.guard || App.editOn) { bumpEdit(); return true; }
+  const n = Date.now(); if (n - (App._hintT || 0) > 1800) { App._hintT = n; toast('🔒 กันกดพลาดอยู่ — กดปุ่ม "🔒 เปิดแก้ไข" ก่อนจึงจะแก้ตารางได้', 'warn', 2800); }
+  return false;
+}
+const isFutureDay = (mk, d) => { const t = todayKey(); return mk > t.mk || (mk === t.mk && d > t.d); };
+// ข้อความเตือนเมื่อการแก้ไขชุดนี้เสี่ยง (คืนค่าว่าง = ไม่ต้องถาม)
+function guardMsg(ch, opt = {}) {
+  if (!App.guard) return '';
+  const out = [], fut = ch.filter(c => isWork(c.to) && isFutureDay(App.mk, c.day));
+  if (fut.length) { const ds = [...new Set(fut.map(c => c.day))].sort((a, b) => a - b); out.push(`⚠ ติ๊กมาปฏิบัติงานล่วงหน้า ${fut.length} ช่อง (วันที่ ${ds.slice(0, 6).join(', ')}${ds.length > 6 ? ' …' : ''}) — วันนี้ยังมาไม่ถึง`); }
+  if (ch.length > BULK_CONFIRM && !opt.skipBulk) out.push(`⚠ เปลี่ยนทีเดียว ${ch.length} ช่อง`);
+  return out.join('\n');
+}
+function editToast(ch) {
+  if (!ch || !ch.length) return;
+  if (App._edToast && App._edToast.isConnected) App._edToast.remove();
+  const M = curMonth(), by = {}; M.rows.forEach(r => by[r.code] = r);
+  const cell = (k) => (ST[k] && (ST[k].cell || ST[k].label)) || '–', entry = App.undo[App.undo.length - 1];
+  const msg = ch.length === 1 ? `${by[ch[0].code] ? shortName(by[ch[0].code].name) : ch[0].code} วันที่ ${ch[0].day}: ${cell(ch[0].from)} → ${cell(ch[0].to)}` : `แก้ไข ${ch.length} ช่อง`;
+  App._edToast = toast(msg, 'info', 5000, { label: '↶ ย้อนกลับ', fn: () => { if (App.undo[App.undo.length - 1] === entry) undo(); else toast('ย้อนกลับจากปุ่มนี้ไม่ได้แล้ว (มีการแก้ไขใหม่) — ใช้ปุ่ม ↶ ด้านบนแทน', 'warn'); } });
+}
+// ใช้กับการแก้ไขจากตาราง/เมนู/เช็ครายวัน: ตรวจความเสี่ยง → (ถาม) → บันทึก → toast ย้อนกลับ
+function commitEdit(ch) {
+  if (!ch.length) return;
+  const gm = guardMsg(ch);
+  const go = () => { applyChanges(ch); editToast(ch); };
+  if (!gm) { go(); return; }
+  render(); // คืนภาพช่องที่ลากทับไว้ก่อน — ถ้าไม่ยืนยันตารางต้องไม่เปลี่ยน
+  confirmBox('ยืนยันการแก้ไข', gm + '\nต้องการดำเนินการต่อหรือไม่?', 'ยืนยัน', 'btn-primary').then(ok => { if (ok) go(); });
+}
 function lockedToast(mk = App.mk) { const L = (App.store.months[mk] || {}).lock || {}; toast(`🔒 ${mLabel(mk)} ปิดยอดแล้ว${L.by ? ' โดย ' + L.by : ''} — แก้ไขไม่ได้ (เมนู → เปิดให้แก้ไข)`, 'warn', 5000); }
 /* ---------- เอฟเฟกต์ (เคารพการตั้งค่า "ลดการเคลื่อนไหว" ของเครื่อง) ---------- */
 const fx = (() => {
@@ -985,7 +1125,7 @@ function writeLocalNow() {
 function saveLocal() { App.ver++; clearTimeout(saveTimer); saveTimer = setTimeout(writeLocalNow, 300); } // หน่วงเล็กน้อย แต่บังคับเขียนทันทีตอนปิด/สลับหน้า
 function loadLocal() { try { const s = localStorage.getItem(LS); const j = s ? JSON.parse(s) : null; return j && typeof j.months === 'object' ? j : null; } catch (e) { return null; } }
 function loadPrefs() { try { return JSON.parse(localStorage.getItem(LS + '_prefs') || '{}') || {}; } catch (e) { return {}; } }
-function savePrefs() { try { localStorage.setItem(LS + '_prefs', JSON.stringify({ gasUrl: App.gasUrl === GAS_URL ? '' : App.gasUrl, gasOff: !App.gasUrl, user: App.user, fit: App.fit, target: D.target, hiddenMonths: [...App.hidden], rpt: App.rpt, sumShift: App.sumShift || 'all', theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light' })); } catch (e) {} }
+function savePrefs() { try { localStorage.setItem(LS + '_prefs', JSON.stringify({ gasUrl: App.gasUrl === GAS_URL ? '' : App.gasUrl, gasOff: !App.gasUrl, user: App.user, fit: App.fit, guard: App.guard !== false, target: D.target, hiddenMonths: [...App.hidden], rpt: App.rpt, sumShift: App.sumShift || 'all', theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light' })); } catch (e) {} }
 
 function rowFromSheet(o, mk) {
   const days = mDays(mk), c = [], oth = {};
@@ -1282,15 +1422,44 @@ function cancelSwap(mk, id) {
   s.status = 'cancelled'; s.updatedBy = App.user || ''; s.updatedAt = new Date().toISOString();
   applyChanges(ch, true, `ยกเลิกการเปลี่ยนวันหยุดของ ${s.name} แล้ว${ch.length < 2 ? ' (บางช่องถูกแก้เป็นสถานะอื่นแล้ว จึงไม่คืนค่า)' : ''}`, { swapCancel: id });
 }
-function tickWholeDay(day) {
-  const ch = [];
-  visibleRows().forEach(r => { const cur = r.c[day - 1] || '.'; const to = cur === 'J' ? 'K' : (isPlan(cur) || cur === '.') ? 'W' : null; if (to) { const c = mkChange(r.code, day, to); if (c) ch.push(c); } });
-  applyChanges(ch); toast(ch.length ? `ติ๊กมาปฏิบัติงาน ${ch.length} คน (วันที่ ${day})` : 'ไม่มีช่องที่ต้องติ๊กเพิ่มในวันนี้', ch.length ? 'success' : 'info');
+// v19: ติ๊ก/ยกเลิกติ๊กทั้งวัน เลือกผลัดได้ — แยกตามผลัดของพนักงาน (ไม่ขึ้นกับตัวกรองผลัดที่เลือกอยู่ แต่ยังเคารพช่องค้นหาชื่อ)
+function dayChangesByShift(day, mode) {
+  const M = curMonth(), q = App.q.toLowerCase().replace(/\s+/g, ''), out = { d: [], n: [] };
+  M.rows.filter(r => !q || r.name.toLowerCase().replace(/\s+/g, '').includes(q) || r.code.includes(q)).forEach(r => {
+    const cur = r.c[day - 1] || '.';
+    const to = mode === 'tick' ? (cur === 'J' ? 'K' : (isPlan(cur) || cur === '.') ? 'W' : null)
+      : (cur === 'W' || cur === 'Y' ? (r.plan || '.') : cur === 'K' ? 'J' : cur === 'T' ? 'O' : null);
+    const c = to && mkChange(r.code, day, to); if (c) out[r.shift === 'n' ? 'n' : 'd'].push(c);
+  });
+  return out;
 }
-function untickWholeDay(day) {
-  const ch = [];
-  visibleRows().forEach(r => { const cur = r.c[day - 1]; const to = cur === 'W' || cur === 'Y' ? (r.plan || '.') : cur === 'K' ? 'J' : cur === 'T' ? 'O' : null; if (to) { const c = mkChange(r.code, day, to); if (c) ch.push(c); } });
-  applyChanges(ch); toast(`ยกเลิกติ๊ก ${ch.length} ช่อง (วันที่ ${day})`, 'info');
+function shiftPickBox(title, day, by, verb) {
+  return new Promise(res => {
+    const nd = by.d.length, nn = by.n.length, cur = App.shift;
+    const btn = (k, label, n) => `<button class="btn ${cur === k || (cur === 'all' && k === 'all') ? 'btn-primary' : 'btn-ghost'}" data-pick="${k}" style="display:flex;justify-content:space-between;align-items:center;width:100%;${n ? '' : 'opacity:.4;pointer-events:none'}"><span>${label}</span><b>${n} คน</b></button>`;
+    openModal(esc(title), `<p class="text-sm mb-3">วัน${WD[wdOf(App.mk, day)]}ที่ ${day} ${mLabel(App.mk)}${isFutureDay(App.mk, day) ? '<br><span class="text-amber-600">⚠ วันนี้ยังมาไม่ถึง</span>' : ''}<br>เลือกผลัดที่ต้องการ${esc(verb)}</p>
+      <div style="display:grid;gap:8px;margin-bottom:12px">${btn('d', '☀️ ผลัดกลางวัน', nd)}${btn('n', '🌙 ผลัดกลางคืน', nn)}${btn('all', 'ทั้งสองผลัด', nd + nn)}</div><div class="flex justify-end"><button class="btn btn-ghost" id="spNo">ยกเลิก</button></div>`);
+    document.querySelectorAll('#modalBody [data-pick]').forEach(b => b.onclick = () => { closeModal(); res(b.dataset.pick); });
+    document.getElementById('spNo').onclick = () => { closeModal(); res(null); };
+  });
+}
+async function tickWholeDay(day) {
+  if (!canEdit()) return;
+  const by = dayChangesByShift(day, 'tick');
+  if (!by.d.length && !by.n.length) { toast('ไม่มีช่องที่ต้องติ๊กเพิ่มในวันนี้', 'info'); return; }
+  const k = await shiftPickBox('ติ๊กมาปฏิบัติงานทั้งวัน', day, by, 'ติ๊กมา'); if (!k) return;
+  const ch = k === 'all' ? by.d.concat(by.n) : by[k];
+  if (!ch.length) return;
+  applyChanges(ch); toast(`ติ๊กมาปฏิบัติงาน ${ch.length} คน (${SHIFT_TH[k]} · วันที่ ${day})`, 'success', 5000, { label: '↶ ย้อนกลับ', fn: undo });
+}
+async function untickWholeDay(day) {
+  if (!canEdit()) return;
+  const by = dayChangesByShift(day, 'untick');
+  if (!by.d.length && !by.n.length) { toast('ไม่มีช่องให้ยกเลิกติ๊กในวันนี้', 'info'); return; }
+  const k = await shiftPickBox('ยกเลิกติ๊กทั้งวัน', day, by, 'ยกเลิกติ๊ก'); if (!k) return;
+  const ch = k === 'all' ? by.d.concat(by.n) : by[k];
+  if (!ch.length) return;
+  applyChanges(ch); toast(`ยกเลิกติ๊ก ${ch.length} ช่อง (${SHIFT_TH[k]} · วันที่ ${day})`, 'info', 5000, { label: '↶ ย้อนกลับ', fn: undo });
 }
 
 /* =====================================================================
@@ -1310,10 +1479,11 @@ function render() {
   document.querySelectorAll('[data-fv]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.fv === App.fv)));
   document.getElementById('toolRow').classList.toggle('hidden', !form);
   const locked = !!M && isLocked();
-  document.getElementById('toolbar').classList.toggle('hidden', App.fv !== 'grid' || locked);
+  document.getElementById('toolPalette').classList.toggle('hidden', App.fv !== 'grid' || locked);
   renderLockState(M, form, locked);
   document.getElementById('btnFit').classList.toggle('hidden', App.fv !== 'grid');
   document.getElementById('btnCopyGrid').classList.toggle('hidden', App.fv !== 'grid');
+  editBtnUpdate(locked);
   document.getElementById('btnUndo').classList.toggle('hidden', !form);
   document.getElementById('dashFilter').classList.toggle('hidden', form);
   const empty = !M && !(App.tab === 'dash' && D.period !== 'month');
@@ -1433,7 +1603,9 @@ function gridSwapPanel(M, mk, locked) {
 function swapAt(M, code, day) { return (M.swaps || []).find(s => s.status === 'active' && s.code === code && (s.fromDay === day || s.toDay === day)); }
 function cellHtml(r, i, today) {
   const ch = r.c[i] || '.', st = ST[ch] || ST['?'], M = curMonth();
-  const label = ch === '?' ? (r.oth[i] || '?') : st.cell;
+  const compact = (App._cw || 44) < 40; // ช่องแคบ → ใช้ข้อความย่อ ไม่ให้ล้นช่อง (ข้อความเต็มดูได้จาก tooltip/แตะค้าง)
+  let label = ch === '?' ? (r.oth[i] || '?') : (compact && st.m ? st.m : st.cell);
+  if (compact && ch === '?' && [...label].length > 4) label = [...label].slice(0, 3).join('') + '…';
   let note = '', mark = '';
   if (ch === 'H' || ch === 'J' || ch === 'K') {
     const sw = swapAt(M, r.code, i + 1);
@@ -1445,7 +1617,7 @@ function cellHtml(r, i, today) {
   const cls = 'cell' + mark + (hd ? ' holc' + (hd.t === 'gov' ? ' holg' : '') : '') + (App._flash && App._flash.has(r.code + '|' + (i + 1)) ? ' flash' : '') + (today ? ' today' : '') + (isCellDirty(App.mk, r, i) ? ' dirty' : '') + (App.swapSrc && App.swapSrc.code === r.code && App.swapSrc.day === i + 1 ? ' swapsrc' : '');
   const extra = isPlan(ch) ? (ch === 'J' ? 'border:1px dashed #059669;' : '') + 'font-weight:600;' : '';
   const sw = (ch === 'H' || ch === 'J' || ch === 'K') ? swapAt(M, r.code, i + 1) : null;
-  const sub = sw ? `<span class="swsub">${ch === 'H' ? 'จาก' + sw.fromDay : 'ไป' + sw.toDay}</span>` : ''; // แสดงคู่วันที่เปลี่ยนในช่องเลย ไม่ต้องคลิกดู
+  const sub = sw ? `<span class="swsub">${ch === 'H' ? (compact ? '←' : 'จาก') + sw.fromDay : (compact ? '→' : 'ไป') + sw.toDay}</span>` : ''; // แสดงคู่วันที่เปลี่ยนในช่องเลย ไม่ต้องคลิกดู
   return `<td class="${cls}${sub ? ' hassub' : ''}${[...label].length > 4 ? ' long' : ''}" data-code="${esc(r.code)}" data-day="${i + 1}" title="${esc(r.name)} · วันที่ ${i + 1} · ${esc(ch === '?' ? (r.oth[i] || 'รหัสอื่นๆ') : st.label)}${esc(note)}" style="background:${st.bg};color:${st.fg};${extra}">${esc(label)}${sub}</td>`;
 }
 // แถบวันหยุดนักขัตฤกษ์ของเดือน (แสดงเหนือตารางเวร)
@@ -1465,7 +1637,7 @@ function renderGrid() {
   const fixed = 26 + nw + 6 * 31;
   let cw = Math.floor((avail - fixed) / days), scroll = false;
   if (!App.fit || cw < 20) { cw = 34; scroll = true; }
-  cw = Math.min(cw, 44);
+  cw = Math.min(cw, 44); App._cw = cw; // cellHtml ใช้ตัดสินใจย่อข้อความ
   document.documentElement.style.setProperty('--cw', cw + 'px');
   let html = holidayStrip(mk);
   [['d', 'ผลัดกลางวัน'], ['n', 'ผลัดกลางคืน']].forEach(([sh, title]) => {
@@ -1500,7 +1672,7 @@ function renderGrid() {
   wrapEl.innerHTML = html || '<div class="card p-8 text-center muted">ไม่พบพนักงานตามเงื่อนไข</div>';
   wrapEl.querySelectorAll('.gridwrap').forEach((e, i) => { e.scrollLeft = pos[i] || (scroll && t.mk === mk && !App._scrolled ? Math.max(0, (t.d - 5) * cw) : 0); });
   App._scrolled = true;
-  document.getElementById('btnFit').innerHTML = App.fit ? '⤢<span class="lg2-hide"> พอดีจอ</span>' : '⤡<span class="lg2-hide"> ขยายช่อง</span>';
+  document.getElementById('btnFit').innerHTML = App.fit ? '⤢ พอดีจอ' : '⤡ ขยายช่อง';
 }
 function renderDaily() {
   const mk = App.mk, days = mDays(mk), d = Math.min(App.day, days); App.day = d;
@@ -1538,8 +1710,10 @@ function buildMonthSelect() {
   buildDayOptions();
   if (typeof buildYearOptions === 'function') buildYearOptions();
 }
+const TOOL_GROUPS = [['ติ๊กมาทำงาน', ['tick', 'W', 'Y', 'K', 'T']], ['หยุด · ลา · ขาด', ['swap', 'O', 'S', 'P', 'V', 'E', 'X']], ['อื่นๆ', ['plan', 'clear']]];
 function buildToolbar() {
-  document.getElementById('toolbar').innerHTML = TOOLS.map(t => `<button class="tool btn text-white" style="background:${t.bg}" data-tool="${t.id}" aria-pressed="${App.tool === t.id}" title="${esc(t.tip || t.label)}">${t.label}</button>`).join('');
+  const btn = (t) => `<button class="tool btn text-white" style="background:${t.bg}" data-tool="${t.id}" aria-pressed="${App.tool === t.id}" title="${esc(t.tip || t.label)}">${t.label}</button>`;
+  document.getElementById('toolbar').innerHTML = TOOL_GROUPS.map(([g, ids]) => `<div class="tg"><span class="tg-t">${g}</span>${ids.map(id => TOOLS.find(t => t.id === id)).filter(Boolean).map(btn).join('')}</div>`).join('');
 }
 
 /* =====================================================================
@@ -2449,7 +2623,7 @@ function cellPop(code, day, x, y) {
 }
 function dayPop(day, x, y) {
   showPop(x, y, `<div class="px-3 py-1 text-xs muted">วัน${WD[wdOf(App.mk, day)]}ที่ ${day} ${mLabel(App.mk)}</div>
-    ${popItem('data-pday="tick"', 'W', 'ติ๊กมาทุกคนที่มีเวร')}${popItem('data-pday="untick"', null, '↺ ยกเลิกติ๊กทั้งวัน')}
+    ${popItem('data-pday="tick"', 'W', 'ติ๊กมาทั้งวัน (เลือกผลัด)')}${popItem('data-pday="untick"', null, '↺ ยกเลิกติ๊กทั้งวัน (เลือกผลัด)')}
     ${popItem('data-pday="daily"', null, '📱 เปิดเช็ครายวัน')}${popItem('data-pday="detail"', null, '🔎 ดูรายชื่อสรุปวันนี้')}`);
   App.popDay = day;
 }
@@ -2457,7 +2631,7 @@ function openModal(title, body) { document.getElementById('modalTitle').innerHTM
 function closeModal() { document.getElementById('modal').classList.add('hidden'); if (D.charts.chEmp) { D.charts.chEmp.destroy(); delete D.charts.chEmp; } }
 function confirmBox(title, msg, okText = 'ยืนยัน', okClass = 'btn-primary') {
   return new Promise(res => {
-    openModal(esc(title), `<p class="text-sm mb-4">${esc(msg)}</p><div class="flex justify-end gap-2"><button class="btn btn-ghost" id="cfNo">ยกเลิก</button><button class="btn ${okClass}" id="cfYes">${esc(okText)}</button></div>`);
+    openModal(esc(title), `<p class="text-sm mb-4" style="white-space:pre-line">${esc(msg)}</p><div class="flex justify-end gap-2"><button class="btn btn-ghost" id="cfNo">ยกเลิก</button><button class="btn ${okClass}" id="cfYes">${esc(okText)}</button></div>`);
     document.getElementById('cfYes').onclick = () => { closeModal(); res(true); };
     document.getElementById('cfNo').onclick = () => { closeModal(); res(false); };
   });
@@ -2881,9 +3055,11 @@ async function exportWsPdf() {
 /* =====================================================================
    8) UI HELPERS
    ===================================================================== */
-function toast(msg, type = 'info', ms = 3200) {
+function toast(msg, type = 'info', ms = 3200, action) {
   const el = document.createElement('div'); el.className = `toast ${{ success: 'bg-emerald-600', error: 'bg-rose-600', info: 'bg-slate-800', warn: 'bg-amber-600' }[type]} text-white text-sm px-4 py-2.5 rounded-xl shadow-xl max-w-md`;
-  el.textContent = ({ success: '✔ ', error: '✖ ', info: 'ℹ ', warn: '⚠ ' }[type]) + msg; document.getElementById('toasts').appendChild(el);
+  el.textContent = ({ success: '✔ ', error: '✖ ', info: 'ℹ ', warn: '⚠ ' }[type]) + msg;
+  if (action) { const b = document.createElement('button'); b.textContent = action.label; b.className = 'ml-3 underline font-semibold whitespace-nowrap'; b.onclick = () => { action.fn(); el.remove(); }; el.appendChild(b); }
+  document.getElementById('toasts').appendChild(el); return el;
   setTimeout(() => { el.style.transition = 'opacity .3s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, ms);
 }
 function setBtnLoading(btn, on, text) {
@@ -2934,7 +3110,8 @@ function handleEvents() {
     if (['addEmp', 'discard', 'lock', 'pending', 'xchk', 'summary'].includes(a) && !curMonth()) { toast('ยังไม่มีตารางเวรของเดือนที่เลือก', 'warn'); return; }
     if (a === 'newMonth') openNewMonth(); else if (a === 'addEmp') openEmployee(null); else if (a === 'import') $('fileInput').click();
     else if (a === 'uploadAll') uploadAll(); else if (a === 'log') openLog(); else if (a === 'settings') openSettings(); else if (a === 'install') openInstall();
-    else if (a === 'months') openMonthManager(); else if (a === 'lock') openLockModal(); else if (a === 'pending') openPending(); else if (a === 'xchk') openXchk(App.mk); else if (a === 'summary') openDailySummary(); else if (a === 'holidays') openHolidays(); else if (a === 'theme') { applyTheme(!document.documentElement.classList.contains('dark')); savePrefs(); render(); }
+    else if (a === 'months') openMonthManager(); else if (a === 'lock') openLockModal(); else if (a === 'pending') openPending(); else if (a === 'xchk') openXchk(App.mk); else if (a === 'summary') openDailySummary(); else if (a === 'holidays') openHolidays(); else if (a === 'guard') { App.guard = !App.guard; if (!App.guard) { clearTimeout(App._editT); App.editOn = false; } savePrefs(); editBtnUpdate(isLocked()); toast(App.guard ? '🛡️ เปิดโหมดกันกดพลาดแล้ว — ต้องกดปลดล็อกก่อนแก้ตาราง' : 'ปิดโหมดกันกดพลาดแล้ว — แตะตารางแก้ได้ทันที', 'info', 4000); }
+    else if (a === 'theme') { applyTheme(!document.documentElement.classList.contains('dark')); savePrefs(); render(); }
     else if (a === 'discard') {
       const M = curMonth(); if (!M.edited || !dirtyCount(App.mk)) { toast('ไม่มีการแก้ไขที่ค้างอยู่', 'info'); return; }
       if (!await confirmBox('ยกเลิกการแก้ไข', 'ต้องการทิ้งการแก้ไขทั้งหมดที่ยังไม่บันทึกของเดือนนี้หรือไม่?', 'ทิ้งการแก้ไข', 'btn-danger')) return;
@@ -2971,10 +3148,17 @@ function handleEvents() {
 
   /* --- ตารางติ๊ก: คลิก/ลาก, คลิกขวา/กดค้าง = เมนู, คลิกหัววัน = ติ๊กทั้งวัน --- */
   const grid = $('gridBlocks'); let paint = null, pressT = null, longP = false;
+  grid.addEventListener('pointerover', (e) => { if (e.pointerType !== 'mouse' || !viewOnly()) return; const td = e.target.closest('td.cell'); if (td) swapTipShow(td, e.clientX, e.clientY); });
+  grid.addEventListener('pointermove', (e) => { if (e.pointerType === 'mouse' && App._tipTd) swapTipMove(e.clientX, e.clientY); }, { passive: true });
+  grid.addEventListener('pointerout', (e) => { const td = App._tipTd; if (td && e.pointerType === 'mouse' && !td.contains(e.relatedTarget)) swapTipHide(); });
+  document.addEventListener('pointerdown', (e) => { if (e.pointerType !== 'mouse' && App._tipTd && !e.target.closest('td.cell')) swapTipHide(); }, true);
+  window.addEventListener('scroll', () => { if (App._tipTd) swapTipHide(); }, { passive: true, capture: true });
   grid.addEventListener('pointerdown', (e) => {
     const td = e.target.closest('td.cell'); if (!td || e.button === 2) return;
     hidePop(); longP = false;
     if (isLocked()) { if (e.pointerType !== 'mouse') { const code = td.dataset.code, day = +td.dataset.day, x = e.clientX, y = e.clientY; pressT = setTimeout(() => cellPop(code, day, x, y), 450); } else lockedToast(); return; }
+    if (App.guard && !App.editOn) { if (!(e.pointerType !== 'mouse' && swapTipShow(td, e.clientX, e.clientY, 5000))) { swapTipHide(); canEdit(); } return; } // ตารางล็อก: แตะช่องเปลี่ยนวันหยุด → ดูรายละเอียด
+    if (!canEdit()) return; // v18: กันกดพลาด
     const code = td.dataset.code, day = +td.dataset.day;
     if (App.tool === 'swap') { // เปลี่ยนวันหยุดแบบ 2 คลิก
       if (!App.swapSrc) { App.swapSrc = { code, day }; render(); toast(`เลือกวันหยุดเดิม: วันที่ ${day} — คลิกวันใหม่ในแถวเดียวกัน`, 'info'); }
@@ -2983,7 +3167,7 @@ function handleEvents() {
       return;
     }
     const r = curMonth().rows.find(x => x.code === code), first = nextState(App.tool, r, day - 1);
-    paint = { mode: App.tool === 'tick' ? (isWork(first) ? 'on' : 'off') : null, changes: [], seen: new Set(), pt: e.pointerType };
+    paint = { mode: App.tool === 'tick' ? (isWork(first) ? 'on' : 'off') : null, changes: [], seen: new Set(), pt: e.pointerType, x: e.clientX, y: e.clientY };
     if (e.pointerType !== 'mouse') { pressT = setTimeout(() => { longP = true; paint = null; cellPop(code, day, e.clientX, e.clientY); }, 520); return; }
     paintCell(td);
   });
@@ -3002,16 +3186,16 @@ function handleEvents() {
   document.addEventListener('pointerup', (e) => {
     clearTimeout(pressT);
     if (paint && paint.pt !== 'mouse' && !longP) { const td = e.target.closest && e.target.closest('td.cell'); if (td) paintCell(td); }
-    if (paint && paint.changes.length) { const M = curMonth(); if (M) { paint.changes.slice().reverse().forEach(c => { const rr = M.rows.find(x => x.code === c.code); if (rr) rr.c[c.day - 1] = c.from; }); applyChanges(paint.changes); } }
+    if (paint && paint.changes.length) { const M = curMonth(); if (M) { const chs = paint.changes; chs.slice().reverse().forEach(c => { const rr = M.rows.find(x => x.code === c.code); if (rr) rr.c[c.day - 1] = c.from; }); commitEdit(chs); } }
     paint = null;
   });
   grid.addEventListener('pointercancel', () => { clearTimeout(pressT); paint = null; });
-  grid.addEventListener('pointermove', () => { if (paint && paint.pt !== 'mouse') clearTimeout(pressT); }, { passive: true });
+  grid.addEventListener('pointermove', (e) => { if (paint && paint.pt !== 'mouse') { clearTimeout(pressT); if (Math.hypot(e.clientX - paint.x, e.clientY - paint.y) > 10) paint = null; } }, { passive: true }); // v18: นิ้วขยับ/เลื่อนจอ ≠ ติ๊ก
   grid.addEventListener('contextmenu', (e) => { const td = e.target.closest('td.cell'); if (!td) return; e.preventDefault(); cellPop(td.dataset.code, +td.dataset.day, e.clientX, e.clientY); });
   grid.addEventListener('click', (e) => { const h = e.target.closest('[data-hday]'); if (h) { e.stopPropagation(); const r = h.getBoundingClientRect(); dayPop(+h.dataset.hday, r.left, r.bottom + 4); } });
   $('pop').addEventListener('click', (e) => {
     const b = e.target.closest('[data-pset]'), d = e.target.closest('[data-pday]');
-    if (b && App.popTarget) { const r = curMonth().rows.find(x => x.code === App.popTarget.code), v = b.dataset.pset; const c = mkChange(r.code, App.popTarget.day, v === 'plan' ? (r.plan || '.') : v === 'clear' ? '.' : v); if (c) applyChanges([c]); hidePop(); }
+    if (b && App.popTarget) { if (!canEdit()) { hidePop(); return; } const r = curMonth().rows.find(x => x.code === App.popTarget.code), v = b.dataset.pset; const c = mkChange(r.code, App.popTarget.day, v === 'plan' ? (r.plan || '.') : v === 'clear' ? '.' : v); hidePop(); if (c) commitEdit([c]); }
     if (d) { const day = App.popDay, a = d.dataset.pday; hidePop(); if (a === 'tick') tickWholeDay(day); else if (a === 'untick') untickWholeDay(day); else if (a === 'daily') { App.day = day; App.tab = 'form'; App.fv = 'daily'; App._chip = false; render(); } else openDay({ mk: App.mk, d: day }); }
   });
   document.addEventListener('click', (e) => {
@@ -3035,19 +3219,21 @@ function handleEvents() {
   $('dayChips').onclick = (e) => { const b = e.target.closest('[data-dchip]'); if (b) { App.day = +b.dataset.dchip; render(); } };
   $('btnTickAllDay').onclick = () => tickWholeDay(App.day);
   $('btnPending').onclick = openPending;
+  $('btnEditLock').onclick = () => { if (App.editOn) lockEdit(); else unlockEdit(); };
   $('btnCopyGrid').onclick = () => openDailySummary(App.day); // v16: ปุ่มเดียวกันในหน้าตารางทั้งเดือน
   $('btnCopyDay').onclick = () => openDailySummary(App.day); // v14: เปิดหน้าต่างเลือกผลัด (ทุกผลัด/กลางวัน/กลางคืน) ก่อนคัดลอก
   document.addEventListener('click', (e) => { const a = e.target.closest('[data-act2]'); if (!a) return; const v = a.dataset.act2; if (v === 'unlock' || v === 'lock') openLockModal(); else if (v === 'pending') openPending(); else if (v === 'xchk') openXchk(App.mk); else if (v === 'holidays') openHolidays(); });
   $('dailyList').onclick = (e) => {
     const b = e.target.closest('[data-dset]'); if (!b) return;
     if (isLocked()) { lockedToast(); return; }
+    if (!canEdit()) return;
     const r = curMonth().rows.find(x => x.code === b.dataset.code), v = b.dataset.dset, cur = r.c[App.day - 1] || '.';
     let to = v === 'plan' ? (r.plan || '.') : v;
     if (v === 'W' && isOff(cur)) to = 'T';         // กด "มา" ในวันหยุด = OT
     else if (v === 'W' && cur === 'J') to = 'K';    // กด "มา" ในเวรทำแทน = ทำแทน
     else if (v === 'Y' && isOff(cur)) to = 'T';      // วันหยุดมาทำงาน (แม้สาย) = OT
     else if (v !== 'plan' && cur === to) to = to === 'T' ? 'O' : to === 'K' ? 'J' : (r.plan || '.'); // กดซ้ำ = ยกเลิก
-    const c = mkChange(r.code, App.day, to); if (c) applyChanges([c]);
+    const c = mkChange(r.code, App.day, to); if (c) commitEdit([c]);
   };
   $('modalClose').onclick = closeModal;
   $('modal').addEventListener('click', (e) => { if (e.target.id === 'modal') closeModal(); });
@@ -3059,7 +3245,7 @@ function handleEvents() {
   let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { if ((App.tab === 'form' && App.fv === 'grid') || (App.tab === 'dash' && D.view === 'report')) render(); else updateStickyOffset(); }, 200); });
   // เขียนข้อมูลลงเครื่องทันทีเมื่อปิด/สลับแอป (กันการแก้ไขล่าสุดหายระหว่างรอหน่วงเวลา 300ms)
   window.addEventListener('pagehide', writeLocalNow);
-  document.addEventListener('visibilitychange', () => { if (document.hidden) writeLocalNow(); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) { writeLocalNow(); if (App.guard && App.editOn) lockEdit(true); } });
   window.addEventListener('offline', () => { setConn('err', 'ออฟไลน์ (ไม่มีอินเทอร์เน็ต)'); toast('ขาดการเชื่อมต่ออินเทอร์เน็ต — แก้ไขต่อได้ ข้อมูลเก็บในเครื่อง แล้วกดบันทึกเมื่อออนไลน์', 'warn', 7000); });
   window.addEventListener('online', () => { if (App.gasUrl) { setConn('ok', 'กลับมาออนไลน์'); toast('กลับมาออนไลน์แล้ว' + (Object.keys(App.store.months).some(k => App.store.months[k].edited && dirtyCount(k)) ? ' — มีข้อมูลรอบันทึก กรุณากด "บันทึก"' : ''), 'info', 6000); } });
   window.addEventListener('error', (e) => { if (!e.message || /ResizeObserver|Script error/i.test(e.message) || (e.target && e.target !== window)) return; console.error(e.error || e.message); toast('เกิดข้อผิดพลาดที่ไม่คาดคิด: ' + (e.message || 'ไม่ทราบสาเหตุ') + ' — ข้อมูลยังอยู่ในเครื่อง', 'error', 8000); });
@@ -3304,7 +3490,7 @@ function init() {
   const prefs = loadPrefs();
   applyTheme(prefs.theme ? prefs.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches);
   // ค่าเริ่มต้น = URL ที่ฝังในแอป · ผู้ใช้ตั้ง URL อื่นเองได้ · ลบ URL ในตั้งค่า = ใช้แบบออฟไลน์ (gasOff)
-  App.gasUrl = prefs.gasOff === true ? '' : (prefs.gasUrl || GAS_URL); App.user = prefs.user || ''; App.fit = prefs.fit !== false; App.rpt = { ...App.rpt, ...(prefs.rpt || {}) };
+  App.gasUrl = prefs.gasOff === true ? '' : (prefs.gasUrl || GAS_URL); App.user = prefs.user || ''; App.fit = prefs.fit !== false; App.guard = prefs.guard !== false; App.editOn = false; App.rpt = { ...App.rpt, ...(prefs.rpt || {}) };
   if (prefs.target) { D.target = prefs.target; document.getElementById('targetInp').value = prefs.target; }
   const local = loadLocal();
   App.store.months = seedFromEmbed();
