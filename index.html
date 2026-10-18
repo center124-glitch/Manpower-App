@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <!--
-  SBK Manpower App v22 — ระบบตรวจเช็คการมาปฏิบัติงาน + แดชบอร์ดวิเคราะห์อัตรากำลังพล (รวมในแอปเดียว)
+  SBK Manpower App v23 — ระบบตรวจเช็คการมาปฏิบัติงาน + แดชบอร์ดวิเคราะห์อัตรากำลังพล (รวมในแอปเดียว)
+  v23: แรเงาคอลัมน์วันเสาร์-อาทิตย์ (สีฟ้า) ในตารางติ๊ก + ทุกตารางในใบรายงาน/ภาคผนวก/PDF ตารางเวร (วันนักขัตฤกษ์ยังเป็นสีชมพู)
   v22: แนบตารางการปฏิบัติงาน (Working Schedule) ที่ติ๊กรายวันเป็นภาคผนวกท้ายรายงานรายเดือน แยกผลัด (ช่อง "📎 แนบตารางเวร" เลือกแนบ/ไม่แนบได้)
   v21: การ์ดรายละเอียดเมื่อชี้/แตะช่องตอนตารางล็อก ครอบคลุมทุกช่องที่ไม่ใช่วันมาปกติ (สาย/OT/ทำแทน/หยุดแทน/ลาทุกชนิด/ขาด) · พื้นหลังฟอร์ม–แดชบอร์ดสีสันต่างกัน · แก้ข้อความแจ้ง (toast) ค้างไม่หาย · จัดแถบเมนูด้านบนใหม่ (แท็บหลักอยู่กลางหัว, ตัวกรองรวมเข้าแถบควบคุม)
   v20: จัดแถบเมนูบนตารางใหม่ (แถวแท็บ+ปุ่มสั่งงาน / แถวเครื่องมือแบ่งกลุ่ม) · ปุ่มล็อก/ปลดล็อกเปลี่ยนสีชัดเจน + ป้ายสถานะ · ชี้/แตะช่องที่เปลี่ยนวันหยุดตอนตารางล็อก → การ์ดรายละเอียด
@@ -113,6 +114,11 @@
   .ws td.cell:hover { outline: 2px solid #6366f1; outline-offset: -2px; z-index: 1; }
   .ws td.today, .ws th.today { box-shadow: inset 0 0 0 2px #f59e0b; }
   .ws th.we { color: #e11d48; }
+  /* v23: คอลัมน์เสาร์-อาทิตย์ — หัวตารางพื้นฟ้า + ชั้นสีฟ้าโปร่งทับทุกช่องในคอลัมน์ (สีสถานะเดิมยังเห็น) · วันนักขัตฤกษ์ (holc) ทับด้วยสีชมพูตามเดิม */
+  .ws th.day.we { background: #bae6fd; color: #be123c; } /* สีทึบ: หัวตารางเป็น sticky ต้องไม่โปร่งใส ไม่งั้นเห็นช่องที่เลื่อนผ่านด้านหลัง */
+  .dark .ws th.day.we { background: #0c4a6e; color: #fda4af; }
+  .ws td.wec { background-image: linear-gradient(rgba(14,165,233,.22), rgba(14,165,233,.22)) !important; } /* !important: ช่องมี style background (สีสถานะ) แบบ inline ซึ่งจะล้าง background-image */
+  .dark .ws td.wec { background-image: linear-gradient(rgba(56,189,248,.20), rgba(56,189,248,.20)) !important; }
   .ws td.swapsrc { outline: 3px solid #f59e0b !important; outline-offset: -3px; animation: pulse 1s infinite; }
   @keyframes pulse { 50% { opacity: .55; } }
   .ws tr.sub td { background: rgba(99,102,241,.08); font-weight: 700; color: #4338ca; height: 22px; text-align:center; font-size: 11px; }
@@ -584,7 +590,7 @@
   </div>
   </section>
 
-  <footer class="text-center text-xs muted py-5">SBK Manpower App v22 · แผนกลานจอดและจราจร · ศูนย์การค้า ซีคอนบางแค</footer>
+  <footer class="text-center text-xs muted py-5">SBK Manpower App v23 · แผนกลานจอดและจราจร · ศูนย์การค้า ซีคอนบางแค</footer>
 </main>
 
 <!-- แถบเมนูล่างสำหรับมือถือ (แสดงเฉพาะจอ < 768px) — ใช้ปุ่มชุดเดียวกับเมนูหลัก -->
@@ -1683,7 +1689,7 @@ function cellHtml(r, i, today) {
   }
   const hd = App._hols && App._hols[i];
   if (hd) note += ` · 🎌 ${hd.n}`;
-  const cls = 'cell' + mark + (hd ? ' holc' + (hd.t === 'gov' ? ' holg' : '') : '') + (App._flash && App._flash.has(r.code + '|' + (i + 1)) ? ' flash' : '') + (today ? ' today' : '') + (isCellDirty(App.mk, r, i) ? ' dirty' : '') + (App.swapSrc && App.swapSrc.code === r.code && App.swapSrc.day === i + 1 ? ' swapsrc' : '');
+  const cls = 'cell' + mark + (hd ? ' holc' + (hd.t === 'gov' ? ' holg' : '') : (App._we && App._we[i] ? ' wec' : '')) + (App._flash && App._flash.has(r.code + '|' + (i + 1)) ? ' flash' : '') + (today ? ' today' : '') + (isCellDirty(App.mk, r, i) ? ' dirty' : '') + (App.swapSrc && App.swapSrc.code === r.code && App.swapSrc.day === i + 1 ? ' swapsrc' : '');
   const extra = isPlan(ch) ? (ch === 'J' ? 'border:1px dashed #059669;' : '') + 'font-weight:600;' : '';
   const sw = (ch === 'H' || ch === 'J' || ch === 'K') ? swapAt(M, r.code, i + 1) : null;
   const sub = sw ? `<span class="swsub">${ch === 'H' ? (compact ? '←' : 'จาก') + sw.fromDay : (compact ? '→' : 'ไป') + sw.toDay}</span>` : ''; // แสดงคู่วันที่เปลี่ยนในช่องเลย ไม่ต้องคลิกดู
@@ -1698,6 +1704,7 @@ function holidayStrip(mk) {
 function renderGrid() {
   const mk = App.mk, days = mDays(mk), rows = visibleRows(), t = todayKey(), M0 = curMonth();
   const hols = App._hols = Array.from({ length: days }, (_, i) => holidayAt(mk, i + 1)); // ใช้ใน cellHtml (ไล่สีคอลัมน์วันหยุด)
+  const we = App._we = Array.from({ length: days }, (_, i) => { const w = wdOf(mk, i + 1); return w === 0 || w === 6; }); // v23: คอลัมน์เสาร์-อาทิตย์
   const wrapEl = document.getElementById('gridBlocks');
   // คำนวณความกว้างช่องวันให้ "พอดีจอ" — ถ้าแคบเกิน (มือถือ) จะเลื่อนแนวนอนแทน
   const avail = wrapEl.clientWidth - 26;
@@ -1716,7 +1723,7 @@ function renderGrid() {
       <th rowspan="2" class="stk0">No</th><th rowspan="2" class="text-left px-2 stk1">ชื่อ - สกุล</th>`;
     for (let d = 1; d <= days; d++) { const wd = wdOf(mk, d), hd = hols[d - 1]; h += `<th class="day ${wd === 0 || wd === 6 ? 'we' : ''} ${hd ? 'hol hol-' + hd.t : ''} ${t.mk === mk && t.d === d ? 'today' : ''}" data-hday="${d}" title="${hd ? '🎌 ' + esc(hd.n) + ' (' + HOL_T[hd.t] + ') · ' : ''}คลิกเพื่อติ๊กทั้งวัน">${WD_S[wd]}</th>`; }
     h += `<th rowspan="2" title="มาปฏิบัติงาน (รวม สาย/OT/ทำแทน)">มา</th><th rowspan="2" title="มาสาย">สาย</th><th rowspan="2">OT</th><th rowspan="2" title="เปลี่ยนวันหยุด (หยุดแทน) / ทำแทน">↔</th><th rowspan="2">ลา</th><th rowspan="2">ขาด</th></tr><tr>`;
-    for (let d = 1; d <= days; d++) { const hd = hols[d - 1]; h += `<th class="day ${hd ? 'hol hol-' + hd.t : ''} ${t.mk === mk && t.d === d ? 'today' : ''}" data-hday="${d}"${hd ? ` title="🎌 ${esc(hd.n)}"` : ''}>${d}</th>`; }
+    for (let d = 1; d <= days; d++) { const hd = hols[d - 1], wd = wdOf(mk, d); h += `<th class="day ${wd === 0 || wd === 6 ? 'we' : ''} ${hd ? 'hol hol-' + hd.t : ''} ${t.mk === mk && t.d === d ? 'today' : ''}" data-hday="${d}"${hd ? ` title="🎌 ${esc(hd.n)}"` : ''}>${d}</th>`; }
     h += '</tr></thead><tbody>';
     const gt = [];
     [['s', 'ตรวจการ - หัวหน้าทีม'], ['g', 'ร.ป.ภ.']].forEach(([ro, gname]) => {
@@ -1729,14 +1736,14 @@ function renderGrid() {
       });
       const per = []; for (let i = 0; i < days; i++) per.push(gr.filter(r => isWork(r.c[i])).length);
       gt.push({ gname, per });
-      h += `<tr class="sub"><td class="stk0"></td><td class="!text-left px-2 stk1 truncate">รวม ${gname}</td>${per.map(v => `<td>${v || ''}</td>`).join('')}<td>${per.reduce((a, b) => a + b, 0)}</td><td colspan="5"></td></tr>`;
+      h += `<tr class="sub"><td class="stk0"></td><td class="!text-left px-2 stk1 truncate">รวม ${gname}</td>${per.map((v, i) => `<td class="${we[i] && !hols[i] ? 'wec' : ''}">${v || ''}</td>`).join('')}<td>${per.reduce((a, b) => a + b, 0)}</td><td colspan="5"></td></tr>`;
     });
     const all = []; for (let i = 0; i < days; i++) all.push(gt.reduce((a, g) => a + g.per[i], 0));
-    h += `<tr class="tot"><td class="stk0"></td><td class="!text-left px-2 stk1 truncate">รวมยอด ${title}</td>${all.map(v => `<td>${v}</td>`).join('')}<td>${all.reduce((a, b) => a + b, 0)}</td><td colspan="5"></td></tr></tbody></table></div></div>`;
+    h += `<tr class="tot"><td class="stk0"></td><td class="!text-left px-2 stk1 truncate">รวมยอด ${title}</td>${all.map((v, i) => `<td class="${we[i] && !hols[i] ? 'wec' : ''}">${v}</td>`).join('')}<td>${all.reduce((a, b) => a + b, 0)}</td><td colspan="5"></td></tr></tbody></table></div></div>`;
     html += h;
   });
   html += gridSwapPanel(M0, mk, isLocked());
-  html += `<div class="card p-2.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px]">${['W', 'Y', 'K', 'T', 'O', 'H', 'J', 'S', 'P', 'V', 'E', 'X', 'A', 'R'].map(k => `<span class="flex items-center gap-1"><span class="inline-grid place-items-center w-7 h-4 rounded text-[9px] font-bold" style="background:${ST[k].bg};color:${ST[k].fg};${isPlan(k) ? `border:1px dashed ${ST[k].fg}` : ''}">${ST[k].cell}</span>${k === 'A' ? 'เวรตามแผน A/B/C' : ST[k].label}</span>`).join('')}<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-500"></span>แก้ไขยังไม่บันทึก</span><span class="flex items-center gap-1"><span class="inline-block w-7 h-4 rounded hol-legend"></span>วันหยุดนักขัตฤกษ์</span></div>`;
+  html += `<div class="card p-2.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px]">${['W', 'Y', 'K', 'T', 'O', 'H', 'J', 'S', 'P', 'V', 'E', 'X', 'A', 'R'].map(k => `<span class="flex items-center gap-1"><span class="inline-grid place-items-center w-7 h-4 rounded text-[9px] font-bold" style="background:${ST[k].bg};color:${ST[k].fg};${isPlan(k) ? `border:1px dashed ${ST[k].fg}` : ''}">${ST[k].cell}</span>${k === 'A' ? 'เวรตามแผน A/B/C' : ST[k].label}</span>`).join('')}<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-500"></span>แก้ไขยังไม่บันทึก</span><span class="flex items-center gap-1"><span class="inline-block w-7 h-4 rounded hol-legend"></span>วันหยุดนักขัตฤกษ์</span><span class="flex items-center gap-1"><span class="inline-block w-7 h-4 rounded" style="background:#bae6fd;border:1px solid #7dd3fc"></span>เสาร์-อาทิตย์</span></div>`;
   const pos = [...wrapEl.querySelectorAll('.gridwrap')].map(e => e.scrollLeft);
   wrapEl.innerHTML = html || '<div class="card p-8 text-center muted">ไม่พบพนักงานตามเงื่อนไข</div>';
   wrapEl.querySelectorAll('.gridwrap').forEach((e, i) => { e.scrollLeft = pos[i] || (scroll && t.mk === mk && !App._scrolled ? Math.max(0, (t.d - 5) * cw) : 0); });
@@ -2419,7 +2426,7 @@ function deepReportHtml(v, secNo) {
   const cols = H.cols, n = cols.length, cw = n > 20 ? 25 : n > 12 ? 40 : 60, fs = n > 20 ? 9 : 10.5;
   const th = `${TH}padding:2px 1px;`, td = 'border:1px solid #e2e8f0;padding:1px 1px;text-align:center;';
   const heat = `<table style="border-collapse:collapse;font-size:${fs}px;width:100%;table-layout:fixed"><colgroup><col style="width:150px">${cols.map(() => `<col style="width:${cw}px">`).join('')}<col style="width:70px"></colgroup>
-    <thead><tr><th style="${th}text-align:left;padding-left:4px">กลุ่ม \\ ${H.unit === 'คน' ? 'วันที่' : 'เดือน'}</th>${cols.map(c => `<th style="${th}${c.hol ? 'background:#fecdd3;color:#9f1239;' : c.wd === 0 || c.wd === 6 ? 'color:#e11d48;' : ''}">${esc(c.label)}</th>`).join('')}<th style="${th}">ต่ำสุด</th></tr></thead><tbody>
+    <thead><tr><th style="${th}text-align:left;padding-left:4px">กลุ่ม \\ ${H.unit === 'คน' ? 'วันที่' : 'เดือน'}</th>${cols.map(c => `<th style="${th}${c.hol ? 'background:#fecdd3;color:#9f1239;' : isWE(c.wd) ? WE_HEAD : ''}">${esc(c.label)}</th>`).join('')}<th style="${th}">ต่ำสุด</th></tr></thead><tbody>
     ${H.segs.map(s => `<tr><td style="${td}text-align:left;padding-left:4px;white-space:nowrap">${esc(s.label)}</td>${cols.map(c => { const val = c.val[s.key], [bg, fg] = heatColor(val, H.max[s.key]); return `<td style="${td}background:${bg};color:${fg};font-weight:700">${val === null ? '·' : fmt(val, H.unit === 'คน' ? 0 : 1)}</td>`; }).join('')}<td style="${td}">${H.min[s.key] ? `${fmt(H.min[s.key].v, H.unit === 'คน' ? 0 : 1)} (${esc(H.min[s.key].label)})` : '-'}</td></tr>`).join('')}
     <tr style="background:#eef2ff;font-weight:700"><td style="${td}text-align:left;padding-left:4px">รวม</td>${cols.map(c => `<td style="${td}${D.target && c.tot !== null && c.tot < D.target ? 'background:#e11d48;color:#fff;' : ''}">${c.tot === null ? '·' : fmt(c.tot, H.unit === 'คน' ? 0 : 1)}</td>`).join('')}<td style="${td}"></td></tr></tbody></table>`;
   const bk = `<table style="border-collapse:collapse;width:100%;font-size:10.5px"><thead><tr>${['ช่วง', 'วันยืนยัน', 'เฉลี่ย/วัน', '% มา', 'สาย', 'ลา', 'ขาด'].map((h, i) => `<th style="${TH}${i ? 'text-align:right' : 'text-align:left'}">${h}</th>`).join('')}</tr></thead><tbody>${A.buckets.map(b => `<tr><td style="${TD}white-space:nowrap">${esc(b.label)} <span style="color:#64748b">${esc(b.sub)}</span></td><td style="${TD}text-align:right">${b.conf}${b.days ? '/' + b.days : ''}</td><td style="${TD}text-align:right">${b.conf ? fmt(b.avg, 1) : '-'}</td><td style="${TD}text-align:right;font-weight:700;color:${rateColor(b.rate)}">${pctTxt(b.rate)}</td><td style="${TD}text-align:right">${b.Y || ''}</td><td style="${TD}text-align:right">${b.L || ''}</td><td style="${TD}text-align:right">${b.X || ''}</td></tr>`).join('')}</tbody></table>`;
@@ -2432,12 +2439,12 @@ function deepReportHtml(v, secNo) {
   const dcols = isY(v.def) ? v.byMonth.filter(m => m.has).map(m => { const ds = v.daily.filter(x => x.mk === m.mk), cd = ds.filter(x => x.conf), sm = (arr, f) => arr.reduce((a, x) => a + f(x), 0);
       return { label: m.short, conf: cd.length > 0, W: sm(cd, x => x.W), Y: sm(cd, x => x.Y), TK: sm(cd, x => x.T + x.K), L: sm(cd, x => x.L), X: sm(cd, x => x.X), O: sm(ds, x => x.O), PL: sm(ds, x => x.PL) }; })
     : v.daily.map(x => ({ label: String(x.d), wd: x.wd, hol: !!holidayAt(x.mk, x.d), conf: x.conf, W: x.W, Y: x.Y, TK: x.T + x.K, L: x.L, X: x.X, O: x.O, PL: x.PL }));
-  const drow = (lab, f, style = '') => `<tr><td style="${td}text-align:left;padding-left:4px;white-space:nowrap;${style}">${lab}</td>${dcols.map(c => { const val = f(c); return `<td style="${td}${style}${c.conf ? '' : 'color:#94a3b8;'}">${val === '' || val === null ? '' : val}</td>`; }).join('')}<td style="${td}font-weight:700;${style}">${f(dtot)}</td></tr>`;
+  const drow = (lab, f, style = '') => `<tr><td style="${td}text-align:left;padding-left:4px;white-space:nowrap;${style}">${lab}</td>${dcols.map(c => { const val = f(c); return `<td style="${td}${style}${c.conf ? '' : 'color:#94a3b8;'}${!c.hol && isWE(c.wd) ? WE_TINT : ''}">${val === '' || val === null ? '' : val}</td>`; }).join('')}<td style="${td}font-weight:700;${style}">${f(dtot)}</td></tr>`;
   // คอลัมน์ "รวม" ให้ตรงกับ KPI: มา/สาย/OT/ลา/ขาด นับเฉพาะวันที่ยืนยันแล้ว (ลาล่วงหน้าในวันที่ยังไม่ถึงไม่นับ) · หยุด/รอติ๊ก นับทั้งช่วง
   const dtot = dcols.reduce((a, c) => { ['W', 'Y', 'TK', 'L', 'X'].forEach(k => a[k] += c.conf ? c[k] : 0); a.O += c.O; a.PL += c.PL; return a; }, { W: 0, Y: 0, TK: 0, L: 0, X: 0, O: 0, PL: 0, conf: true, total: true });
   const rateOf = (c) => { const s = c.W + c.L + c.X; return s && (c.conf || c.total) ? fmt(c.W / s * 100, c.total || isY(v.def) ? 1 : 0) + '%' : '-'; };
   const daily = `<table style="border-collapse:collapse;font-size:${fs}px;width:100%;table-layout:fixed"><colgroup><col style="width:150px">${dcols.map(() => `<col style="width:${cw}px">`).join('')}<col style="width:70px"></colgroup>
-    <thead><tr><th style="${th}text-align:left;padding-left:4px">สถานะ \ ${isY(v.def) ? 'เดือน' : 'วันที่'}</th>${dcols.map(c => `<th style="${th}${c.hol ? 'background:#fecdd3;color:#9f1239;' : c.wd === 0 || c.wd === 6 ? 'color:#e11d48;' : ''}">${esc(c.label)}</th>`).join('')}<th style="${th}">รวม</th></tr></thead><tbody>
+    <thead><tr><th style="${th}text-align:left;padding-left:4px">สถานะ \ ${isY(v.def) ? 'เดือน' : 'วันที่'}</th>${dcols.map(c => `<th style="${th}${c.hol ? 'background:#fecdd3;color:#9f1239;' : isWE(c.wd) ? WE_HEAD : ''}">${esc(c.label)}</th>`).join('')}<th style="${th}">รวม</th></tr></thead><tbody>
     ${drow('มาปฏิบัติงาน (คน)', c => c.W || (c.conf ? 0 : ''), 'font-weight:700;color:#047857;')}${drow('— มาสาย', c => c.Y || '')}${drow('— OT / ทำแทน', c => c.TK || '')}${drow('ลา', c => c.L || '')}${drow('ขาดงาน', c => c.X || '', 'color:#b91c1c;')}${drow('หยุด / เปลี่ยนวันหยุด', c => c.O || '')}${drow('เวรรอติ๊ก', c => c.PL || '', 'color:#6366f1;')}${drow('% มาปฏิบัติงาน', rateOf, 'font-weight:700;background:#f8fafc;')}</tbody></table>`;
   return { top: `${rptSec(secNo, `ความหนาแน่นกำลังพลแยกกลุ่ม (${H.unit === 'คน' ? 'คนต่อวัน' : 'เฉลี่ยคนต่อวัน'}) — เขียว = เต็มกำลัง · เหลือง = 60–80% ของสูงสุด · แดง = ต่ำกว่า 60%${D.target ? ` · แถบแดงในแถวรวม = ต่ำกว่าเป้า ${D.target} คน (${A.below.length} วัน)` : ''}`)}${heat}
     <div style="margin-top:6px">${rptSec(secNo + 1, `ตารางสรุป${isY(v.def) ? 'รายเดือน' : 'รายวัน'} (คน) — สีเทา = ยังไม่ยืนยันข้อมูล · รวม มา/ลา/ขาด และ % มา คิดเฉพาะวันที่ยืนยันแล้ว (ตรงกับสรุปภาพรวม)`)}${daily}</div>
@@ -2491,29 +2498,35 @@ const rptHolText = (v) => { if (!v || !v.def) return ''; const hs = v.def.days.m
 const TD = 'border:1px solid #cbd5e1;padding:2px 5px;';
 const TH = `border:1px solid #94a3b8;padding:3px 5px;background:#e0e7ff;color:#1e3a8a;font-weight:700;`;
 
+// ---------- v23: สีคอลัมน์วันเสาร์-อาทิตย์ (ใช้ร่วมกันทุกตารางในรายงาน/PDF) ----------
+// ใช้ "ชั้นสีโปร่ง" ทับสีสถานะเดิม (ไม่แทนที่) — ช่องยังบอกสถานะได้ครบ แต่เห็นแนวเสาร์-อาทิตย์ชัด · วันนักขัตฤกษ์ยังเป็นสีชมพูเหมือนเดิม
+const isWE = (wd) => wd === 0 || wd === 6;
+const WE_HEAD = 'background:#bae6fd;color:#be123c;';
+const WE_TINT = 'background-image:linear-gradient(rgba(14,165,233,.24),rgba(14,165,233,.24));';
 // ---------- v22: ภาคผนวก "ตารางการปฏิบัติงาน (Working Schedule)" ที่ติ๊กรายวัน แนบท้ายรายงานรายเดือน ----------
 // แยกเป็น "บรรทัด" (พนักงาน / รวมกลุ่ม / รวมยอด) เพื่อแบ่งหน้าได้ตามความสูงจริง — ยอดรวมคิดจากพนักงานทั้งผลัดเสมอ แม้ตารางถูกแบ่งหลายหน้า
 const WS_BG = (ch) => ch === 'W' || ch === 'Y' ? '#d1fae5' : ch === 'K' ? '#a7f3d0' : ch === 'T' ? '#a5f3fc' : ch === 'O' ? '#e2e8f0' : ch === 'H' ? '#fde68a' : isLeave(ch) ? '#fef3c7' : ch === 'X' ? '#fee2e2' : '#fff';
-const WS_LEGEND = '1 = มา · สาย = มาสาย · OT = มาวันหยุด · แทน = ทำแทนวันหยุด · หยุด = หยุดแทน (เปลี่ยนวันหยุด) · รอ = เวรทำแทนรอติ๊ก · ป / ก / พร / EX = ลาป่วย / ลากิจ / พักร้อน / ลา Extra · ข = ขาด · A/B/C = เวรรอติ๊ก · ตัวอักษรอื่น = รหัสตามไฟล์ต้นฉบับ';
+const WS_LEGEND = 'คอลัมน์สีฟ้า = เสาร์-อาทิตย์ · สีชมพู = วันหยุดนักขัตฤกษ์ · 1 = มา · สาย = มาสาย · OT = มาวันหยุด · แทน = ทำแทนวันหยุด · หยุด = หยุดแทน (เปลี่ยนวันหยุด) · รอ = เวรทำแทนรอติ๊ก · ป / ก / พร / EX = ลาป่วย / ลากิจ / พักร้อน / ลา Extra · ข = ขาด · A/B/C = เวรรอติ๊ก · ตัวอักษรอื่น = รหัสตามไฟล์ต้นฉบับ';
 // ข้อความในช่อง: ใช้คำย่อ (m) ถ้ามี เพื่อไม่ให้ล้นช่องแคบ เช่น หยุดแทน → หยุด, รอแทน → รอ
 const wsCellTxt = (r, ch, j) => ch === 'W' ? '1' : ch === '?' ? (r.oth[j] || '') : ((ST[ch] || ST['?']).m || (ST[ch] || ST['?']).cell);
 function wsLines(mk, rows, days) {
-  const lines = [], groupTot = [];
+  const lines = [], groupTot = [], we = Array.from({ length: days }, (_, j) => isWE(wdOf(mk, j + 1)) && !holidayAt(mk, j + 1));
+  const tc = (j) => we[j] ? WE_TINT : ''; // ช่องรวมต่อวันก็แรเงาด้วย ให้แนวคอลัมน์ต่อเนื่องถึงแถวรวม
   [['s', 'ตรวจการ - หัวหน้าทีม'], ['g', 'ร.ป.ภ.']].forEach(([ro, g]) => {
     const gr = rows.filter(r => r.role === ro); if (!gr.length) return; let no = 0;
     gr.forEach(r => { const s = rowSum(r, 1, days), n = ++no; // เลขลำดับคำนวณครั้งเดียว (html ถูกวาดซ้ำหลายรอบระหว่างหาขนาดที่พอดีหน้า)
-      lines.push({ html: (rh, fs) => `<tr style="height:${rh}px"><td style="text-align:center">${n}</td><td style="text-align:center">${esc(r.code)}</td><td style="white-space:nowrap;overflow:hidden;padding-left:3px">${esc(r.name)}${r.tag ? ` <span style="color:#4f46e5;font-size:${fs - 1.5}px">(${esc(r.tag)})</span>` : ''}</td>${r.c.slice(0, days).map((ch, j) => `<td style="text-align:center;background:${WS_BG(ch)};color:${isPlan(ch) || ch === 'J' ? '#a5b4fc' : '#0f172a'};font-weight:${isWork(ch) ? 700 : 500};font-size:${fs - .5}px">${esc(wsCellTxt(r, ch, j))}</td>`).join('')}<td style="text-align:center;font-weight:700">${s.work}</td><td style="text-align:center">${s.ot || ''}</td><td style="text-align:center">${s.h || s.k + s.j ? `${s.h}/${s.k + s.j}` : ''}</td><td style="text-align:center">${s.leave || ''}</td><td style="text-align:center;${s.abs ? 'color:#dc2626;font-weight:700' : ''}">${s.abs || ''}</td><td style="font-size:${fs - 1}px;padding-left:2px;white-space:nowrap">${esc(remarkShort(r.remark))}</td></tr>` }); });
+      lines.push({ html: (rh, fs) => `<tr style="height:${rh}px"><td style="text-align:center">${n}</td><td style="text-align:center">${esc(r.code)}</td><td style="white-space:nowrap;overflow:hidden;padding-left:3px">${esc(r.name)}${r.tag ? ` <span style="color:#4f46e5;font-size:${fs - 1.5}px">(${esc(r.tag)})</span>` : ''}</td>${r.c.slice(0, days).map((ch, j) => `<td style="text-align:center;background:${WS_BG(ch)};${we[j] ? WE_TINT : ''}color:${isPlan(ch) || ch === 'J' ? '#a5b4fc' : '#0f172a'};font-weight:${isWork(ch) ? 700 : 500};font-size:${fs - .5}px">${esc(wsCellTxt(r, ch, j))}</td>`).join('')}<td style="text-align:center;font-weight:700">${s.work}</td><td style="text-align:center">${s.ot || ''}</td><td style="text-align:center">${s.h || s.k + s.j ? `${s.h}/${s.k + s.j}` : ''}</td><td style="text-align:center">${s.leave || ''}</td><td style="text-align:center;${s.abs ? 'color:#dc2626;font-weight:700' : ''}">${s.abs || ''}</td><td style="font-size:${fs - 1}px;padding-left:2px;white-space:nowrap">${esc(remarkShort(r.remark))}</td></tr>` }); });
     const per = []; for (let i = 0; i < days; i++) per.push(gr.filter(r => isWork(r.c[i])).length); groupTot.push(per);
-    lines.push({ html: (rh) => `<tr style="height:${rh}px;background:#eef2ff;font-weight:700"><td colspan="3" style="padding-left:3px">รวม ${g} (${gr.length} คน)</td>${per.map(x => `<td style="text-align:center">${x}</td>`).join('')}<td style="text-align:center">${per.reduce((a, b) => a + b, 0)}</td><td colspan="5"></td></tr>` });
+    lines.push({ html: (rh) => `<tr style="height:${rh}px;background:#eef2ff;font-weight:700"><td colspan="3" style="padding-left:3px">รวม ${g} (${gr.length} คน)</td>${per.map((x, j) => `<td style="text-align:center;${tc(j)}">${x}</td>`).join('')}<td style="text-align:center">${per.reduce((a, b) => a + b, 0)}</td><td colspan="5"></td></tr>` });
   });
   const all = []; for (let i = 0; i < days; i++) all.push(groupTot.reduce((a, p) => a + p[i], 0));
-  lines.push({ html: (rh) => `<tr style="height:${rh}px;background:#d1fae5;font-weight:700"><td colspan="3" style="padding-left:3px">รวมยอดมาปฏิบัติงาน (${rows.length} คน)</td>${all.map(x => `<td style="text-align:center">${x}</td>`).join('')}<td style="text-align:center">${all.reduce((a, b) => a + b, 0)}</td><td colspan="5"></td></tr>` });
+  lines.push({ html: (rh) => `<tr style="height:${rh}px;background:#d1fae5;font-weight:700"><td colspan="3" style="padding-left:3px">รวมยอดมาปฏิบัติงาน (${rows.length} คน)</td>${all.map((x, j) => `<td style="text-align:center;${tc(j)}">${x}</td>`).join('')}<td style="text-align:center">${all.reduce((a, b) => a + b, 0)}</td><td colspan="5"></td></tr>` });
   return lines;
 }
 function wsTable(mk, days, lines, rh) {
   const fs = rh <= 14 ? 9 : 10.5;
   let h = `<table style="font-size:${fs}px;table-layout:fixed;width:100%"><thead><tr><th style="width:20px">No</th><th style="width:42px">CODE</th><th style="text-align:left;padding-left:3px">ชื่อ - สกุล</th>`;
-  for (let d = 1; d <= days; d++) { const w = wdOf(mk, d), hd = holidayAt(mk, d); h += `<th style="width:22px;line-height:1.15;${w === 0 || w === 6 || hd ? 'color:#e11d48;' : ''}${hd ? 'background:#fecdd3;' : ''}">${WD_S[w]}<br>${d}</th>`; }
+  for (let d = 1; d <= days; d++) { const w = wdOf(mk, d), hd = holidayAt(mk, d); h += `<th style="width:22px;line-height:1.15;${hd ? 'background:#fecdd3;color:#e11d48;' : isWE(w) ? WE_HEAD : ''}">${WD_S[w]}<br>${d}</th>`; }
   h += '<th style="width:24px">มา</th><th style="width:20px">OT</th><th style="width:28px">↔</th><th style="width:20px">ลา</th><th style="width:22px">ขาด</th><th style="width:44px">Remark</th></tr></thead><tbody>';
   return h + lines.map(l => l.html(rh, fs)).join('') + '</tbody></table>';
 }
@@ -2577,12 +2590,12 @@ function buildReportPages(v, host, scale = 1) {
   const renderPeople = (cap) => {
   if (isWeek) {
     const parts = chunk(ppl, 26, cap);
-    const head = `<tr><th style="${TH}width:24px">#</th><th style="${TH}text-align:left">ชื่อ - สกุล</th><th style="${TH}width:36px">ผลัด</th>${v.daily.map(x => `<th style="${TH}width:58px">${WD_S[x.wd]} ${x.d}/${x.dt.getMonth() + 1}</th>`).join('')}${['มา', 'สาย', 'OT', 'ลา', 'ขาด'].map(h => `<th style="${TH}width:34px">${h}</th>`).join('')}</tr>`;
+    const head = `<tr><th style="${TH}width:24px">#</th><th style="${TH}text-align:left">ชื่อ - สกุล</th><th style="${TH}width:36px">ผลัด</th>${v.daily.map(x => `<th style="${TH}width:58px;${holidayAt(x.mk, x.d) ? 'background:#fecdd3;color:#9f1239;' : isWE(x.wd) ? WE_HEAD : ''}">${WD_S[x.wd]} ${x.d}/${x.dt.getMonth() + 1}</th>`).join('')}${['มา', 'สาย', 'OT', 'ลา', 'ขาด'].map(h => `<th style="${TH}width:34px">${h}</th>`).join('')}</tr>`;
     let no = 0;
     parts.forEach((part, pi) => {
-      const body = part.map(p => `<tr style="height:19px"><td style="${TD}text-align:center">${++no}</td>${nameCell(p)}<td style="${TD}text-align:center">${p.r.shift === 'n' ? 'คืน' : 'วัน'}</td>${p.r.c.map((ch, j) => { const st = ST[ch] || ST['?']; const lab = ch === 'W' ? '✓' : ch === '?' ? (p.r.oth[j] || '') : st.cell; return `<td style="${TD}text-align:center;background:${isPlan(ch) || ch === '.' ? '#fff' : st.bg + '33'};color:${isPlan(ch) ? '#a5b4fc' : RC.text};font-weight:600">${esc(lab)}</td>`; }).join('')}${[p.s.W, p.s.Y, p.s.T, p.s.leave, p.s.X].map(n => `<td style="${TD}text-align:center">${n || ''}</td>`).join('')}</tr>`).join('');
+      const body = part.map(p => `<tr style="height:19px"><td style="${TD}text-align:center">${++no}</td>${nameCell(p)}<td style="${TD}text-align:center">${p.r.shift === 'n' ? 'คืน' : 'วัน'}</td>${p.r.c.map((ch, j) => { const st = ST[ch] || ST['?']; const lab = ch === 'W' ? '✓' : ch === '?' ? (p.r.oth[j] || '') : st.cell; const we = isWE(v.daily[j].wd) && !holidayAt(v.daily[j].mk, v.daily[j].d); return `<td style="${TD}text-align:center;background:${isPlan(ch) || ch === '.' ? '#fff' : st.bg + '33'};${we ? WE_TINT : ''}color:${isPlan(ch) ? '#a5b4fc' : RC.text};font-weight:600">${esc(lab)}</td>`; }).join('')}${[p.s.W, p.s.Y, p.s.T, p.s.leave, p.s.X].map(n => `<td style="${TD}text-align:center">${n || ''}</td>`).join('')}</tr>`).join('');
       const last = pi === parts.length - 1;
-      mkPage(`__H${pages.length + 1}__${rptSec(sec, `ตารางการมาปฏิบัติงานรายวัน (${ppl.length} คน)${parts.length > 1 ? ` · ส่วนที่ ${pi + 1}/${parts.length}` : ''}`)}<table style="width:100%;border-collapse:collapse;font-size:11px;line-height:1.15">${head}${body}</table>${last ? `<div style="font-size:9.5px;color:${RC.muted};margin-top:4px">✓ = มา · สาย = มาสาย · OT = มาวันหยุด · แทน = ทำแทนวันหยุด · ↔ = เปลี่ยนวันหยุด (หยุดแทน/ทำแทน) · ป/ก/พร = ลา · ข = ขาด · A/B/C = เวรรอติ๊ก</div>${rptNotes(v)}${rptSign()}` : ''}${rptFooter()}`);
+      mkPage(`__H${pages.length + 1}__${rptSec(sec, `ตารางการมาปฏิบัติงานรายวัน (${ppl.length} คน)${parts.length > 1 ? ` · ส่วนที่ ${pi + 1}/${parts.length}` : ''}`)}<table style="width:100%;border-collapse:collapse;font-size:11px;line-height:1.15">${head}${body}</table>${last ? `<div style="font-size:9.5px;color:${RC.muted};margin-top:4px">คอลัมน์สีฟ้า = เสาร์-อาทิตย์ · สีชมพู = วันหยุดนักขัตฤกษ์ · ✓ = มา · สาย = มาสาย · OT = มาวันหยุด · แทน = ทำแทนวันหยุด · ↔ = เปลี่ยนวันหยุด (หยุดแทน/ทำแทน) · ป/ก/พร = ลา · ข = ขาด · A/B/C = เวรรอติ๊ก</div>${rptNotes(v)}${rptSign()}` : ''}${rptFooter()}`);
     });
   } else {
     const parts = chunk(ppl, 48, cap), fs = 10.8;
@@ -3144,24 +3157,13 @@ async function exportWsPdf() {
   const stage = document.getElementById('reportStage'); stage.innerHTML = '';
   try {
     const mk = App.mk, days = mDays(mk), now = new Date(), pages = [];
-    const bg = (ch) => ch === 'W' ? '#d1fae5' : ch === 'K' ? '#a7f3d0' : ch === 'T' ? '#a5f3fc' : ch === 'O' ? '#e2e8f0' : ch === 'H' ? '#fde68a' : isLeave(ch) ? '#fef3c7' : ch === 'X' ? '#fee2e2' : '#fff';
     [['d', 'ผลัดกลางวัน'], ['n', 'ผลัดกลางคืน']].forEach(([sh, title]) => {
       const br = M.rows.filter(r => r.shift === sh); if (!br.length) return;
-      const rh = Math.max(11, Math.min(19, Math.floor(590 / (br.length + new Set(br.map(r => r.role)).size + 3)))), fs = rh <= 14 ? 9 : 10.5;
-      let t = `<table style="font-size:${fs}px"><thead><tr><th style="width:20px">No</th><th style="width:42px">CODE</th><th style="text-align:left;padding-left:3px">Name</th>`;
-      for (let d = 1; d <= days; d++) { const w = wdOf(mk, d), hd = holidayAt(mk, d); t += `<th style="width:23px;${w === 0 || w === 6 || hd ? 'color:#e11d48;' : ''}${hd ? 'background:#fecdd3;' : ''}">${WD_S[w]}<br>${d}</th>`; }
-      t += '<th style="width:26px">มา</th><th style="width:22px">OT</th><th style="width:30px">↔</th><th style="width:22px">ลา</th><th style="width:66px">Remark</th></tr></thead><tbody>';
-      const tot = [];
-      [['s', 'ตรวจการ - หัวหน้าทีม'], ['g', 'ร.ป.ภ.']].forEach(([ro, g]) => {
-        const gr = br.filter(r => r.role === ro); if (!gr.length) return;
-        gr.forEach((r, i) => { const s = rowSum(r); t += `<tr style="height:${rh}px"><td style="text-align:center">${i + 1}</td><td style="text-align:center">${esc(r.code)}</td><td style="white-space:nowrap;padding-left:3px">${esc(r.name)}${r.tag ? ` <span style="color:#4f46e5">(${esc(r.tag)})</span>` : ''}</td>${r.c.map((ch, j) => `<td style="text-align:center;background:${bg(ch)};color:${isPlan(ch) ? '#a5b4fc' : '#0f172a'};font-weight:${isWork(ch) ? 700 : 500};font-size:${fs - .5}px">${esc(ch === 'W' ? '1' : ch === '?' ? (r.oth[j] || '') : ST[ch].cell)}</td>`).join('')}<td style="text-align:center;font-weight:700">${s.work}</td><td style="text-align:center">${s.ot || ''}</td><td style="text-align:center">${s.h || s.k + s.j ? `${s.h}/${s.k + s.j}` : ''}</td><td style="text-align:center">${s.leave + s.abs || ''}</td><td style="font-size:${fs - 1}px;padding-left:2px;white-space:nowrap">${esc(remarkShort(r.remark))}</td></tr>`; });
-        const per = []; for (let i = 0; i < days; i++) per.push(gr.filter(r => isWork(r.c[i])).length); tot.push(per);
-        t += `<tr style="height:${rh}px;background:#eef2ff;font-weight:700"><td colspan="3" style="padding-left:3px">รวม ${g}</td>${per.map(v => `<td style="text-align:center">${v}</td>`).join('')}<td style="text-align:center">${per.reduce((a, b) => a + b, 0)}</td><td colspan="4"></td></tr>`;
-      });
-      const all = []; for (let i = 0; i < days; i++) all.push(tot.reduce((a, p) => a + p[i], 0));
-      t += `<tr style="height:${rh}px;background:#d1fae5;font-weight:700"><td colspan="3" style="padding-left:3px">รวมยอด</td>${all.map(v => `<td style="text-align:center">${v}</td>`).join('')}<td style="text-align:center">${all.reduce((a, b) => a + b, 0)}</td><td colspan="4"></td></tr></tbody></table>`;
+      // v23: ใช้ตัวสร้างตารางเดียวกับภาคผนวกของรายงาน (สีเสาร์-อาทิตย์/ยอดรวมตรงกันทุกที่)
+      const rh = Math.max(11, Math.min(19, Math.floor(590 / (br.length + new Set(br.map(r => r.role)).size + 3))));
+      const t = wsTable(mk, days, wsLines(mk, br, days), rh) + `<div style="font-size:9.5px;color:#64748b;margin-top:4px;line-height:1.45">${WS_LEGEND}${wsHolText(mk) ? '<br>' + wsHolText(mk) : ''}</div>`;
       const p = document.createElement('div'); p.className = 'rpt';
-      p.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #4f46e5;padding-bottom:6px;margin-bottom:8px"><div><div style="font-family:Prompt;font-size:19px;font-weight:700">WORKING SCHEDULE · ตารางการปฏิบัติงาน ${title}</div><div style="font-size:12.5px;color:#475569">${DEPT} · ${ORG} · ประจำเดือน ${mLabel(mk)}</div></div><div style="font-size:10.5px;color:#64748b;text-align:right">พิมพ์เมื่อ ${now.getDate()} ${TH_M[now.getMonth()]} ${now.getFullYear() + 543}<br>1=มา · OT=มาวันหยุด · แทน=ทำแทนวันหยุด · ↔=เปลี่ยนวันหยุด (หยุดแทน/ทำแทน) · ป/ก/พร=ลา · ข=ขาด</div></div>${t}
+      p.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #4f46e5;padding-bottom:6px;margin-bottom:8px"><div><div style="font-family:Prompt;font-size:19px;font-weight:700">WORKING SCHEDULE · ตารางการปฏิบัติงาน ${title}</div><div style="font-size:12.5px;color:#475569">${DEPT} · ${ORG} · ประจำเดือน ${mLabel(mk)}</div></div><div style="font-size:10.5px;color:#64748b;text-align:right">พิมพ์เมื่อ ${now.getDate()} ${TH_M[now.getMonth()]} ${now.getFullYear() + 543}</div></div>${t}
         <div style="position:absolute;bottom:20px;right:60px;text-align:center;font-size:12.5px">ลงชื่อ ....................................... ผู้จัดทำ<br>( ${esc(App.user || '.......................................')} )<br>วันที่ ........../........../..........</div>`;
       stage.appendChild(p); pages.push(p);
     });
