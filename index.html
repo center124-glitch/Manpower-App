@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <!--
-  SBK Manpower App v23 — ระบบตรวจเช็คการมาปฏิบัติงาน + แดชบอร์ดวิเคราะห์อัตรากำลังพล (รวมในแอปเดียว)
+  SBK Manpower App v24 — ระบบตรวจเช็คการมาปฏิบัติงาน + แดชบอร์ดวิเคราะห์อัตรากำลังพล (รวมในแอปเดียว)
+  v24: ออก "เฉพาะตารางการปฏิบัติงาน" (รูปแบบรายงานประจำเดือน: หัวกระดาษ/เลขหน้า/ลงนามผู้จัดทำ) แยกจากรายงานปกติ — PDF และ JPEG (เมนูส่งออก + แถบหน้ารายงาน)
   v23: แรเงาคอลัมน์วันเสาร์-อาทิตย์ (สีฟ้า) ในตารางติ๊ก + ทุกตารางในใบรายงาน/ภาคผนวก/PDF ตารางเวร (วันนักขัตฤกษ์ยังเป็นสีชมพู)
   v22: แนบตารางการปฏิบัติงาน (Working Schedule) ที่ติ๊กรายวันเป็นภาคผนวกท้ายรายงานรายเดือน แยกผลัด (ช่อง "📎 แนบตารางเวร" เลือกแนบ/ไม่แนบได้)
   v21: การ์ดรายละเอียดเมื่อชี้/แตะช่องตอนตารางล็อก ครอบคลุมทุกช่องที่ไม่ใช่วันมาปกติ (สาย/OT/ทำแทน/หยุดแทน/ลาทุกชนิด/ขาด) · พื้นหลังฟอร์ม–แดชบอร์ดสีสันต่างกัน · แก้ข้อความแจ้ง (toast) ค้างไม่หาย · จัดแถบเมนูด้านบนใหม่ (แท็บหลักอยู่กลางหัว, ตัวกรองรวมเข้าแถบควบคุม)
@@ -398,6 +399,8 @@
           <div class="px-3 pt-1 text-[11px] muted">ตารางเวร (ข้อมูลที่ติ๊ก)</div>
           <button class="mi w-full text-left px-3 py-2 rounded-lg hover:bg-indigo-50 dark:hover:bg-slate-800" data-act="exportWs">📊 Excel รูปแบบ WORKING SCHEDULE</button>
           <button class="mi w-full text-left px-3 py-2 rounded-lg hover:bg-indigo-50 dark:hover:bg-slate-800" data-act="exportWsPdf">🗓️ พิมพ์ตารางเวร PDF (A4)</button>
+          <button class="mi w-full text-left px-3 py-2 rounded-lg hover:bg-indigo-50 dark:hover:bg-slate-800" data-act="wsRptPdf">📅 ตารางการปฏิบัติงาน PDF (รูปแบบรายงานประจำเดือน)</button>
+          <button class="mi w-full text-left px-3 py-2 rounded-lg hover:bg-indigo-50 dark:hover:bg-slate-800" data-act="wsRptJpg">📅 ตารางการปฏิบัติงาน JPEG (รูปแบบรายงานประจำเดือน)</button>
           <div class="px-3 pt-2 text-[11px] muted">รายงานทางการ (ตามช่วงเวลา/ตัวกรองแดชบอร์ด)</div>
           <button class="mi w-full text-left px-3 py-2 rounded-lg hover:bg-indigo-50 dark:hover:bg-slate-800" data-act="rptPdf">📄 รายงานสรุป PDF (A4 แนวนอน)</button>
           <button class="mi w-full text-left px-3 py-2 rounded-lg hover:bg-indigo-50 dark:hover:bg-slate-800" data-act="rptJpg">🖼️ รายงานสรุป JPEG</button>
@@ -580,17 +583,19 @@
   <!-- ===== แดชบอร์ด: รายงานทางการ (พรีวิว A4) ===== -->
   <div id="dv-report" class="dview hidden space-y-3">
     <div class="card p-3 flex flex-wrap items-center gap-2">
-      <div class="min-w-0 flex-1"><h3 class="font-semibold truncate" id="rptTitle">รายงาน</h3><p class="text-xs muted">ตัวอย่างก่อนพิมพ์ (A4 แนวนอน) · เลือก รายสัปดาห์ / รายเดือน / รายปี ที่แถบด้านบน · ใช้ตัวกรองผลัด/ตำแหน่ง/ค้นหาร่วมด้วย</p></div>
+      <div class="min-w-0" style="flex:1 1 260px"><h3 class="font-semibold truncate" id="rptTitle">รายงาน</h3><p class="text-xs muted">ตัวอย่างก่อนพิมพ์ (A4 แนวนอน) · เลือก รายสัปดาห์ / รายเดือน / รายปี ที่แถบด้านบน · ใช้ตัวกรองผลัด/ตำแหน่ง/ค้นหาร่วมด้วย</p></div>
       <label class="flex items-center gap-1.5 text-sm cursor-pointer px-2 py-1.5 rounded-lg border border-slate-200" style="user-select:none"><input type="checkbox" id="rptWsChk" class="accent-indigo-600" style="width:16px;height:16px" checked> 📎 แนบตารางเวร</label>
       <button class="btn btn-primary" data-act="rptPdf">📄 ดาวน์โหลด PDF</button>
       <button class="btn btn-ghost" data-act="rptJpg">🖼️ JPEG</button>
+      <button class="btn btn-ghost" data-act="wsRptPdf" title="ออกเฉพาะตารางการปฏิบัติงาน (Working Schedule) ของเดือนที่เลือก รูปแบบรายงานประจำเดือน — PDF">📅 เฉพาะตารางเวร PDF</button>
+      <button class="btn btn-ghost" data-act="wsRptJpg" title="ออกเฉพาะตารางการปฏิบัติงาน ของเดือนที่เลือก — JPEG (1 ไฟล์ต่อหน้า)">📅 JPEG</button>
       <button class="btn btn-ghost" data-act="sumXlsx">📈 Excel</button>
     </div>
     <div id="rptWrap" class="pb-4 overflow-hidden"></div>
   </div>
   </section>
 
-  <footer class="text-center text-xs muted py-5">SBK Manpower App v23 · แผนกลานจอดและจราจร · ศูนย์การค้า ซีคอนบางแค</footer>
+  <footer class="text-center text-xs muted py-5">SBK Manpower App v24 · แผนกลานจอดและจราจร · ศูนย์การค้า ซีคอนบางแค</footer>
 </main>
 
 <!-- แถบเมนูล่างสำหรับมือถือ (แสดงเฉพาะจอ < 768px) — ใช้ปุ่มชุดเดียวกับเมนูหลัก -->
@@ -2532,7 +2537,8 @@ function wsTable(mk, days, lines, rh) {
 }
 const wsHolText = (mk) => { const hs = holidaysOfMonth(mk); return hs.length ? `วันหยุดนักขัตฤกษ์: ${hs.map(h => `${+h.d.slice(8)} ${TH_MONTHS_S[+mk.slice(5) - 1]} ${esc(h.n)}${h.t === 'gov' ? ' (เฉพาะราชการ)' : ''}`).join(' · ')}` : ''; };
 
-function buildReportPages(v, host, scale = 1) {
+// opt.wsOnly (v24): สร้างเฉพาะ "ตารางการปฏิบัติงาน" (Working Schedule) ของเดือน — หัวกระดาษ/เลขหน้า/ท้ายกระดาษเหมือนรายงานปกติ + ช่องลงนามผู้จัดทำ
+function buildReportPages(v, host, scale = 1, opt = {}) {
   host.innerHTML = '';
   const t = v.tot, rate = t.sched ? fmt(t.W / t.sched * 100, 1) + '%' : '-', pages = [], charts = [];
   const kp = [['อัตรากำลัง', fmt(v.heads) + ' คน', `ตก./หน.ทีม ${v.sup} · รปภ. ${v.guard}`, RC.navy], ['แรงงานรวม', fmt(t.W) + ' คน-วัน', 'รวม สาย/OT/ทำแทน', '#047857'], ['เฉลี่ยต่อวัน', fmt(v.avgDay, 1) + ' คน', v.minDay ? `ต่ำสุด ${v.minDay.W} · สูงสุด ${v.maxDay.W}` : '-', '#0369a1'], ['% มาปฏิบัติงาน', rate, 'มา ÷ (มา+ลา+ขาด)', '#7c3aed'],
@@ -2548,6 +2554,7 @@ function buildReportPages(v, host, scale = 1) {
   const overflowOf = (pg) => { const kids = [...pg.children], abs = kids.filter(c => c.style.position === 'absolute' || getComputedStyle(c).position === 'absolute');
     const limit = Math.min(794 - 34, ...abs.map(c => c.offsetTop)) - 4; let maxB = 0; kids.filter(c => !abs.includes(c)).forEach(c => { maxB = Math.max(maxB, c.offsetTop + c.offsetHeight); }); return maxB - limit; };
   const dropPages = (n) => { for (let i = 0; i < n; i++) { const pg = pages.pop(); if (pg && pg.parentElement) pg.parentElement.remove(); } };
+  if (!opt.wsOnly) { // ---- ตัวรายงานปกติ (ข้ามทั้งหมดเมื่อออกเฉพาะตารางการปฏิบัติงาน) ----
   // หน้า 1: ภาพรวม
   mkPage(`__H1__<div style="font-size:12.5px;line-height:1.6;margin:6px 0 2px"><b>เรื่อง</b>&nbsp; รายงานสรุปอัตรากำลังพล${v.def.title} ${esc(v.def.sub)}${App.rpt && App.rpt.to ? `<br><b>เรียน</b>&nbsp; ${esc(App.rpt.to)}` : ''}<br><span style="padding-left:40px">${DEPT} ขอรายงานสรุปการปฏิบัติงานของพนักงาน จำนวน ${v.heads} คน ข้อมูลยืนยันแล้ว ${v.confDaily.length} จาก ${v.daily.length} วัน${v.lastConf ? ` (ถึง${thDateFull(v.lastConf.dt)})` : ''} รายละเอียดดังนี้</span></div>${rptSec(1, 'สรุปภาพรวม')}${kpi}
     <div style="display:grid;grid-template-columns:1.75fr 1fr;gap:12px">
@@ -2616,15 +2623,19 @@ function buildReportPages(v, host, scale = 1) {
     if ((!anyOver && ov <= 0) || cap <= 6) break;
     dropPages(added);
   }
+  } // ---- จบตัวรายงานปกติ ----
   // v22: ภาคผนวก — ตารางการปฏิบัติงานที่ติ๊กรายวัน (Working Schedule) ของเดือนที่รายงาน แยกผลัด แนบท้ายเอกสาร
   // ใช้ตารางเวร "ทั้งเดือน" เสมอ (แม้เลือกช่วงวันที่) — ตัวกรองผลัด/ตำแหน่ง/ค้นหามีผลเหมือนตัวรายงาน
   // แบ่งหน้าตามความสูงจริง: ลองความสูงแถว 18→11px ในหน้าเดียว ถ้ายังล้นจึงแบ่งเป็น 2, 3 … หน้า (ยอดรวมอยู่หน้าสุดท้ายของผลัดนั้น)
-  if (v.def.type === 'month' && D.rptWs !== false) {
+  if (v.def.type === 'month' && (opt.wsOnly || D.rptWs !== false)) {
     const mk = v.def.key, days = mDays(mk), fullRows = periodRows(periodDef('month', mk)); let apx = 0;
-    [['d', 'ผลัดกลางวัน'], ['n', 'ผลัดกลางคืน']].forEach(([sh, title]) => {
+    const shList = [['d', 'ผลัดกลางวัน'], ['n', 'ผลัดกลางคืน']].filter(([sh]) => fullRows.some(r => r.shift === sh));
+    shList.forEach(([sh, title], si) => {
       const br = fullRows.filter(r => r.shift === sh).sort((a, b) => (a.role === 's' ? 0 : 1) - (b.role === 's' ? 0 : 1)); if (!br.length) return;
       apx++; const lines = wsLines(mk, br, days), hol = wsHolText(mk);
-      const page = (part, k, n, rh) => mkPage(`__H${pages.length + 1}__${rptSec('ผนวก ' + apx, `ตารางการปฏิบัติงาน (Working Schedule) ${title} · ${mLabel(mk)}${n > 1 ? ` · ส่วนที่ ${k + 1}/${n}` : ''}`)}${wsTable(mk, days, part, rh)}<div style="font-size:9.5px;color:${RC.muted};margin-top:4px;line-height:1.45">${WS_LEGEND}${k === n - 1 && hol ? '<br>' + hol : ''}</div>${rptFooter()}`);
+      // ออกเฉพาะตาราง: เลขหัวข้อเป็น 1, 2 (ไม่ใช่ "ผนวก") และมีช่องลงนามผู้จัดทำครั้งเดียวที่หน้าสุดท้ายของเอกสาร (รวมในการวัดความสูง จึงไม่ทับตาราง)
+      const sign = () => `<div style="position:absolute;right:40px;bottom:40px;text-align:center;font-size:12px;line-height:1.75;min-width:230px">ลงชื่อ ................................................. ผู้จัดทำ<br>( ${esc(App.user || '.................................................')} )<br>${App.rpt && App.rpt.makerPos ? esc(App.rpt.makerPos) + '<br>' : ''}วันที่ ........../........../..........</div>`;
+      const page = (part, k, n, rh) => mkPage(`__H${pages.length + 1}__${rptSec(opt.wsOnly ? apx : 'ผนวก ' + apx, `ตารางการปฏิบัติงาน (Working Schedule) ${title} · ${mLabel(mk)}${n > 1 ? ` · ส่วนที่ ${k + 1}/${n}` : ''}`)}${wsTable(mk, days, part, rh)}<div style="font-size:9.5px;color:${RC.muted};margin-top:4px;line-height:1.45">${WS_LEGEND}${k === n - 1 && hol ? '<br>' + hol : ''}</div>${opt.wsOnly && k === n - 1 && si === shList.length - 1 ? sign() : ''}${rptFooter()}`);
       let done = false;
       for (let n = 1; n <= 6 && !done; n++) {
         const per = Math.ceil(lines.length / n), parts = []; for (let i = 0; i < lines.length; i += per) parts.push(lines.slice(i, i + per));
@@ -2711,17 +2722,23 @@ async function capturePages(pages, scale = 2) {
     const out = []; for (const p of pages) out.push(await html2canvas(p, { scale, backgroundColor: '#fff', logging: false, onclone: async (doc) => { if (doc.fonts) await doc.fonts.ready; nudgeText(doc, plan); } })); return out;
   } finally { fix.remove(); }
 }
-async function exportReport(type) {
-  const v = D.cur && D.cur.rows.length ? D.cur : computeView(); if (!v || !v.rows.length) { toast('ไม่มีข้อมูลสำหรับรายงาน', 'error'); return; }
+async function exportReport(type, opt = {}) {
+  // ออกเฉพาะตารางการปฏิบัติงาน: ใช้ "เดือนที่เลือก" ทั้งเดือนเสมอ (กดได้จากทุกหน้า ไม่ขึ้นกับช่วงสัปดาห์/ปีในแดชบอร์ด) · ตัวกรองผลัด/ตำแหน่ง/ค้นหายังมีผล
+  const v = opt.wsOnly ? computeView(periodDef('month', App.mk)) : (D.cur && D.cur.rows.length ? D.cur : computeView()); if (!v || !v.rows.length) { toast('ไม่มีข้อมูลสำหรับรายงาน', 'error'); return false; }
   if (typeof html2canvas === 'undefined' || (type === 'pdf' && !window.jspdf) || typeof Chart === 'undefined') throw new Error('โหลดไลบรารีสร้างรายงานไม่สำเร็จ (ตรวจสอบอินเทอร์เน็ต)');
   const stage = document.getElementById('reportStage');
-  const { pages, charts } = buildReportPages(v, stage, 1);
+  // ท้ายกระดาษ (แหล่งข้อมูล) อ่านจาก D.cur — ตอนออกเฉพาะตารางให้ชี้ไปที่ข้อมูลเดือนนี้ชั่วคราว แล้วคืนค่าเดิมเมื่อเสร็จ
+  const prevCur = D.cur; if (opt.wsOnly) D.cur = v;
+  let pages = [], charts = [];
+  try { ({ pages, charts } = buildReportPages(v, stage, 1, opt)); } finally { if (opt.wsOnly) D.cur = prevCur; }
   try {
+    if (!pages.length) { toast('ไม่มีพนักงานตามตัวกรองที่เลือก', 'error'); return false; }
     await document.fonts.ready; await new Promise(r => setTimeout(r, 150));
     const cv = await capturePages(pages);
-    const name = `รายงานอัตรากำลังพล${v.def.title}_${v.def.key}`;
+    const name = opt.wsOnly ? `ตารางการปฏิบัติงาน_${mLabel(v.def.key).replace(/\s+/g, '_')}` : `รายงานอัตรากำลังพล${v.def.title}_${v.def.key}`;
     if (type === 'pdf') { const pdf = new window.jspdf.jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' }); cv.forEach((c, i) => { if (i) pdf.addPage(); pdf.addImage(c.toDataURL('image/jpeg', .95), 'JPEG', 0, 0, 297, 210); }); pdf.save(name + '.pdf'); }
     else for (let i = 0; i < cv.length; i++) { download(await new Promise(r => cv[i].toBlob(r, 'image/jpeg', .95)), `${name}_หน้า${i + 1}.jpg`); await new Promise(r => setTimeout(r, 300)); }
+    return true;
   } finally { charts.forEach(c => c.destroy()); stage.innerHTML = ''; }
 }
 
@@ -3201,7 +3218,7 @@ function showLoading(t) { document.getElementById('loadingText').textContent = t
 function hideLoading() { document.getElementById('loading').classList.add('hidden'); }
 function applyTheme(dark) { document.documentElement.classList.toggle('dark', dark); document.getElementById('themeIcon').textContent = dark ? '☀️' : '🌙'; }
 async function runExport(act) {
-  const needM = ['exportWs', 'exportWsPdf', 'rptPdf', 'rptJpg', 'sumXlsx', 'sumCsv'];
+  const needM = ['exportWs', 'exportWsPdf', 'rptPdf', 'rptJpg', 'wsRptPdf', 'wsRptJpg', 'sumXlsx', 'sumCsv'];
   if (needM.includes(act) && !curMonth()) { toast('ยังไม่มีตารางเวรของเดือนที่เลือก', 'warn'); return; }
   // ออกรายงานทางการ: เตือนถ้าช่วงที่เลือกยังมีวันที่ค้างติ๊ก (ตัวเลขในรายงานจะยังไม่ครบ)
   if (['rptPdf', 'rptJpg'].includes(act)) {
@@ -3209,12 +3226,13 @@ async function runExport(act) {
     if (pend.length && !await confirmBox('ยังมีวันที่ค้างติ๊ก', `ช่วงรายงานนี้มี ${pend.length} วันที่ยังติ๊กไม่ครบ (${pend.slice(0, 8).map(p => p.d + ' ' + mShort(p.mk)).join(', ')}${pend.length > 8 ? ' …' : ''}) — ตัวเลขในรายงานอาจยังไม่สมบูรณ์ ต้องการออกรายงานต่อหรือไม่?`, 'ออกรายงานต่อ')) return;
   }
   const btn = document.getElementById('btnExport'); setBtnLoading(btn, true, 'กำลังส่งออก…');
-  if (['exportWsPdf', 'rptPdf', 'rptJpg'].includes(act)) showLoading('กำลังสร้างไฟล์ A4…');
+  if (['exportWsPdf', 'rptPdf', 'rptJpg', 'wsRptPdf', 'wsRptJpg'].includes(act)) showLoading('กำลังสร้างไฟล์ A4…');
   try {
     if (['exportWs', 'sumXlsx'].includes(act) && typeof XLSX === 'undefined') throw new Error('โหลดไลบรารี Excel ไม่สำเร็จ');
     const v = computeView();
     if (act === 'exportWs') exportWs(); else if (act === 'exportWsPdf') { await exportWsPdf(); toast('สร้าง PDF ตารางเวรแล้ว', 'success'); }
-    else if (act === 'rptPdf' || act === 'rptJpg') { await exportReport(act === 'rptPdf' ? 'pdf' : 'jpeg'); toast('สร้างรายงานแล้ว', 'success'); }
+    else if (act === 'rptPdf' || act === 'rptJpg') { if (await exportReport(act === 'rptPdf' ? 'pdf' : 'jpeg') !== false) toast('สร้างรายงานแล้ว', 'success'); }
+    else if (act === 'wsRptPdf' || act === 'wsRptJpg') { if (await exportReport(act === 'wsRptPdf' ? 'pdf' : 'jpeg', { wsOnly: true }) !== false) toast(`สร้างตารางการปฏิบัติงาน ${mLabel(App.mk)} แล้ว`, 'success'); }
     else if (act === 'sumXlsx') { exportSumXlsx(v); toast('ส่งออก Excel แล้ว', 'success'); } else if (act === 'sumCsv') { exportSumCsv(v); toast('ส่งออก CSV แล้ว', 'success'); }
     else if (act === 'backup') { exportBackup(); toast('สำรองข้อมูลแล้ว', 'success'); }
   } catch (e) { console.error(e); toast('ส่งออกไม่สำเร็จ: ' + e.message, 'error', 7000); }
@@ -3237,7 +3255,7 @@ function handleEvents() {
   document.querySelectorAll('.mi').forEach(b => b.onclick = async () => {
     $('menu').classList.add('hidden'); $('exportMenu').classList.add('hidden');
     const a = b.dataset.act;
-    if (['exportWs', 'exportWsPdf', 'rptPdf', 'rptJpg', 'sumXlsx', 'sumCsv', 'backup'].includes(a)) return runExport(a);
+    if (['exportWs', 'exportWsPdf', 'rptPdf', 'rptJpg', 'wsRptPdf', 'wsRptJpg', 'sumXlsx', 'sumCsv', 'backup'].includes(a)) return runExport(a);
     if (['addEmp', 'discard', 'lock', 'pending', 'xchk', 'summary'].includes(a) && !curMonth()) { toast('ยังไม่มีตารางเวรของเดือนที่เลือก', 'warn'); return; }
     if (a === 'newMonth') openNewMonth(); else if (a === 'addEmp') openEmployee(null); else if (a === 'import') $('fileInput').click();
     else if (a === 'uploadAll') uploadAll(); else if (a === 'log') openLog(); else if (a === 'settings') openSettings(); else if (a === 'install') openInstall();
